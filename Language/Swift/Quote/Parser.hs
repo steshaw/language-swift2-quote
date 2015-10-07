@@ -13,10 +13,12 @@ import Text.Parsec.Expr
 import qualified Text.Parsec.Token as T
 
 parse :: Text -> Either String Module
-parse input = Left "todo"
+parse input = case P.parse moduleP "<stdin>" input of
+  Left err -> Left $ show err
+  Right mod -> Right mod
 
 moduleP :: Parser Module
-moduleP = Module <$> P.many expression
+moduleP = Module <$> expression <* ws
 
 ------------------------------------------------------------
 -- Lexical Structure
@@ -174,13 +176,16 @@ stringLiteral :: Parser Expression
 stringLiteral = StringLiteral <$> T.stringLiteral lexer
 
 booleanLiteral :: Parser Expression
-booleanLiteral = BooleanLiteral <$> (P.string "true" <|> P.string "false")
+booleanLiteral = BooleanLiteral <$>
+     (P.string "true" *> pure True
+  <|> P.string "false" *> pure False)
 
 nilLiteral :: Parser Expression
 nilLiteral = NilLiteral <$> P.string "nil"
 
 literal :: Parser Expression
-literal = integerLiteral <|> stringLiteral <|> booleanLiteral <|> nilLiteral
+literal = ws *>
+  (integerLiteral <|> stringLiteral <|> booleanLiteral <|> nilLiteral)
 
 expression :: Parser Expression
 expression = literal
