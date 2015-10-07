@@ -2,15 +2,25 @@ module Language.Swift.Quote.Parser where
 
 import Language.Swift.Quote.Syntax
 
-import Data.Text (Text)
-import Text.Parsec
+import Control.Applicative
+import Control.Monad.Identity
+
+import Data.Text
+import qualified Text.ParserCombinators.Parsec as P
+import Text.Parsec.Text (Parser)
 import Text.Parsec.Language
 import Text.Parsec.Expr
-import Text.Parsec.Text
-import qualified Text.ParserCombinators.Parsec.Token as Token
+import qualified Text.Parsec.Token as T
 
 parse :: Text -> Either String Module
-parse input = Left "unimplemented"
+parse input = Left "todo"
+
+moduleP :: Parser Module
+moduleP = Module <$> P.many expression
+
+------------------------------------------------------------
+-- Lexical Structure
+------------------------------------------------------------
 
 reservedWordsDeclarations =
  [ "class"
@@ -129,22 +139,48 @@ reservedOperators =
 
 -- Ignore Whitespace
 -- C-style comments with nesting.
-languageDef = emptyDef
-  { Token.commentStart = "/*"
-  , Token.commentEnd = "*/"
-  , Token.commentLine = "//"
-  , Token.identStart = letter
-  , Token.identLetter = alphaNum
-  , Token.reservedNames = reservedWordsDeclarations
+swiftLangDef :: GenLanguageDef Text st Identity
+swiftLangDef = T.LanguageDef
+  { T.commentStart = "/*"
+  , T.commentEnd = "*/"
+  , T.commentLine = "//"
+  , T.nestedComments = True
+  , T.identStart = P.letter
+  , T.identLetter = P.alphaNum
+  , T.opStart = P.oneOf "+-*/<>="
+  , T.opLetter = P.oneOf "+-*/<>="
+  , T.reservedNames = reservedWordsDeclarations
                           ++ reservedWordsStatements
                           ++ reservedWordsExpressionsTypes
                           ++ keywordsInPatterns
                           ++ keywordsinContexts
-  , Token.reservedOpNames = [ "+", "-", "*", "/", "<", ">", "<=", ">="]
+  , T.reservedOpNames = [ "+", "-", "*", "/", "<", ">", "<=", ">="]
+  , T.caseSensitive = True
   }
 
-lexer = Token.makeTokenParser languageDef
+lexer = T.makeTokenParser swiftLangDef
 
-identifier = Token.identifier lexer
-integer = Token.integer lexer
-ws = Token.whiteSpace lexer
+identifier = T.identifier lexer
+ws = T.whiteSpace lexer
+
+------------------------------------------------------------
+-- Expressions
+------------------------------------------------------------
+
+integerLiteral :: Parser Expression
+integerLiteral = IntegerLiteral <$> T.integer lexer
+
+stringLiteral :: Parser Expression
+stringLiteral = StringLiteral <$> T.stringLiteral lexer
+
+booleanLiteral :: Parser Expression
+booleanLiteral = BooleanLiteral <$> (P.string "true" <|> P.string "false")
+
+nilLiteral :: Parser Expression
+nilLiteral = NilLiteral <$> P.string "nil"
+
+literal :: Parser Expression
+literal = integerLiteral <|> stringLiteral <|> booleanLiteral <|> nilLiteral
+
+expression :: Parser Expression
+expression = literal
