@@ -1,12 +1,14 @@
 name:                language-swift-quote
 version:             0.1.0.0
 synopsis:            QuasiQuotation support for Swift in Template Haskell
-description:         QuasiQuotation support for Swift in Template Haskell
+description:         Please see README.md
+homepage:            http://github.com/steshaw/language-swift-quote#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Manuel M T Chakravarty, Maxwell Swadling
-maintainer:          maxwellswadling@gmail.com
-copyright:           (c) 2014, Manuel M T Chakravarty
+author:              Steven Shaw, Manuel M T Chakravarty, Maxwell Swadling
+maintainer:          steven@steshaw.org
+copyright:           (c) 2015, Steven Shaw
+                     (c) 2014, Manuel M T Chakravarty
                      (c) 2014, Maxwell Swadling
 category:            Language
 build-type:          Simple
@@ -18,8 +20,21 @@ library
                        Language.Swift.Quote.Parser,
                        Language.Swift.Quote.Pretty,
                        Language.Swift.Quote.Syntax
-  build-depends:       base >=4.7 && <4.8,
-                       parsec == 3.1.*,
-                       mainland-pretty == 0.2.*,
-                       text == 1.1.*
+  build-depends:       base                   >= 4.7 && < 5
+                     , parsec
+                     , text
+                     , mainland-pretty
+--                       mainland-pretty        >= 0.4 && < 0.5
   default-language:    Haskell2010
+
+test-suite unit
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      tests/unit
+  main-is:             Main.hs
+  build-depends:       base
+                     , language-swift-quote
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: git://github.com/steshaw/language-swift-quote.git
