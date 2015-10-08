@@ -4,11 +4,16 @@ import System.Exit
 
 import Language.Swift.Quote.Parser
 import Language.Swift.Quote.Syntax
+import Language.Swift.Quote.Pretty
+import qualified Data.Text.Lazy as L
 
 t input expectedModule = case parse input of
-  Right m -> if m == expectedModule
-             then "SUCCESS " ++ show expectedModule
-             else "Wrong module " ++ show m
+  Right m ->
+    if m == expectedModule
+    then "SUCCESS " ++ show expectedModule ++ p
+    else "Wrong module " ++ show m ++ p
+    where
+      p = "\n Pretty print:\n" ++ L.unpack (prettyPrint m) ++ "\n"
   Left msg -> "Error parsing module: " ++ msg
 
 p1 = t "1" $ Module $ IntegerLiteral 1
