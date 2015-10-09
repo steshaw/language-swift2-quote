@@ -6,12 +6,37 @@ data Module = Module Expression
   deriving (Show, Eq)
 
 data Expression
+  = Expression1 (Maybe String) PrefixExpression (Maybe [BinaryExpression])
+  deriving (Show, Eq)
+
+data PrefixExpression
+  = PeRegular (Maybe String) {- prefixOperator -} PrimaryExpression
+  | PeInOutExpression String -- identifier
+  deriving (Show, Eq)
+
+data PrimaryExpression
+  = PrimaryExpression1 LiteralExpression
+  | PrimaryExpression2 SelfExpression
+  deriving (Show, Eq)
+
+data SelfExpression
+  = Self1
+  | Self2 String -- identifier
+  | Self3 [Expression]
+  | Self4
+  deriving (Show, Eq)
+
+data Literal
   = IntegerLiteral Integer
+  | FloatingPointLiteral Double
   | StringLiteral String
   | BooleanLiteral Bool
-  | NilLiteral String
-  | PrefixExpression PrefixExpression
-  | DummyExpression
+  | NilLiteral
+  deriving (Show, Eq)
+
+data LiteralExpression
+  = RegularLiteral Literal
+  | SpecialLiteral String
   deriving (Show, Eq)
 
 data BinaryExpression
@@ -26,10 +51,6 @@ data BinaryExpression
     }
   | BinaryExpression3 (Maybe String, Expression) (Maybe String) PrefixExpression
   | BinaryExpression4 String Type
-
-data PrefixExpression
-  = PeRegular (Maybe String) {- prefixOperator -} Expression
-  | PeInOutExpression String -- identifier
   deriving (Show, Eq)
 
 data Statement
@@ -67,3 +88,4 @@ data Declaration
   | DummyDeclaration
 
 data Type = Type
+  deriving (Show, Eq)

@@ -13,12 +13,12 @@ import Text.Parsec.Expr
 import qualified Text.Parsec.Token as T
 
 parse :: Text -> Either String Module
-parse input = case P.parse moduleP "<stdin>" input of
+parse input = case P.parse module_ "<stdin>" input of
   Left err -> Left $ show err
   Right mod -> Right mod
 
-moduleP :: Parser Module
-moduleP = Module <$> primaryExpression <* ws
+module_ :: Parser Module
+module_ = Module <$> expression <* ws
 
 ------------------------------------------------------------
 -- Lexical Structure
@@ -163,7 +163,6 @@ swiftLangDef = T.LanguageDef
 lexer = T.makeTokenParser swiftLangDef
 
 identifier = T.identifier lexer
-operator = T.operator lexer
 ws = T.whiteSpace lexer
 comma = T.comma lexer
 semicolon = T.semi lexer
@@ -171,29 +170,11 @@ optSemicolon = optional semicolon
 braces = T.braces lexer
 parens = T.braces lexer
 
+s :: String -> Parser String
 s s = ws *> P.string s
 
-------------------------------------------------------------
--- Expressions
-------------------------------------------------------------
-
-integerLiteral :: Parser Expression
-integerLiteral = IntegerLiteral <$> T.integer lexer
-
-stringLiteral :: Parser Expression
-stringLiteral = StringLiteral <$> T.stringLiteral lexer
-
-booleanLiteral :: Parser Expression
-booleanLiteral = BooleanLiteral <$>
-     (s "true" *> pure True
-  <|> s "false" *> pure False)
-
-nilLiteral :: Parser Expression
-nilLiteral = NilLiteral <$> s "nil"
-
-literal :: Parser Expression
-literal = ws *>
-  (integerLiteral <|> stringLiteral <|> booleanLiteral <|> nilLiteral)
+op :: String -> Parser ()
+op s = ws *> T.reservedOp lexer s
 
 ------------------------------------------------------------
 -- SUMMARY OF THE GRAMMAR
@@ -232,7 +213,7 @@ pattern :: Parser Pattern
 pattern = return Pattern
 
 whereClause :: Parser Expression
-whereClause = return DummyExpression
+whereClause = expression -- TODO
 
 declaration :: Parser Declaration
 declaration = return DummyDeclaration
@@ -682,11 +663,10 @@ Expressions
 -- GRAMMAR OF AN EXPRESSION
 
 expression :: Parser Expression
-expression = do
-  optional tryOperator
-  prefixExpression
-  optional binaryExpressions
-  return DummyExpression
+expression = Expression1
+  <$> optional tryOperator
+  <*> prefixExpression
+  <*> optional binaryExpressions
 
 expressionList :: Parser [Expression]
 expressionList = P.sepBy1 expression comma
@@ -753,7 +733,9 @@ typeCastingOperator
   <|> BinaryExpression4 <$> s "as!" <*> type_
 
 -- GRAMMAR OF A PRIMARY EXPRESSION
-primaryExpression = literalExpression
+primaryExpression
+    = PrimaryExpression1 <$> literalExpression
+  <|> PrimaryExpression2 <$> selfExpression
 
 {-
 primary-expression → identifier­generic-argument-clause­opt­
@@ -767,23 +749,34 @@ primary-expression → wildcard-expression­
 
 -}
 -- GRAMMAR OF A LITERAL EXPRESSION
-literalExpression = literal
+literalExpression
+    = RegularLiteral <$> literal
+-- <|> literalExpression = arrayLiteral <|> dictionaryLiteral
+  <|> SpecialLiteral <$> P.choice
+        [ s "__FILE__"
+        , s "__LINE__"
+        , s "__COLUMN__"
+        , s "__FUNCTION__"
+        ]
 
 {-
-literal-expression → array-literal­  dictionary-literal­
-literal-expression → __FILE__­  __LINE__­  __COLUMN__­  __FUNCTION__­
 array-literal → [­array-literal-items­opt­]­
 array-literal-items → array-literal-item­,­opt­  array-literal-item­,­array-literal-items­
 array-literal-item → expression­
 dictionary-literal → [­dictionary-literal-items­]­  [­:­]­
 dictionary-literal-items → dictionary-literal-item­,­opt­ dictionary-literal-item­,­dictionary-literal-items­
 dictionary-literal-item → expression­:­expression­
-GRAMMAR OF A SELF EXPRESSION
+-}
 
-self-expression → self­
-self-expression → self­.­identifier­
-self-expression → self­[­expression-list­]­
-self-expression → self­.­init­
+-- GRAMMAR OF A SELF EXPRESSION
+selfExpression :: Parser SelfExpression
+selfExpression
+    = pure Self1 <* s "self"
+  <|> pure Self2 <* s "self" <* op "." <*> identifier
+  <|> pure Self3 <* s "self" <*> parens expressionList
+  <|> pure Self4 <* s "self" <* op "." <* s "init"
+
+{-
 GRAMMAR OF A SUPERCLASS EXPRESSION
 
 superclass-expression → superclass-method-expression­  superclass-subscript-expression­ superclass-initializer-expression­
@@ -885,14 +878,23 @@ identifier-character → U+0300–U+036F, U+1DC0–U+1DFF, U+20D0–U+20FF, or U
 identifier-character → identifier-head­
 identifier-characters → identifier-character­identifier-characters­opt­
 implicit-parameter-name → $­decimal-digits­
-GRAMMAR OF A LITERAL
+-}
 
-literal → numeric-literal­  string-literal­  boolean-literal­  nil-literal­
-numeric-literal → -­opt­integer-literal­  -­opt­floating-point-literal­
-boolean-literal → true­  false­
-nil-literal → nil­
-GRAMMAR OF AN INTEGER LITERAL
+-- GRAMMAR OF A LITERAL
+literal :: Parser Literal
+literal = ws *>
+  (numericLiteral <|> stringLiteral <|> booleanLiteral <|> nilLiteral)
 
+-- numeric-literal → - ­opt ­integer-literal |­ - ­opt ­floating-point-literal­
+{-
+numericLiteral
+    = optional (op "-") integerLiteral
+  <|> optional (op "-") floatingPointLiteral
+-}
+numericLiteral = integerLiteral <|> floatingPointLiteral
+
+-- GRAMMAR OF AN INTEGER LITERAL
+{-
 integer-literal → binary-literal­
 integer-literal → octal-literal­
 integer-literal → decimal-literal­
@@ -914,8 +916,13 @@ hexadecimal-literal → 0x­hexadecimal-digit­hexadecimal-literal-characters­o
 hexadecimal-digit → Digit 0 through 9, a through f, or A through F
 hexadecimal-literal-character → hexadecimal-digit­  _­
 hexadecimal-literal-characters → hexadecimal-literal-character­hexadecimal-literal-characters­opt­
-GRAMMAR OF A FLOATING-POINT LITERAL
+-}
+-- TODO: simplified
+integerLiteral :: Parser Literal
+integerLiteral = IntegerLiteral <$> T.integer lexer
 
+-- GRAMMAR OF A FLOATING-POINT LITERAL
+{-
 floating-point-literal → decimal-literal­decimal-fraction­opt­decimal-exponent­opt­
 floating-point-literal → hexadecimal-literal­hexadecimal-fraction­opt­hexadecimal-exponent­
 decimal-fraction → .­decimal-literal­
@@ -925,8 +932,13 @@ hexadecimal-exponent → floating-point-p­sign­opt­decimal-literal­
 floating-point-e → e­  E­
 floating-point-p → p­  P­
 sign → +­  -­
-GRAMMAR OF A STRING LITERAL
+-}
+-- TODO: simplified
+floatingPointLiteral :: Parser Literal
+floatingPointLiteral = FloatingPointLiteral <$> T.float lexer
 
+--GRAMMAR OF A STRING LITERAL
+{-
 string-literal → static-string-literal­  interpolated-string-literal­
 static-string-literal → "­quoted-text­opt­"­
 quoted-text → quoted-text-item­quoted-text­opt­
@@ -938,6 +950,20 @@ interpolated-text-item → \(­expression­)­  quoted-text-item­
 escaped-character → \0­  \\­  \t­  \n­  \r­  \"­  \'­
 escaped-character → \u­{­unicode-scalar-digits­}­
 unicode-scalar-digits → Between one and eight hexadecimal digits
+-}
+-- TODO: simplified
+stringLiteral :: Parser Literal
+stringLiteral = StringLiteral <$> T.stringLiteral lexer
+
+booleanLiteral :: Parser Literal
+booleanLiteral = BooleanLiteral <$>
+     (s "true" *> pure True
+  <|> s "false" *> pure False)
+
+nilLiteral :: Parser Literal
+nilLiteral = pure NilLiteral <* s "nil"
+
+{-
 GRAMMAR OF OPERATORS
 
 operator → operator-head­operator-characters­opt­
@@ -969,6 +995,8 @@ dot-operator-head → ..­
 dot-operator-character → .­  operator-character­
 dot-operator-characters → dot-operator-character­dot-operator-characters­opt­
 -}
+-- TODO: simplified!
+operator = T.operator lexer
 
 binaryOperator = operator
 prefixOperator = operator
