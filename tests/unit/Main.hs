@@ -57,6 +57,10 @@ src2ast2src = testGroup "Source -> AST -> Source"
   , ppTest " true " "true"
   , ppTest "true" "true"
   , ppTest " \t false   " "false"
+  , ppTest "self" "self"
+  , ppTest "self . id" "self.id"
+  , ppTest "self . init" "self.init"
+  , ppTest "self [1,2,  3] " "self[1, 2, 3]"
   ]
 
 litExpMod :: Literal -> Module

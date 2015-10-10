@@ -35,5 +35,5 @@ instance Pretty Literal where
 instance Pretty SelfExpression where
   ppr Self1 = string "self"
   ppr (Self2 identifier) = string "self" <> string "." <> string identifier
-  ppr (Self3 expressions) = string "self" <> squotes (commasep (map ppr expressions))
+  ppr (Self3 expressions) = string "self" <> brackets (commasep (map ppr expressions))
   ppr Self4 = string "self" <> string "." <> string "init"
