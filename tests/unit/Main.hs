@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings  #-}
 
-import System.Exit
+import Test.Tasty
+import Test.Tasty.HUnit
 
 import Language.Swift.Quote.Parser
 import Language.Swift.Quote.Syntax
@@ -8,40 +9,60 @@ import Language.Swift.Quote.Pretty
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
 
-t input expectedModule = "\ninput = " ++ T.unpack input ++ " " ++
-  (case parse input of
-    Right m ->
-      if m == expectedModule
-      then "SUCCESS " ++ show expectedModule ++ p
-      else "Wrong module " ++ show m ++ p
-      where
-        p = "\n Pretty print:\n" ++ L.unpack (prettyPrint m) ++ "\n"
-    Left msg -> "Error parsing module: " ++ msg)
+main :: IO ()
+main = defaultMain $ testGroup "Tests " [src2ast, src2ast2src]
 
+src2ast = testGroup "Source -> AST"
+  [ litTest "1" (IntegerLiteral 1)
+  , litTest " 2" (IntegerLiteral 2)
+  , litTest "3 " (IntegerLiteral 3)
+  , litTest " 4 " (IntegerLiteral 4)
+  , litTest "\"Hello\"" (StringLiteral "Hello")
+  , litTest " \"Hello\"" (StringLiteral "Hello")
+  , litTest "\"Hello\" " (StringLiteral "Hello")
+  , litTest " \"Hello\" " (StringLiteral "Hello")
+  , litTest "true" (BooleanLiteral True)
+  , litTest "false" (BooleanLiteral False)
+  , litTest " true" (BooleanLiteral True)
+  , litTest "true " (BooleanLiteral True)
+  , litTest " true " (BooleanLiteral True)
+  , litTest " false" (BooleanLiteral False)
+  , litTest "false " (BooleanLiteral False)
+  , litTest " false " (BooleanLiteral False)
+  ]
+
+src2ast2src = testGroup "Source -> AST -> Source"
+  [ ppTest "1" "1"
+  , ppTest "2 " "2"
+  , ppTest " 3" "3"
+  , ppTest " 4 " "4"
+  , ppTest "\"Hello\"" "\"Hello\""
+  , ppTest "\"foo\"" "\"foo\""
+  , ppTest " \"x\"" "\"x\""
+  , ppTest " \"y\" " "\"y\""
+  , ppTest " true " "true"
+  , ppTest "true" "true"
+  , ppTest " \t false   " "false"
+  ]
+
+litMod :: Literal -> Module
 litMod lit = Module
   (Expression1 Nothing
     (PeRegular Nothing
       (PrimaryExpression1
         (RegularLiteral lit))) (Just []))
 
-p1 = t "1" $ litMod $ IntegerLiteral 1
-p2 = t "2 " $ litMod $ IntegerLiteral 2
-p3 = t " 3" $ litMod $ IntegerLiteral 2
+litTest :: T.Text -> Literal -> TestTree
+litTest input i = testCase ("Literal " ++ T.unpack input) $
+  parse input @?= Right (litMod i)
 
-s1  = t "\"Hello\"" $ litMod $ StringLiteral "Hello"
-s2  = t "foo" $ litMod $ StringLiteral "bar"
-s3  = t "\"foo\"" $ litMod $ StringLiteral "foo"
+wrap :: String -> String
+wrap s = "[[" ++ s ++ "]]"
+indent = "  "
 
-b1 = t "true" $ litMod $ BooleanLiteral True
-b2 = t "false" $ litMod $ BooleanLiteral False
-b3 = t " true" $ litMod $ BooleanLiteral True
-b4 = t " true " $ litMod $ BooleanLiteral True
-b5 = t " true  " $ litMod $ BooleanLiteral True
-b6 = t " false" $ litMod $ BooleanLiteral False
-
--- TODO: HUnit/HSpec.
-main :: IO ()
-main = do
-  putStrLn "\nTests:"
-  mapM_ putStrLn [p1, p2, p3, s1, s2, s3, b1, b2, b3, b4, b5]
-  exitSuccess
+-- ppTest :: T.Text -> String -> TestTree
+ppTest input s = testCase ("Literal " ++ T.unpack input) $
+  sosrc @?= Right s
+    where ast = parse input
+          osrc = fmap prettyPrint ast
+          sosrc = fmap L.unpack osrc
