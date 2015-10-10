@@ -86,5 +86,5 @@ data Declaration
   = VariableDeclaration
   | DummyDeclaration
 
-data Type = Type
+data Type = Type String -- identifier
   deriving (Show, Eq)

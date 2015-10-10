@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings  #-}
 
+import Control.Arrow (left)
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Language.Swift.Quote.Parser
+import qualified Language.Swift.Quote.Parser as P
 import Language.Swift.Quote.Syntax
 import Language.Swift.Quote.Pretty
 import qualified Data.Text.Lazy as L
@@ -15,22 +16,22 @@ main = defaultMain $ testGroup "Tests " [src2ast, src2ast2src]
 litIntExp i = litExp (IntegerLiteral i)
 
 src2ast = testGroup "Source -> AST"
-  [ expressionTest "1" $ litExpMod (IntegerLiteral 1)
-  , expressionTest " 2" $ litExpMod (IntegerLiteral 2)
-  , expressionTest "3 " $ litExpMod (IntegerLiteral 3)
-  , expressionTest " 4 " $ litExpMod (IntegerLiteral 4)
-  , expressionTest "\"Hello\"" $ litExpMod (StringLiteral "Hello")
-  , expressionTest " \"Hello\"" $ litExpMod (StringLiteral "Hello")
-  , expressionTest "\"Hello\" " $ litExpMod (StringLiteral "Hello")
-  , expressionTest " \"Hello\" " $ litExpMod (StringLiteral "Hello")
-  , expressionTest "true" $ litExpMod (BooleanLiteral True)
-  , expressionTest "false" $ litExpMod (BooleanLiteral False)
-  , expressionTest " true" $ litExpMod (BooleanLiteral True)
-  , expressionTest "true " $ litExpMod (BooleanLiteral True)
-  , expressionTest " true " $ litExpMod (BooleanLiteral True)
-  , expressionTest " false" $ litExpMod (BooleanLiteral False)
-  , expressionTest "false " $ litExpMod (BooleanLiteral False)
-  , expressionTest " false " $ litExpMod (BooleanLiteral False)
+  [ expressionTest "1" $ litExp (IntegerLiteral 1)
+  , expressionTest " 2" $ litExp (IntegerLiteral 2)
+  , expressionTest "3 " $ litExp (IntegerLiteral 3)
+  , expressionTest " 4 " $ litExp (IntegerLiteral 4)
+  , expressionTest "\"Hello\"" $ litExp (StringLiteral "Hello")
+  , expressionTest " \"Hello\"" $ litExp (StringLiteral "Hello")
+  , expressionTest "\"Hello\" " $ litExp (StringLiteral "Hello")
+  , expressionTest " \"Hello\" " $ litExp (StringLiteral "Hello")
+  , expressionTest "true" $ litExp (BooleanLiteral True)
+  , expressionTest "false" $ litExp (BooleanLiteral False)
+  , expressionTest " true" $ litExp (BooleanLiteral True)
+  , expressionTest "true " $ litExp (BooleanLiteral True)
+  , expressionTest " true " $ litExp (BooleanLiteral True)
+  , expressionTest " false" $ litExp (BooleanLiteral False)
+  , expressionTest "false " $ litExp (BooleanLiteral False)
+  , expressionTest " false " $ litExp (BooleanLiteral False)
   , expressionTest "self" $ self Self1
   , expressionTest "self.a" $ self (Self2 "a")
   , expressionTest "self. a" $ self (Self2 "a")
@@ -43,6 +44,7 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "self [1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self.init" $ self Self4
+  , expressionTest "1 is Int" $ typeCastExp (IntegerLiteral 1) "is" (Type "Int")
   ]
 
 src2ast2src = testGroup "Source -> AST -> Source"
@@ -63,8 +65,12 @@ src2ast2src = testGroup "Source -> AST -> Source"
   , ppTest "self [1,2,  3] " "self[1, 2, 3]"
   ]
 
-litExpMod :: Literal -> Module
-litExpMod lit = Module $ litExp lit
+typeCastExp :: Literal -> String -> Type -> Expression
+typeCastExp lit typeCastKind type_ =
+  Expression1 Nothing
+    (PeRegular Nothing
+      (PrimaryExpression1
+        (RegularLiteral lit))) (Just [BinaryExpression4 typeCastKind type_])
 
 litExp :: Literal -> Expression
 litExp lit =
@@ -73,16 +79,16 @@ litExp lit =
       (PrimaryExpression1
         (RegularLiteral lit))) (Just [])
 
-self :: SelfExpression -> Module
-self se = Module
-  (Expression1 Nothing
+self :: SelfExpression -> Expression
+self se =
+  Expression1 Nothing
     (PeRegular Nothing
       (PrimaryExpression2
-        se)) (Just []))
+        se)) (Just [])
 
-expressionTest :: T.Text -> Module -> TestTree
-expressionTest input expressionModule = testCase ("Expression " ++ T.unpack input) $
-  parse input @?= Right expressionModule
+expressionTest :: T.Text -> Expression -> TestTree
+expressionTest input expression = testCase ("Expression " ++ T.unpack input) $
+  P.parseExpression input @?= Right expression
 
 wrap :: String -> String
 wrap s = "[[" ++ s ++ "]]"
@@ -91,6 +97,6 @@ indent = "  "
 -- ppTest :: T.Text -> String -> TestTree
 ppTest input s = testCase ("Literal " ++ T.unpack input) $
   sosrc @?= Right s
-    where ast = parse input
+    where ast = P.parse input
           osrc = fmap prettyPrint ast
           sosrc = fmap L.unpack osrc

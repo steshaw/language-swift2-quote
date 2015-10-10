@@ -4,6 +4,7 @@ import Language.Swift.Quote.Syntax
 
 import Control.Applicative
 import Control.Monad.Identity
+import Control.Arrow (left)
 
 import Data.Text
 import qualified Text.ParserCombinators.Parsec as P
@@ -13,10 +14,18 @@ import qualified Text.Parsec.Language as L
 import Text.Parsec.Expr
 import qualified Text.Parsec.Token as T
 
+-- parserToEitheror :: Parser a -> Text -> Either String a
+-- parserToEitheror parser input = case parser input of
+--   Left err -> Left $ show err
+--   Right mod -> Right mod
+
 parse :: Text -> Either String Module
-parse input = case P.parse module_ "<stdin>" input of
-  Left err -> Left $ show err
-  Right mod -> Right mod
+parse input = left show (P.parse module_ "<stdin>" input)
+
+parseExpression :: Text -> Either String Expression
+parseExpression input = left show (P.parse expression' "<stdin>" input)
+
+expression' = ws *> expression <* ws
 
 module_ :: Parser Module
 module_ = ws *> (Module <$> expression <* ws)
@@ -1015,7 +1024,7 @@ postfixOperator = operator
 
 -- GRAMMAR OF A TYPE
 type_ :: Parser Type
-type_ = pure Type
+type_ = Type <$> identifier
 
 {-
 
