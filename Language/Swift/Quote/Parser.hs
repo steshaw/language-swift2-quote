@@ -190,6 +190,9 @@ kw' s = kw s *> pure s
 op :: String -> Parser ()
 op s = ws *> T.reservedOp lexer s
 
+op' :: String -> Parser String
+op' s = op s *> pure s
+
 ------------------------------------------------------------
 -- SUMMARY OF THE GRAMMAR
 ------------------------------------------------------------
@@ -742,10 +745,19 @@ conditionalOperator = do
 -- GRAMMAR OF A TYPE-CASTING OPERATOR
 typeCastingOperator :: Parser BinaryExpression
 typeCastingOperator
-    = BinaryExpression4 <$> kw' "is" <*> type_
-  <|> BinaryExpression4 <$> kw' "as" <*> type_
-  <|> BinaryExpression4 <$> kw' "as?" <*> type_
-  <|> BinaryExpression4 <$> kw' "as!" <*> type_
+    = try (BinaryExpression4 <$> kw' "is" <*> type_)
+  <|> try (BinaryExpression4 <$> kw' "as" <*> type_)
+  <|> try (do
+        kw <- kw' "as"
+        op <- op' "?"
+        ty <- type_
+        return $ BinaryExpression4 (kw ++ op) ty)
+  <|> try (do
+        kw <- kw' "as"
+        op <- op' "!"
+        ty <- type_
+        return $ BinaryExpression4 (kw ++ op) ty
+      )
 
 -- GRAMMAR OF A PRIMARY EXPRESSION
 primaryExpression

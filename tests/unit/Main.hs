@@ -45,6 +45,9 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self.init" $ self Self4
   , expressionTest "1 is Int" $ typeCastExp (IntegerLiteral 1) "is" (Type "Int")
+  , expressionTest "200 as Double" $ typeCastExp (IntegerLiteral 200) "as" (Type "Double")
+  , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (Type "String")
+  , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (Type "String")
   ]
 
 src2ast2src = testGroup "Source -> AST -> Source"
