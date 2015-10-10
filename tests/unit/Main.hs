@@ -37,7 +37,11 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "self . a" $ self (Self2 "a")
   , expressionTest " self . a" $ self (Self2 "a")
   , expressionTest " self . a " $ self (Self2 "a")
---  , expressionTest "self(1,2)" $ self (Self3 [litIntExp 1, litIntExp 2])
+  , expressionTest "self[1]" $ self (Self3 [litIntExp 1])
+  , expressionTest "self[1,2]" $ self (Self3 [litIntExp 1, litIntExp 2])
+  , expressionTest "self[1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
+  , expressionTest "self [1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
+  , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self.init" $ self Self4
   ]
 

@@ -170,6 +170,7 @@ semicolon = T.semi lexer
 optSemicolon = optional semicolon
 braces = T.braces lexer
 parens = T.braces lexer
+brackets = T.brackets lexer
 
 kw :: String -> Parser ()
 kw s = ws *> T.reserved lexer s
@@ -777,7 +778,7 @@ dictionary-literal-item → expression­:­expression­
 selfExpression :: Parser SelfExpression
 selfExpression = kw "self" *> P.choice
   [ try (pure Self2 <* op "." <*> identifier)
-  , try (pure Self3 <*> parens expressionList)
+  , try (pure Self3 <*> brackets expressionList)
   , try (pure Self4 <* op "." <* kw "init")
   , try (pure Self1)
   ]
