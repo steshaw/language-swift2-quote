@@ -8,7 +8,7 @@ import Language.Swift.Quote.Pretty
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
 
-t input expectedModule = "input = " ++ T.unpack input ++ " " ++
+t input expectedModule = "\ninput = " ++ T.unpack input ++ " " ++
   (case parse input of
     Right m ->
       if m == expectedModule
@@ -25,18 +25,19 @@ litMod lit = Module
         (RegularLiteral lit))) (Just []))
 
 p1 = t "1" $ litMod $ IntegerLiteral 1
-p2 = t "2" $ litMod $ IntegerLiteral 2
-p3 = t "3" $ litMod $ IntegerLiteral 2
+p2 = t "2 " $ litMod $ IntegerLiteral 2
+p3 = t " 3" $ litMod $ IntegerLiteral 2
 
 s1  = t "\"Hello\"" $ litMod $ StringLiteral "Hello"
 s2  = t "foo" $ litMod $ StringLiteral "bar"
 s3  = t "\"foo\"" $ litMod $ StringLiteral "foo"
 
 b1 = t "true" $ litMod $ BooleanLiteral True
-b2 = t " true" $ litMod $ BooleanLiteral True
-b3 = t " true " $ litMod $ BooleanLiteral True
-b4 = t " true  " $ litMod $ BooleanLiteral True
-b5 = t " false" $ litMod $ BooleanLiteral False
+b2 = t "false" $ litMod $ BooleanLiteral False
+b3 = t " true" $ litMod $ BooleanLiteral True
+b4 = t " true " $ litMod $ BooleanLiteral True
+b5 = t " true  " $ litMod $ BooleanLiteral True
+b6 = t " false" $ litMod $ BooleanLiteral False
 
 -- TODO: HUnit/HSpec.
 main :: IO ()
