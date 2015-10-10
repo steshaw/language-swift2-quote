@@ -71,23 +71,26 @@ src2ast2src = testGroup "Source -> AST -> Source"
 typeCastExp :: Literal -> String -> Type -> Expression
 typeCastExp lit typeCastKind type_ =
   Expression1 Nothing
-    (PeRegular Nothing
-      (PrimaryExpression1
-        (RegularLiteral lit))) (Just [BinaryExpression4 typeCastKind type_])
+    (PrefixExpression1 Nothing
+      (PostfixExpression1
+        (PrimaryExpression1
+          (RegularLiteral lit)))) (Just [BinaryExpression4 typeCastKind type_])
 
 litExp :: Literal -> Expression
 litExp lit =
   Expression1 Nothing
-    (PeRegular Nothing
-      (PrimaryExpression1
-        (RegularLiteral lit))) (Just [])
+    (PrefixExpression1 Nothing
+      (PostfixExpression1
+        (PrimaryExpression1
+          (RegularLiteral lit)))) (Just [])
 
 self :: SelfExpression -> Expression
 self se =
   Expression1 Nothing
-    (PeRegular Nothing
-      (PrimaryExpression2
-        se)) (Just [])
+    (PrefixExpression1 Nothing
+      (PostfixExpression1
+        (PrimaryExpression2
+          se))) (Just [])
 
 expressionTest :: T.Text -> Expression -> TestTree
 expressionTest input expression = testCase ("Expression " ++ T.unpack input) $

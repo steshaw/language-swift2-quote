@@ -10,8 +10,23 @@ data Expression
   deriving (Show, Eq)
 
 data PrefixExpression
-  = PeRegular (Maybe String) {- prefixOperator -} PrimaryExpression
-  | PeInOutExpression String -- identifier
+  = PrefixExpression1 (Maybe String) {- prefixOperator -} PostfixExpression
+  | PrefixExpression2 String -- identifier
+  deriving (Show, Eq)
+
+data PostfixExpression
+  = PostfixExpression1 PrimaryExpression
+  | PostfixExpression2 PostfixExpression String -- postfix-operator
+  | PostfixExpression3 FunctionCall
+  deriving (Show, Eq)
+
+data ExpressionElement = ExpressionElement (Maybe String) Expression
+  deriving (Show, Eq)
+
+data FunctionCall = FunctionCall PostfixExpression (Maybe (Maybe [ExpressionElement])) (Maybe Closure)
+  deriving (Show, Eq)
+
+data Closure = Closure
   deriving (Show, Eq)
 
 data PrimaryExpression

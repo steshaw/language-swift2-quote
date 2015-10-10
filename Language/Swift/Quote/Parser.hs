@@ -695,8 +695,8 @@ prefixExpression
     = do
         o <- optional prefixOperator
         pe <- postfixExpression
-        return $ PeRegular o pe
-  <|> PeInOutExpression <$> inOutExpression
+        return $ PrefixExpression1 o pe
+  <|> PrefixExpression2 <$> inOutExpression
 
 inOutExpression = op "&" *> identifier
 
@@ -811,8 +811,12 @@ superclass-expression → superclass-method-expression­  superclass-subscript-e
 superclass-method-expression → super­.­identifier­
 superclass-subscript-expression → super­[­expression-list­]­
 superclass-initializer-expression → super­.­init­
-GRAMMAR OF A CLOSURE EXPRESSION
+-}
 
+-- GRAMMAR OF A CLOSURE EXPRESSION
+
+closureExpression = pure Closure
+{-
 closure-expression → {­closure-signature­opt­statements­}­
 closure-signature → parameter-clause­function-result­opt­in­
 closure-signature → identifier-list­function-result­opt­in­
@@ -826,19 +830,28 @@ capture-specifier → weak­  unowned­  unowned(safe)­  unowned(unsafe)­
 GRAMMAR OF A IMPLICIT MEMBER EXPRESSION
 
 implicit-member-expression → .­identifier­
-GRAMMAR OF A PARENTHESIZED EXPRESSION
-
-parenthesized-expression → (­expression-element-list­opt­)­
-expression-element-list → expression-element­  expression-element­,­expression-element-list­
-expression-element → expression­  identifier­:­expression­
-GRAMMAR OF A WILDCARD EXPRESSION
-
-wildcard-expression → _­
 -}
+
+-- GRAMMAR OF A PARENTHESIZED EXPRESSION
+
+parenthesizedExpression = parens (optional expressionElementList)
+
+expressionElementList = P.sepBy1 expressionElement comma
+
+expressionElement
+    = ExpressionElement <$> pure Nothing <* semicolon <*> expression
+  <|> ExpressionElement <$> (Just <$> identifier) <* semicolon <*> expression
+
+-- GRAMMAR OF A WILDCARD EXPRESSION
+
+wildCardExpression = op "_"
 
 -- GRAMMAR OF A POSTFIX EXPRESSION
 
-postfixExpression = primaryExpression
+postfixExpression
+    = PostfixExpression1 <$> primaryExpression
+  <|> PostfixExpression2 <$> postfixExpression <*> postfixOperator
+  <|> PostfixExpression3 <$> functionCallExpression
 
 {-
 postfix-expression → postfix-expression­postfix-operator­
@@ -850,11 +863,22 @@ postfix-expression → dynamic-type-expression­
 postfix-expression → subscript-expression­
 postfix-expression → forced-value-expression­
 postfix-expression → optional-chaining-expression­
-GRAMMAR OF A FUNCTION CALL EXPRESSION
+-}
 
-function-call-expression → postfix-expression­parenthesized-expression­
-function-call-expression → postfix-expression­parenthesized-expression­opt­trailing-closure­
-trailing-closure → closure-expression­
+-- GRAMMAR OF A FUNCTION CALL EXPRESSION
+functionCallExpression
+    = FunctionCall
+      <$> postfixExpression
+      <*> (Just <$> parenthesizedExpression)
+      <*> pure Nothing
+  <|> FunctionCall
+      <$> postfixExpression
+      <*> optional parenthesizedExpression
+      <*> (Just <$> trailingClosure)
+
+trailingClosure = closureExpression
+
+{-
 GRAMMAR OF AN INITIALIZER EXPRESSION
 
 initializer-expression → postfix-expression­.­init­
