@@ -30,8 +30,8 @@ data Closure = Closure
   deriving (Show, Eq)
 
 data PrimaryExpression
-  = PrimaryExpression1 LiteralExpression
-  | PrimaryExpression2 SelfExpression
+  = PrimaryExpression2 LiteralExpression
+  | PrimaryExpression3 SelfExpression
   deriving (Show, Eq)
 
 data SelfExpression

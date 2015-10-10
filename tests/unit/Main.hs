@@ -73,7 +73,7 @@ typeCastExp lit typeCastKind type_ =
   Expression1 Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
-        (PrimaryExpression1
+        (PrimaryExpression2
           (RegularLiteral lit)))) (Just [BinaryExpression4 typeCastKind type_])
 
 litExp :: Literal -> Expression
@@ -81,7 +81,7 @@ litExp lit =
   Expression1 Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
-        (PrimaryExpression1
+        (PrimaryExpression2
           (RegularLiteral lit)))) (Just [])
 
 self :: SelfExpression -> Expression
@@ -89,7 +89,7 @@ self se =
   Expression1 Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
-        (PrimaryExpression2
+        (PrimaryExpression3
           se))) (Just [])
 
 expressionTest :: T.Text -> Expression -> TestTree

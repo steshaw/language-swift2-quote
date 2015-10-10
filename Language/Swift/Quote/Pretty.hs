@@ -34,8 +34,8 @@ instance Pretty Closure where
   ppr (Closure) = string "<closure>"
 
 instance Pretty PrimaryExpression where
-  ppr (PrimaryExpression1 literalExpression) =  ppr literalExpression
-  ppr (PrimaryExpression2 selfExpression) =  ppr selfExpression
+  ppr (PrimaryExpression2 literalExpression) =  ppr literalExpression
+  ppr (PrimaryExpression3 selfExpression) =  ppr selfExpression
 
 instance Pretty LiteralExpression where
   ppr (RegularLiteral lit) =  ppr lit

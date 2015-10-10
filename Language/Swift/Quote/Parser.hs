@@ -762,8 +762,8 @@ typeCastingOperator
 
 -- GRAMMAR OF A PRIMARY EXPRESSION
 primaryExpression
-    = PrimaryExpression1 <$> literalExpression
-  <|> PrimaryExpression2 <$> selfExpression
+    = PrimaryExpression2 <$> literalExpression
+  <|> PrimaryExpression3 <$> selfExpression
 
 {-
 primary-expression → identifier­generic-argument-clause­opt­
