@@ -18,7 +18,7 @@ parse input = case P.parse module_ "<stdin>" input of
   Right mod -> Right mod
 
 module_ :: Parser Module
-module_ = Module <$> expression <* ws
+module_ = ws *> (Module <$> expression <* ws)
 
 ------------------------------------------------------------
 -- Lexical Structure
