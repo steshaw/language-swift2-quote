@@ -170,8 +170,11 @@ optSemicolon = optional semicolon
 braces = T.braces lexer
 parens = T.braces lexer
 
-s :: String -> Parser String
-s s = ws *> P.string s
+kw :: String -> Parser ()
+kw s = ws *> T.reserved lexer s
+
+kw' :: String -> Parser String
+kw' s = kw s *> pure s
 
 op :: String -> Parser ()
 op s = ws *> T.reservedOp lexer s
@@ -245,12 +248,12 @@ loopStatement
 
 forStatement
     = do
-        _ <- s "for"
+        _ <- kw "for"
         (i, e1, e2) <- forMiddle
         b <- codeBlock
         return $ ForStatement i e1 e2 b
   <|> do
-        _ <- s "for"
+        _ <- kw "for"
         (i, e1, e2) <- parens forMiddle
         b <- codeBlock
         return $ ForStatement i e1 e2 b
@@ -271,10 +274,10 @@ forInit
 
 forInStatement :: Parser Statement
 forInStatement = do
-  _ <- s "for"
-  _ <- optional $ s "case"
+  _ <- kw "for"
+  _ <- optional $ kw "case"
   p <- pattern
-  _ <- s "in"
+  _ <- kw "in"
   e <- expression
   w <- optional whereClause
   b <- codeBlock
@@ -681,14 +684,15 @@ prefixExpression
         return $ PeRegular o pe
   <|> PeInOutExpression <$> inOutExpression
 
-inOutExpression = s "&" *> identifier
+inOutExpression = op "&" *> identifier
 
 -- GRAMMAR OF A TRY EXPRESSION
 
+tryOperator :: Parser String
 tryOperator
-    = s "try"
-  <|> s "try?"
-  <|> s "try!"
+    = kw' "try"
+  <|> kw' "try?"
+  <|> kw' "try!"
 
 -- GRAMMAR OF A BINARY EXPRESSION
 
@@ -699,10 +703,10 @@ binaryExpression
         e <- prefixExpression
         return $ BinaryExpression1 o e
   <|> do
-        ao <- assignmentOperator
+        _ <- assignmentOperator
         to <- optional tryOperator
         pe <- prefixExpression
-        return $ BinaryExpression2 ao to pe
+        return $ BinaryExpression2 to pe
   <|> do
         co <- conditionalOperator
         to <- optional tryOperator
@@ -714,12 +718,12 @@ binaryExpressions = many binaryExpression
 
 -- GRAMMAR OF AN ASSIGNMENT OPERATOR
 
-assignmentOperator = s "="
+assignmentOperator = op "="
 
 -- GRAMMAR OF A CONDITIONAL OPERATOR
 
 conditionalOperator = do
-  _ <- s "?"
+  _ <- op "?"
   to <- optional tryOperator
   e <- expression
   return (to, e)
@@ -727,10 +731,10 @@ conditionalOperator = do
 -- GRAMMAR OF A TYPE-CASTING OPERATOR
 typeCastingOperator :: Parser BinaryExpression
 typeCastingOperator
-    = BinaryExpression4 <$> s "is" <*> type_
-  <|> BinaryExpression4 <$> s "as" <*> type_
-  <|> BinaryExpression4 <$> s "as?" <*> type_
-  <|> BinaryExpression4 <$> s "as!" <*> type_
+    = BinaryExpression4 <$> kw' "is" <*> type_
+  <|> BinaryExpression4 <$> kw' "as" <*> type_
+  <|> BinaryExpression4 <$> kw' "as?" <*> type_
+  <|> BinaryExpression4 <$> kw' "as!" <*> type_
 
 -- GRAMMAR OF A PRIMARY EXPRESSION
 primaryExpression
@@ -753,10 +757,10 @@ literalExpression
     = RegularLiteral <$> literal
 -- <|> literalExpression = arrayLiteral <|> dictionaryLiteral
   <|> SpecialLiteral <$> P.choice
-        [ s "__FILE__"
-        , s "__LINE__"
-        , s "__COLUMN__"
-        , s "__FUNCTION__"
+        [ kw' "__FILE__"
+        , kw' "__LINE__"
+        , kw' "__COLUMN__"
+        , kw' "__FUNCTION__"
         ]
 
 {-
@@ -771,10 +775,10 @@ dictionary-literal-item → expression­:­expression­
 -- GRAMMAR OF A SELF EXPRESSION
 selfExpression :: Parser SelfExpression
 selfExpression
-    = pure Self1 <* s "self"
-  <|> pure Self2 <* s "self" <* op "." <*> identifier
-  <|> pure Self3 <* s "self" <*> parens expressionList
-  <|> pure Self4 <* s "self" <* op "." <* s "init"
+    = pure Self1 <* kw "self"
+  <|> pure Self2 <* kw "self" <* op "." <*> identifier
+  <|> pure Self3 <* kw "self" <*> parens expressionList
+  <|> pure Self4 <* kw "self" <* op "." <* kw "init"
 
 {-
 GRAMMAR OF A SUPERCLASS EXPRESSION
@@ -957,11 +961,11 @@ stringLiteral = StringLiteral <$> T.stringLiteral lexer
 
 booleanLiteral :: Parser Literal
 booleanLiteral = BooleanLiteral <$>
-     (s "true" *> pure True
-  <|> s "false" *> pure False)
+     (kw "true" *> pure True
+  <|> kw "false" *> pure False)
 
 nilLiteral :: Parser Literal
-nilLiteral = pure NilLiteral <* s "nil"
+nilLiteral = pure NilLiteral <* kw "nil"
 
 {-
 GRAMMAR OF OPERATORS

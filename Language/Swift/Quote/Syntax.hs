@@ -45,8 +45,7 @@ data BinaryExpression
     , bePrefixExpression :: PrefixExpression
     }
   | BinaryExpression2
-    { beAssignmentOperator :: String
-    , beTryOperator :: Maybe String
+    { beTryOperator :: Maybe String
     , bePrefixExpression :: PrefixExpression
     }
   | BinaryExpression3 (Maybe String, Expression) (Maybe String) PrefixExpression
