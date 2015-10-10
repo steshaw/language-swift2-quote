@@ -33,14 +33,14 @@ data PrimaryExpression
   = PrimaryExpression1 {- identifier -} String {- optional generic-argument-clause -} (Maybe [Type])
   | PrimaryExpression2 LiteralExpression
   | PrimaryExpression3 SelfExpression
-  | PrimaryExpression4 SuperClassExpression
+  | PrimaryExpression4 SuperclassExpression
   | PrimaryExpression5 Closure -- XXX closure-expression
   | PrimaryExpression6 (Maybe [ExpressionElement]) -- parenthesized-expression
   | PrimaryExpression7 -- TODO implicit-member-expression
   | PrimaryExpression8 -- wildcard-expression
   deriving (Show, Eq)
 
-data SuperClassExpression = SuperClassExpression -- TODO
+data SuperclassExpression = SuperclassExpression -- TODO
   deriving (Show, Eq)
 
 data SelfExpression

@@ -764,14 +764,15 @@ primaryExpression
     = PrimaryExpression1 <$> identifier <*> optional genericArgumentClause
   <|> PrimaryExpression2 <$> literalExpression
   <|> PrimaryExpression3 <$> selfExpression
-{-
-primary-expression → superclass-expression­
-primary-expression → closure-expression­
-primary-expression → parenthesized-expression­
-primary-expression → implicit-member-expression­
-primary-expression → wildcard-expression­
+  <|> PrimaryExpression4 <$> superclassExpression
+  <|> PrimaryExpression5 <$> closureExpression
+  <|> PrimaryExpression6 <$> parenthesizedExpression
+  <|> pure PrimaryExpression7 <* implicitMemberExpression
+  <|> pure PrimaryExpression8 <* wildCardExpression
 
--}
+superclassExpression = do {kw "<superclass-expression>"; pure SuperclassExpression}
+implicitMemberExpression = do {kw "<implicit-member-expression>"; pure ()}
+
 -- GRAMMAR OF A LITERAL EXPRESSION
 literalExpression
     = RegularLiteral <$> literal
