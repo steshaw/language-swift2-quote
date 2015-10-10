@@ -16,10 +16,10 @@ main = defaultMain $ testGroup "Tests " [src2ast, src2ast2src]
 litIntExp i = litExp (IntegerLiteral i)
 
 src2ast = testGroup "Source -> AST"
-  [ expressionTest "1" $ litExp (IntegerLiteral 1)
-  , expressionTest " 2" $ litExp (IntegerLiteral 2)
-  , expressionTest "3 " $ litExp (IntegerLiteral 3)
-  , expressionTest " 4 " $ litExp (IntegerLiteral 4)
+  [ expressionTest "1" $ litIntExp 1
+  , expressionTest " 2" $ litIntExp 2
+  , expressionTest "3 " $ litIntExp 3
+  , expressionTest " 10 " $ litIntExp 10
   , expressionTest "\"Hello\"" $ litExp (StringLiteral "Hello")
   , expressionTest " \"Hello\"" $ litExp (StringLiteral "Hello")
   , expressionTest "\"Hello\" " $ litExp (StringLiteral "Hello")
