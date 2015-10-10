@@ -775,11 +775,11 @@ dictionary-literal-item → expression­:­expression­
 
 -- GRAMMAR OF A SELF EXPRESSION
 selfExpression :: Parser SelfExpression
-selfExpression = P.choice
-  [ try (pure Self2 <* kw "self" <* op "." <*> identifier)
-  , try (pure Self3 <* kw "self" <*> parens expressionList)
-  , try (pure Self4 <* kw "self" <* op "." <* kw "init")
-  , try (pure Self1 <* kw "self")
+selfExpression = kw "self" *> P.choice
+  [ try (pure Self2 <* op "." <*> identifier)
+  , try (pure Self3 <*> parens expressionList)
+  , try (pure Self4 <* op "." <* kw "init")
+  , try (pure Self1)
   ]
 
 {-
