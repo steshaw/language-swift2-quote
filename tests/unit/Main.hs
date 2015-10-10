@@ -12,23 +12,33 @@ import qualified Data.Text as T
 main :: IO ()
 main = defaultMain $ testGroup "Tests " [src2ast, src2ast2src]
 
+litIntExp i = litExp (IntegerLiteral i)
+
 src2ast = testGroup "Source -> AST"
-  [ litTest "1" (IntegerLiteral 1)
-  , litTest " 2" (IntegerLiteral 2)
-  , litTest "3 " (IntegerLiteral 3)
-  , litTest " 4 " (IntegerLiteral 4)
-  , litTest "\"Hello\"" (StringLiteral "Hello")
-  , litTest " \"Hello\"" (StringLiteral "Hello")
-  , litTest "\"Hello\" " (StringLiteral "Hello")
-  , litTest " \"Hello\" " (StringLiteral "Hello")
-  , litTest "true" (BooleanLiteral True)
-  , litTest "false" (BooleanLiteral False)
-  , litTest " true" (BooleanLiteral True)
-  , litTest "true " (BooleanLiteral True)
-  , litTest " true " (BooleanLiteral True)
-  , litTest " false" (BooleanLiteral False)
-  , litTest "false " (BooleanLiteral False)
-  , litTest " false " (BooleanLiteral False)
+  [ expressionTest "1" $ litExpMod (IntegerLiteral 1)
+  , expressionTest " 2" $ litExpMod (IntegerLiteral 2)
+  , expressionTest "3 " $ litExpMod (IntegerLiteral 3)
+  , expressionTest " 4 " $ litExpMod (IntegerLiteral 4)
+  , expressionTest "\"Hello\"" $ litExpMod (StringLiteral "Hello")
+  , expressionTest " \"Hello\"" $ litExpMod (StringLiteral "Hello")
+  , expressionTest "\"Hello\" " $ litExpMod (StringLiteral "Hello")
+  , expressionTest " \"Hello\" " $ litExpMod (StringLiteral "Hello")
+  , expressionTest "true" $ litExpMod (BooleanLiteral True)
+  , expressionTest "false" $ litExpMod (BooleanLiteral False)
+  , expressionTest " true" $ litExpMod (BooleanLiteral True)
+  , expressionTest "true " $ litExpMod (BooleanLiteral True)
+  , expressionTest " true " $ litExpMod (BooleanLiteral True)
+  , expressionTest " false" $ litExpMod (BooleanLiteral False)
+  , expressionTest "false " $ litExpMod (BooleanLiteral False)
+  , expressionTest " false " $ litExpMod (BooleanLiteral False)
+  , expressionTest "self" $ self Self1
+  , expressionTest "self.a" $ self (Self2 "a")
+  , expressionTest "self. a" $ self (Self2 "a")
+  , expressionTest "self . a" $ self (Self2 "a")
+  , expressionTest " self . a" $ self (Self2 "a")
+  , expressionTest " self . a " $ self (Self2 "a")
+--  , expressionTest "self(1,2)" $ self (Self3 [litIntExp 1, litIntExp 2])
+  , expressionTest "self.init" $ self Self4
   ]
 
 src2ast2src = testGroup "Source -> AST -> Source"
@@ -45,16 +55,26 @@ src2ast2src = testGroup "Source -> AST -> Source"
   , ppTest " \t false   " "false"
   ]
 
-litMod :: Literal -> Module
-litMod lit = Module
-  (Expression1 Nothing
+litExpMod :: Literal -> Module
+litExpMod lit = Module $ litExp lit
+
+litExp :: Literal -> Expression
+litExp lit =
+  Expression1 Nothing
     (PeRegular Nothing
       (PrimaryExpression1
-        (RegularLiteral lit))) (Just []))
+        (RegularLiteral lit))) (Just [])
 
-litTest :: T.Text -> Literal -> TestTree
-litTest input i = testCase ("Literal " ++ T.unpack input) $
-  parse input @?= Right (litMod i)
+self :: SelfExpression -> Module
+self se = Module
+  (Expression1 Nothing
+    (PeRegular Nothing
+      (PrimaryExpression2
+        se)) (Just []))
+
+expressionTest :: T.Text -> Module -> TestTree
+expressionTest input expressionModule = testCase ("Expression " ++ T.unpack input) $
+  parse input @?= Right expressionModule
 
 wrap :: String -> String
 wrap s = "[[" ++ s ++ "]]"

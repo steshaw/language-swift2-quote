@@ -8,6 +8,7 @@ import Control.Monad.Identity
 import Data.Text
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Text (Parser)
+import Text.Parsec (try)
 import qualified Text.Parsec.Language as L
 import Text.Parsec.Expr
 import qualified Text.Parsec.Token as T
@@ -774,11 +775,12 @@ dictionary-literal-item → expression­:­expression­
 
 -- GRAMMAR OF A SELF EXPRESSION
 selfExpression :: Parser SelfExpression
-selfExpression
-    = pure Self1 <* kw "self"
-  <|> pure Self2 <* kw "self" <* op "." <*> identifier
-  <|> pure Self3 <* kw "self" <*> parens expressionList
-  <|> pure Self4 <* kw "self" <* op "." <* kw "init"
+selfExpression = P.choice
+  [ try (pure Self2 <* kw "self" <* op "." <*> identifier)
+  , try (pure Self3 <* kw "self" <*> parens expressionList)
+  , try (pure Self4 <* kw "self" <* op "." <* kw "init")
+  , try (pure Self1 <* kw "self")
+  ]
 
 {-
 GRAMMAR OF A SUPERCLASS EXPRESSION
