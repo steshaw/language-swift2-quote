@@ -673,9 +673,11 @@ balanced-token → [­balanced-tokens­opt­]­
 balanced-token → {­balanced-tokens­opt­}­
 balanced-token → Any identifier, keyword, literal, or operator
 balanced-token → Any punctuation except (­, )­, [­, ]­, {­, or }­
-Expressions
-
 -}
+
+------------------------------------------------------------
+-- Expressions
+------------------------------------------------------------
 
 -- GRAMMAR OF AN EXPRESSION
 
@@ -687,7 +689,6 @@ expression = Expression1
 
 expressionList :: Parser [Expression]
 expressionList = P.sepBy1 expression comma
-
 
 -- GRAMMAR OF A PREFIX EXPRESSION
 
