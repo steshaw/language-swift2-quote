@@ -180,6 +180,7 @@ optSemicolon = optional semicolon
 braces = T.braces lexer
 parens = T.braces lexer
 brackets = T.brackets lexer
+angles = T.angles lexer
 
 kw :: String -> Parser ()
 kw s = ws *> T.reserved lexer s
@@ -297,11 +298,7 @@ forInStatement = do
   b <- codeBlock
   pure $ ForInStatement p e w b
 
-
-
 {-
-
-
 GRAMMAR OF A WHILE STATEMENT
 
 while-statement → while­condition-clause­code-block­
@@ -430,11 +427,13 @@ requirement → conformance-requirement­  same-type-requirement­
 conformance-requirement → type-identifier­:­type-identifier­
 conformance-requirement → type-identifier­:­protocol-composition-type­
 same-type-requirement → type-identifier­==­type­
-GRAMMAR OF A GENERIC ARGUMENT CLAUSE
+-}
 
-generic-argument-clause → <­generic-argument-list­>­
-generic-argument-list → generic-argument­  generic-argument­,­generic-argument-list­
-generic-argument → type­
+-- GRAMMAR OF A GENERIC ARGUMENT CLAUSE
+genericArgumentClause = angles genericArgumentList
+genericArgumentList = P.many1 type_
+
+{-
 Declarations
 
 GRAMMAR OF A DECLARATION
@@ -762,13 +761,10 @@ typeCastingOperator
 
 -- GRAMMAR OF A PRIMARY EXPRESSION
 primaryExpression
-    = PrimaryExpression2 <$> literalExpression
+    = PrimaryExpression1 <$> identifier <*> optional genericArgumentClause
+  <|> PrimaryExpression2 <$> literalExpression
   <|> PrimaryExpression3 <$> selfExpression
-
 {-
-primary-expression → identifier­generic-argument-clause­opt­
-primary-expression → literal-expression­
-primary-expression → self-expression­
 primary-expression → superclass-expression­
 primary-expression → closure-expression­
 primary-expression → parenthesized-expression­

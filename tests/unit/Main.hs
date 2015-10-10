@@ -44,6 +44,10 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "self [1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self.init" $ self Self4
+  , expressionTest "foo" $ primary1 "foo"
+  , expressionTest "a" $ primary1 "a"
+  , expressionTest "a1" $ primary1 "a1"
+  , expressionTest "xs" $ primary1 "xs"
   , expressionTest "1 is Int" $ typeCastExp (IntegerLiteral 1) "is" (Type "Int")
   , expressionTest "200 as Double" $ typeCastExp (IntegerLiteral 200) "as" (Type "Double")
   , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (Type "String")
@@ -67,6 +71,13 @@ src2ast2src = testGroup "Source -> AST -> Source"
   , ppTest "self . init" "self.init"
   , ppTest "self [1,2,  3] " "self[1, 2, 3]"
   ]
+
+primary1 :: String -> Expression
+primary1 identifier =
+  Expression1 Nothing
+    (PrefixExpression1 Nothing
+      (PostfixExpression1
+        (PrimaryExpression1 identifier Nothing))) (Just [])
 
 typeCastExp :: Literal -> String -> Type -> Expression
 typeCastExp lit typeCastKind type_ =

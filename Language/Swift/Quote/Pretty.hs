@@ -34,6 +34,7 @@ instance Pretty Closure where
   ppr (Closure) = string "<closure>"
 
 instance Pretty PrimaryExpression where
+  ppr (PrimaryExpression1 identifier genericArgumentList) = ppr identifier <> angles (ppr genericArgumentList)
   ppr (PrimaryExpression2 literalExpression) =  ppr literalExpression
   ppr (PrimaryExpression3 selfExpression) =  ppr selfExpression
 
@@ -53,3 +54,6 @@ instance Pretty SelfExpression where
   ppr (Self2 identifier) = string "self" <> string "." <> string identifier
   ppr (Self3 expressions) = string "self" <> brackets (commasep (map ppr expressions))
   ppr Self4 = string "self" <> string "." <> string "init"
+
+instance Pretty Type where
+  ppr (Type string) = ppr string
