@@ -105,16 +105,28 @@ data ForInit
   | FiExpressionList [Expression]
   deriving (Show, Eq)
 
-data CodeBlock = CodeBlock
+data CodeBlock = CodeBlock (Maybe [Statement])
   deriving (Show, Eq)
 
 data Pattern = Pattern
   deriving (Show, Eq)
 
 data Declaration
-  = VariableDeclaration
+  = ImportDeclaration (Maybe Attributes) (Maybe ImportKind) ImportPath
+  | VariableDeclaration
   | DummyDeclaration
   deriving (Show, Eq)
 
+data Attributes = DummyAttributes
+  deriving (Show, Eq)
+
 data Type = Type String -- identifier
+  deriving (Show, Eq)
+
+type ImportPath = [ImportPathIdentifier]
+type ImportKind = String
+
+data ImportPathIdentifier
+  = ImportIdentifier String
+  | ImportOperator String
   deriving (Show, Eq)

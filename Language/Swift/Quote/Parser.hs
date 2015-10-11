@@ -221,9 +221,6 @@ whileStatement = return WhileStatement
 repeatWhileStatement :: Parser Statement
 repeatWhileStatement = return RepeatWhileStatement
 
-codeBlock :: Parser CodeBlock
-codeBlock = return CodeBlock
-
 variableDeclaration :: Parser Declaration
 variableDeclaration = return VariableDeclaration
 
@@ -232,9 +229,6 @@ pattern = return Pattern
 
 whereClause :: Parser Expression
 whereClause = expression -- TODO
-
-declaration :: Parser Declaration
-declaration = return DummyDeclaration
 
 ------------------------------------------------------------
 -- Statements
@@ -439,6 +433,9 @@ genericArgumentList = P.many1 type_
 ------------------------------------------------------------
 
 -- GRAMMAR OF A DECLARATION
+declaration :: Parser Declaration
+declaration
+  = importDeclaration
 {-
 declaration → import-declaration­
 declaration → constant-declaration­
@@ -462,16 +459,42 @@ declarations → declaration­declarations­opt­
 topLevelDeclaration :: Parser (Maybe [Statement])
 topLevelDeclaration = optional statements
 
+-- GRAMMAR OF A CODE BLOCK
+
+codeBlock :: Parser CodeBlock
+codeBlock = CodeBlock <$> braces (optional statements)
+
+-- GRAMMAR OF AN IMPORT DECLARATION
+
+importDeclaration
+  = ImportDeclaration
+      <$> optional attributes
+      <*  kw "import"
+      <*> optional importKind
+      <*> importPath
+
+attributes = pure DummyAttributes
+
+importKind :: Parser ImportKind
+importKind = P.choice
+  [ kw' "typealias"
+  , kw' "struct"
+  , kw' "class"
+  , kw' "enum"
+  , kw' "protocol"
+  , kw' "var"
+  , kw' "function"
+  ]
+
+importPath :: Parser ImportPath
+importPath = P.sepBy1 importPathIdentifier (op ".")
+
+importPathIdentifier :: Parser ImportPathIdentifier
+importPathIdentifier
+    = ImportIdentifier <$> identifier
+  <|> ImportOperator <$> operator
+
 {-
-GRAMMAR OF A CODE BLOCK
-
-code-block → {­statements­opt­}­
-GRAMMAR OF AN IMPORT DECLARATION
-
-import-declaration → attributes­opt­import­import-kind­opt­import-path­
-import-kind → typealias­  struct­  class­  enum­  protocol­  var­  func­
-import-path → import-path-identifier­  import-path-identifier­.­import-path­
-import-path-identifier → identifier­  operator­
 GRAMMAR OF A CONSTANT DECLARATION
 
 constant-declaration → attributes­opt­declaration-modifiers­opt­let­pattern-initializer-list­
