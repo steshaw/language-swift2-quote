@@ -6,8 +6,10 @@ import Data.Text.Lazy (Text)
 import Text.PrettyPrint.Mainland
 
 prettyPrint :: Module -> Text
-prettyPrint (Module
-  (Expression1 Nothing (PrefixExpression1 Nothing primaryExpression) (Just [])))
+prettyPrint m = error "<module>" -- TODO
+
+ppExpression :: Expression -> Text
+ppExpression (Expression1 Nothing (PrefixExpression1 Nothing primaryExpression) (Just []))
     = prettyLazyText 100 $ ppr primaryExpression
 
 instance Pretty Expression where

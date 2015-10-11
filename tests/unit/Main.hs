@@ -114,6 +114,6 @@ indent = "  "
 -- ppTest :: T.Text -> String -> TestTree
 ppTest input s = testCase ("Literal " ++ T.unpack input) $
   sosrc @?= Right s
-    where ast = P.parse input
-          osrc = fmap prettyPrint ast
+    where ast = P.parseExpression input
+          osrc = fmap ppExpression ast
           sosrc = fmap L.unpack osrc

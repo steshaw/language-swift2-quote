@@ -28,7 +28,7 @@ parseExpression input = left show (P.parse expression' "<stdin>" input)
 expression' = ws *> expression <* ws
 
 module_ :: Parser Module
-module_ = ws *> (Module <$> expression <* ws)
+module_ = ws *> (Module <$> topLevelDeclaration <* ws)
 
 ------------------------------------------------------------
 -- Lexical Structure
@@ -242,7 +242,7 @@ declaration = return DummyDeclaration
 
 -- GRAMMAR OF A STATEMENT
 statement
-    = expression <* optSemicolon
+    = ExpressionStatement <$> expression <* optSemicolon
   -- <|> declaration <* optSemicolon
   -- <|> loopStatement <* optSemicolon
   -- <|> branchStatement <* optSemicolon
@@ -252,6 +252,7 @@ statement
   -- <|> doStatement <* optSemicolon
   -- <|> compilerControlStatement <* optSemicolon
 
+statements :: Parser [Statement]
 statements = many statement
 
 -- GRAMMAR OF A LOOP STATEMENT
@@ -433,10 +434,12 @@ same-type-requirement → type-identifier­==­type­
 genericArgumentClause = angles genericArgumentList
 genericArgumentList = P.many1 type_
 
-{-
-Declarations
+------------------------------------------------------------
+-- Declarations
+------------------------------------------------------------
 
-GRAMMAR OF A DECLARATION
+-- GRAMMAR OF A DECLARATION
+{-
 declaration → import-declaration­
 declaration → constant-declaration­
 declaration → variable-declaration­
@@ -452,10 +455,14 @@ declaration → extension-declaration­
 declaration → subscript-declaration­
 declaration → operator-declaration­
 declarations → declaration­declarations­opt­
+-}
 
-GRAMMAR OF A TOP-LEVEL DECLARATION
+-- GRAMMAR OF A TOP-LEVEL DECLARATION
 
-top-level-declaration → statements­opt­
+topLevelDeclaration :: Parser (Maybe [Statement])
+topLevelDeclaration = optional statements
+
+{-
 GRAMMAR OF A CODE BLOCK
 
 code-block → {­statements­opt­}­

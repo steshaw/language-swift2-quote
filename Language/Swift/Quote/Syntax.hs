@@ -2,7 +2,7 @@ module Language.Swift.Quote.Syntax where
 
 import Data.Text (Text)
 
-data Module = Module Expression
+data Module = Module (Maybe [Statement])
   deriving (Show, Eq)
 
 data Expression
@@ -77,7 +77,8 @@ data BinaryExpression
   deriving (Show, Eq)
 
 data Statement
-  = ForStatement
+  = ExpressionStatement Expression
+  | ForStatement
     { forInitE :: Maybe ForInit
     , forCondE :: Maybe Expression
     , forNextE :: Maybe Expression
@@ -97,18 +98,23 @@ data Statement
   | CompilerControlStatement
   | WhileStatement
   | RepeatWhileStatement
+  deriving (Show, Eq)
 
 data ForInit
   = FiDeclaration Declaration
   | FiExpressionList [Expression]
+  deriving (Show, Eq)
 
 data CodeBlock = CodeBlock
+  deriving (Show, Eq)
 
 data Pattern = Pattern
+  deriving (Show, Eq)
 
 data Declaration
   = VariableDeclaration
   | DummyDeclaration
+  deriving (Show, Eq)
 
 data Type = Type String -- identifier
   deriving (Show, Eq)
