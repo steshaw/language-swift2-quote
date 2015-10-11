@@ -25,6 +25,9 @@ parse input = left show (P.parse module_ "<stdin>" input)
 parseExpression :: Text -> Either String Expression
 parseExpression input = left show (P.parse expression' "<stdin>" input)
 
+parseDeclaration :: Text -> Either String Declaration
+parseDeclaration input = left show (P.parse declaration "<stdin>" input)
+
 expression' = ws *> expression <* ws
 
 module_ :: Parser Module
@@ -483,7 +486,7 @@ importKind = P.choice
   , kw' "enum"
   , kw' "protocol"
   , kw' "var"
-  , kw' "function"
+  , kw' "func"
   ]
 
 importPath :: Parser ImportPath

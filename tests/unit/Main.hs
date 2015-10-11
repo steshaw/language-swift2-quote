@@ -52,7 +52,12 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "200 as Double" $ typeCastExp (IntegerLiteral 200) "as" (Type "Double")
   , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (Type "String")
   , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (Type "String")
+  , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
+  , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
+  , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
   ]
+
+import_ = ImportDeclaration (Just DummyAttributes)
 
 src2ast2src = testGroup "Source -> AST -> Source"
   [ ppTest "1" "1"
@@ -104,8 +109,12 @@ self se =
           se))) (Just [])
 
 expressionTest :: T.Text -> Expression -> TestTree
-expressionTest input expression = testCase ("Expression " ++ T.unpack input) $
+expressionTest input expression = testCase ("Expression: [[" ++ T.unpack input ++ "]]") $
   P.parseExpression input @?= Right expression
+
+declarationTest :: T.Text -> Declaration -> TestTree
+declarationTest input declaration = testCase ("Declaration: [[" ++ T.unpack input ++ "]]") $
+  P.parseDeclaration input @?= Right declaration
 
 wrap :: String -> String
 wrap s = "[[" ++ s ++ "]]"
