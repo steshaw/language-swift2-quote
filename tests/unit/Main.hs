@@ -66,8 +66,6 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "a++" $ Expression Nothing (PrefixExpression1 Nothing
       (PostfixOperator (PostfixExpression1 (PrimaryExpression1
         (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "++")) []
-  , initializerTest "1.init" $ initTest1
-  , initializerTest "foo.init" $ initTest2
   , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
   , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
   , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
@@ -75,9 +73,13 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "foo(1)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) [])] Nothing))) []
   , expressionTest "foo(1, 2)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) [])] Nothing))) []
   , expressionTest "foo(1, 2, isBlue: false)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) []),ExpressionElement (Just "isBlue") (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (BooleanLiteral False))))) [])] Nothing))) []
-  , expressionTest "a.init" $ primary1 "fail"
-  , expressionTest "a.self" $ primary1 "fail"
-  , expressionTest "a.dynamicType" $ primary1 "fail"
+  , expressionTest "1.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1)))))) []
+  , expressionTest "a.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "foo.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a.self" $ Expression Nothing (PrefixExpression1 Nothing (PostfixSelf (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a.dynamicType" $ Expression Nothing (PrefixExpression1 Nothing (PostfixDynamicType (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a!" $ Expression Nothing (PrefixExpression1 Nothing (PostfixForcedValue (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a?" $ Expression Nothing (PrefixExpression1 Nothing (PostfixOptionChaining (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
   ]
 
 fooEmptyFunCall = (Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])
@@ -153,10 +155,6 @@ wrap s = "[[" ++ s ++ "]]"
 expressionTest :: T.Text -> Expression -> TestTree
 expressionTest input expression = testCase ("Expression: " ++ wrap (T.unpack input)) $
   P.parseExpression input @?= Right expression
-
-initializerTest :: T.Text -> PostfixExpression -> TestTree
-initializerTest input expression = testCase ("initializer: " ++ wrap (T.unpack input)) $
-  P.parseInitializer input @?= Right expression
 
 declarationTest :: T.Text -> Declaration -> TestTree
 declarationTest input declaration = testCase ("Declaration: " ++ wrap (T.unpack input)) $

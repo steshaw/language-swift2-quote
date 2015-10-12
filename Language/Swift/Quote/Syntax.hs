@@ -27,6 +27,8 @@ data PostfixExpression
   | PostfixExpression4Initalizer PostfixExpression
   | PostfixSelf PostfixExpression
   | PostfixDynamicType PostfixExpression
+  | PostfixForcedValue PostfixExpression
+  | PostfixOptionChaining PostfixExpression
   deriving (Show, Eq)
 
 data ExpressionElement = ExpressionElement (Maybe String) Expression

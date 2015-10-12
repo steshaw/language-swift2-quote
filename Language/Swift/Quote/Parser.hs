@@ -943,7 +943,9 @@ postfixExpression = postfixExpressionOuter
 postfixExpressionOuter :: Parser PostfixExpression
 postfixExpressionOuter = do
   e1 <- postfixExpressionInner
-  e2 <- postfixOpTail e1
+  e2 <- (op "!" *> pure (PostfixForcedValue e1))
+        <|> (op "?" *> pure (PostfixOptionChaining e1))
+        <|> postfixOpTail e1
         <|> dotTail e1
         <|> (FunctionCallE <$> functionCallTail e1)
         <|> pure e1
@@ -955,15 +957,15 @@ postfixExpressionOuter = do
       dotTail e = do
         o <- op "."
         trace ("\n\n  got dot = " ++ show o ++ "\n\n") $
-          postfixInitTail e <|> postfixSelfTail e <|> explicitMemberExpressionTail e
+          postfixDynamicTypeTail e
+            <|> postfixInitTail e
+            <|> postfixSelfTail e
+            <|> explicitMemberExpressionTail e
 
 postfixExpressionInner :: Parser PostfixExpression
 postfixExpressionInner = PostfixExpression1 <$> primaryExpression
 {-
-postfix-expression → dynamic-type-expression­
 postfix-expression → subscript-expression­
-postfix-expression → forced-value-expression­
-postfix-expression → optional-chaining-expression­
 -}
 
 -- GRAMMAR OF A FUNCTION CALL EXPRESSION
@@ -1018,12 +1020,16 @@ postfixDynamicTypeTail postfixE = do
 GRAMMAR OF A SUBSCRIPT EXPRESSION
 
 subscript-expression → postfix-expression­[­expression-list­]­
-GRAMMAR OF A FORCED-VALUE EXPRESSION
+-}
 
-forced-value-expression → postfix-expression­!­
-GRAMMAR OF AN OPTIONAL-CHAINING EXPRESSION
 
-optional-chaining-expression → postfix-expression­?­
+--GRAMMAR OF A FORCED-VALUE EXPRESSION
+-- See PostfixForcedValue
+
+-- GRAMMAR OF AN OPTIONAL-CHAINING EXPRESSION
+-- See PostfixOptionChaining
+
+{-
 Lexical Structure
 
 GRAMMAR OF AN IDENTIFIER
