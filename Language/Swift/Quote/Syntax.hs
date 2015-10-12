@@ -12,9 +12,17 @@ data PrefixExpression
   | PrefixExpression2 String -- identifier
   deriving (Show, Eq)
 
+data IdG = IdG
+  { idgIdentifier :: String
+  , idgGenericArgs :: Maybe [Type]
+  }
+  deriving (Show, Eq)
+
 data PostfixExpression
   = PostfixExpression1 PrimaryExpression
-  | PostfixExpression2 PostfixExpression String -- postfix-operator
+  | PostfixOperator PostfixExpression String -- postfix-operator
+  | ExplicitMemberExpressionDigits PostfixExpression String -- digits
+  | ExplicitMemberExpressionIdentifier PostfixExpression IdG
   | FunctionCallE FunctionCall
   | PostfixExpression4Initalizer PrefixExpression
   deriving (Show, Eq)
@@ -29,7 +37,7 @@ data Closure = Closure [Statement]
   deriving (Show, Eq)
 
 data PrimaryExpression
-  = PrimaryExpression1 {- identifier -} String {- optional generic-argument-clause -} (Maybe [Type])
+  = PrimaryExpression1 IdG
   | PrimaryExpression2 LiteralExpression
   | PrimaryExpression3 SelfExpression
   | PrimaryExpression4 SuperclassExpression

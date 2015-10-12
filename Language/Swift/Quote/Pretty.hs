@@ -21,7 +21,7 @@ instance Pretty PrefixExpression where
 
 instance Pretty PostfixExpression where
   ppr (PostfixExpression1 primaryExpression) = ppr primaryExpression
-  ppr (PostfixExpression2 prefixExpression postfixOperator) = ppr prefixExpression <> ppr postfixOperator
+  ppr (PostfixOperator prefixExpression postfixOperator) = ppr prefixExpression <> ppr postfixOperator
   ppr (FunctionCallE functionCall) = ppr functionCall
   ppr (PostfixExpression4Initalizer prefixExpression) = ppr prefixExpression <> string ".init"
 
@@ -40,7 +40,7 @@ instance Pretty Closure where
   ppr (Closure statements) = braces (ppr statements)
 
 instance Pretty PrimaryExpression where
-  ppr (PrimaryExpression1 identifier genericArgumentList) =
+  ppr (PrimaryExpression1 (IdG identifier genericArgumentList)) =
     ppr identifier <> if null genericArgumentList then string "" else angles (ppr genericArgumentList)
   ppr (PrimaryExpression2 literalExpression) = ppr literalExpression
   ppr (PrimaryExpression3 selfExpression) = ppr selfExpression

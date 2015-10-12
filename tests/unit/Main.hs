@@ -47,6 +47,8 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "self [1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self.init" $ self Self4
+  , expressionTest "a.123" $ self Self4
+  , expressionTest "a.b" $ self Self4
   , expressionTest "foo" $ primary1 "foo"
   , expressionTest "a" $ primary1 "a"
   , expressionTest "a1" $ primary1 "a1"
@@ -55,10 +57,13 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "200 as Double" $ typeCastExp (IntegerLiteral 200) "as" (Type "Double")
   , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (Type "String")
   , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (Type "String")
+  , expressionTest "a++" $ Expression Nothing (PrefixExpression1 Nothing
+      (PostfixOperator (PostfixExpression1 (PrimaryExpression1
+        (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "++")) []
   , initializerTest "1.init" $ PostfixExpression4Initalizer (PrefixExpression1 Nothing
       (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1)))))
-  , initializerTest "foo.init" $ PostfixExpression4Initalizer
-      (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression1 "foo" Nothing)))
+  , initializerTest "foo.init" $ PostfixExpression4Initalizer (PrefixExpression1 Nothing
+        (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))))
   , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
   , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
   , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
@@ -97,7 +102,7 @@ primary1 identifier =
   Expression Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
-        (PrimaryExpression1 identifier Nothing))) []
+        (PrimaryExpression1 (IdG identifier Nothing)))) []
 
 typeCastExp :: Literal -> String -> Type -> Expression
 typeCastExp lit typeCastKind type_ =

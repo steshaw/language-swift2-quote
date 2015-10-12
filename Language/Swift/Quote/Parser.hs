@@ -9,6 +9,7 @@ import Control.Monad.Identity
 import Control.Arrow (left)
 import Data.Maybe
 import Data.Text
+import Debug.Trace
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Text (Parser)
 import Text.Parsec (try)
@@ -833,7 +834,7 @@ typeCastingOperator
 -- GRAMMAR OF A PRIMARY EXPRESSION
 primaryExpression :: Parser PrimaryExpression
 primaryExpression
-    = PrimaryExpression1 <$> identifier <*> optional genericArgumentClause
+    = PrimaryExpression1 <$> (IdG <$> identifier <*> optional genericArgumentClause)
   <|> PrimaryExpression2 <$> literalExpression
   <|> PrimaryExpression3 <$> selfExpression
   <|> PrimaryExpression4 <$> superclassExpression
@@ -930,14 +931,29 @@ wildCardExpression = op "_"
 -- GRAMMAR OF A POSTFIX EXPRESSION
 
 postfixExpression :: Parser PostfixExpression
-postfixExpression = P.choice
+postfixExpression = postfixExpressionOuter
+
+postfixExpressionOuter :: Parser PostfixExpression
+postfixExpressionOuter = do
+  e1 <- postfixExpressionInner
+  e2 <- try (tailE e1) <|> pure e1
+  pure e2
+    where
+      tailE :: PostfixExpression -> Parser PostfixExpression
+      tailE e = do
+        o <- operator
+        trace ("\n\n  got operator = " ++ show o ++ "\n\n") $
+          if o == "."
+          then explicitMemberExpressionTail e
+          else pure $ PostfixOperator e o
+
+postfixExpressionInner :: Parser PostfixExpression
+postfixExpressionInner = P.choice
   [ PostfixExpression1 <$> primaryExpression
-  , PostfixExpression2 <$> postfixExpression <*> postfixOperator
   , FunctionCallE <$> functionCallExpression
   , initializerExpression
   ]
 {-
-postfix-expression → explicit-member-expression­
 postfix-expression → postfix-self-expression­
 postfix-expression → dynamic-type-expression­
 postfix-expression → subscript-expression­
@@ -969,11 +985,16 @@ initializerExpression = do
   _ <- kw "init"
   return $ PostfixExpression4Initalizer e
 
-{-
-GRAMMAR OF AN EXPLICIT MEMBER EXPRESSION
+-- GRAMMAR OF AN EXPLICIT MEMBER EXPRESSION
 
-explicit-member-expression → postfix-expression­.­decimal-digits­
-explicit-member-expression → postfix-expression­.­identifier­generic-argument-clause­opt­
+-- We have already parsed postExpression and ".".
+explicitMemberExpressionTail :: PostfixExpression -> Parser PostfixExpression
+explicitMemberExpressionTail postfixE
+    = try (ExplicitMemberExpressionDigits <$> pure postfixE <*> decimalDigits)
+  <|> ExplicitMemberExpressionIdentifier <$> pure postfixE <*>
+        (IdG <$> identifier <*> optional genericArgumentClause)
+
+{-
 GRAMMAR OF A SELF EXPRESSION
 
 postfix-self-expression → postfix-expression­.­self­
@@ -1035,6 +1056,10 @@ numericLiteral :: Parser Literal
 numericLiteral = integerLiteral <|> floatingPointLiteral
 
 -- GRAMMAR OF AN INTEGER LITERAL
+
+decimalDigits :: Parser String
+decimalDigits = P.many1 P.digit
+
 {-
 integer-literal → binary-literal­
 integer-literal → octal-literal­
