@@ -121,30 +121,30 @@ self se =
         (PrimaryExpression3
           se))) (Just [])
 
+wrap :: String -> String
+wrap s = "[[" ++ s ++ "]]"
+
 expressionTest :: T.Text -> Expression -> TestTree
-expressionTest input expression = testCase ("Expression: [[" ++ T.unpack input ++ "]]") $
+expressionTest input expression = testCase ("Expression: " ++ wrap (T.unpack input)) $
   P.parseExpression input @?= Right expression
 
 declarationTest :: T.Text -> Declaration -> TestTree
-declarationTest input declaration = testCase ("Declaration: [[" ++ T.unpack input ++ "]]") $
+declarationTest input declaration = testCase ("Declaration: " ++ wrap (T.unpack input)) $
   P.parseDeclaration input @?= Right declaration
 
-pp1 :: Either d Expression -> Either d L.Text
-pp1 = right (prettyLazyText 100 . ppr)
-
-pp2 :: Either d FunctionCall -> Either d L.Text
-pp2 = right (prettyLazyText 100 . ppr)
+pp :: Pretty pretty => Either d pretty -> Either d L.Text
+pp = right (prettyLazyText 100 . ppr)
 
 ppExpTest :: T.Text -> String -> TestTree
-ppExpTest input s = testCase ("Expression " ++ T.unpack input) $
+ppExpTest input s = testCase ("Expression " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
   sosrc @?= Right s
     where ast = P.parseExpression input
-          osrc = pp1 ast
+          osrc = pp ast
           sosrc = fmap L.unpack osrc
 
 ppFunctionCall :: T.Text -> String -> TestTree
-ppFunctionCall input s = testCase ("FunctionCall " ++ T.unpack input) $
+ppFunctionCall input s = testCase ("FunctionCall " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
   sosrc @?= Right s
     where ast = P.parseFunctionCall input
-          osrc = pp2 ast
+          osrc = pp ast
           sosrc = fmap L.unpack osrc
