@@ -37,6 +37,7 @@ parseInitializer = parseIt initializerExpression
 initializerExpression :: Parser PostfixExpression
 initializerExpression = do
   pfe <- postfixExpression
+  _ <- op "."
   initializerExpressionTail pfe
 
 module_ :: Parser Module
@@ -956,7 +957,6 @@ postfixExpressionInner :: Parser PostfixExpression
 postfixExpressionInner = P.choice
   [ PostfixExpression1 <$> primaryExpression
   , FunctionCallE <$> functionCallExpression
-  , initializerExpression
   ]
 {-
 postfix-expression → postfix-self-expression­
@@ -983,9 +983,9 @@ trailingClosure :: Parser Closure
 trailingClosure = closureExpression
 
 -- GRAMMAR OF AN INITIALIZER EXPRESSION
+-- We have already parsed postfixExpression and ".".
 initializerExpressionTail :: PostfixExpression -> Parser PostfixExpression
 initializerExpressionTail postfixE = do
-  _ <- op "."
   _ <- kw "init"
   return $ PostfixExpression4Initalizer postfixE
 
