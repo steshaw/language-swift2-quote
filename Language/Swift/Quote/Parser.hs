@@ -8,7 +8,6 @@ import Control.Applicative
 import Control.Monad.Identity
 import Control.Arrow (left)
 import Data.Text
-import Debug.Trace
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Text (Parser)
 import Text.Parsec (try)
@@ -912,7 +911,10 @@ implicit-member-expression → .­identifier­
 -- GRAMMAR OF A PARENTHESIZED EXPRESSION
 
 parenthesizedExpression :: Parser [ExpressionElement]
-parenthesizedExpression = parens expressionElementList
+parenthesizedExpression = P.choice
+  [ try (parens (pure []))
+  , parens expressionElementList
+  ]
 
 expressionElementList :: Parser [ExpressionElement]
 expressionElementList = expressionElement `P.sepBy` comma
@@ -929,7 +931,7 @@ wildCardExpression = op "_"
 -- GRAMMAR OF A POSTFIX EXPRESSION
 
 postfixExpression :: Parser PostfixExpression
-postfixExpression = trace "\nin postfixExpression\n" $ P.choice
+postfixExpression = P.choice
   [ try (PostfixExpression3 <$> functionCallExpression)
   , try (PostfixExpression1 <$> primaryExpression)
   , try (PostfixExpression2 <$> postfixExpression <*> postfixOperator)
