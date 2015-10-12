@@ -773,7 +773,7 @@ prefixExpression1 :: Parser PrefixExpression
 prefixExpression1 = do
   o <- optional prefixOperator
   pe <- postfixExpression
-  return $ PrefixExpression1 o pe
+  return $ PrefixOperator o pe
 
 inOutExpression :: Parser PrefixExpression
 inOutExpression = InOutExpression <$> (op "&" *> identifier)

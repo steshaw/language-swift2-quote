@@ -8,7 +8,7 @@ data Expression
   deriving (Show, Eq)
 
 data PrefixExpression
-  = PrefixExpression1 (Maybe String) {- prefixOperator -} PostfixExpression
+  = PrefixOperator (Maybe String) {- prefixOperator -} PostfixExpression
   | InOutExpression String -- identifier
   deriving (Show, Eq)
 

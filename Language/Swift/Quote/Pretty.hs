@@ -15,7 +15,7 @@ instance Pretty Expression where
     ppr optTryOperator <> ppr prefixExpression -- <> ppr optBinaryExpressions
 
 instance Pretty PrefixExpression where
-  ppr (PrefixExpression1 optPrefixOperator primaryExpression)
+  ppr (PrefixOperator optPrefixOperator primaryExpression)
     = ppr optPrefixOperator <> ppr primaryExpression
   ppr (InOutExpression identifier) = string "&" <> string identifier
 
