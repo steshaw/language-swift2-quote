@@ -41,7 +41,7 @@ initializerExpression = do
   postfixInitTail pfe
 
 module_ :: Parser Module
-module_ = ws *> (Module <$> topLevelDeclaration <* ws)
+module_ = Module <$> topLevelDeclaration
 
 ------------------------------------------------------------
 -- Lexical Structure
@@ -277,15 +277,15 @@ whereClause = expression -- TODO
 -- GRAMMAR OF A STATEMENT
 statement :: Parser Statement
 statement
-    = ExpressionStatement <$> expression <* optSemicolon
-  <|> DeclarationStatement <$> declaration <* optSemicolon
-  <|> loopStatement <* optSemicolon
-  <|> branchStatement <* optSemicolon
-  <|> labeledStatement <* optSemicolon
-  <|> controlTransferStatement <* optSemicolon
-  <|> deferStatement <* optSemicolon
-  <|> doStatement <* optSemicolon
-  <|> compilerControlStatement <* optSemicolon
+    = DeclarationStatement <$> declaration <* optSemicolon
+  -- <|> ExpressionStatement <$> expression <* optSemicolon
+  -- <|> loopStatement <* optSemicolon
+  -- <|> branchStatement <* optSemicolon
+  -- <|> labeledStatement <* optSemicolon
+  -- <|> controlTransferStatement <* optSemicolon
+  -- <|> deferStatement <* optSemicolon
+  -- <|> doStatement <* optSemicolon
+  -- <|> compilerControlStatement <* optSemicolon
 
 statements :: Parser [Statement]
 statements = many statement
@@ -478,7 +478,7 @@ genericArgumentClause = angles (P.many1 type_)
 -- GRAMMAR OF A DECLARATION
 declaration :: Parser Declaration
 declaration
-  = importDeclaration
+  = trace "\n\ninside declaration\n\n" $ importDeclaration
 {-
 declaration → import-declaration­
 declaration → constant-declaration­

@@ -66,9 +66,6 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "a++" $ Expression Nothing (PrefixExpression1 Nothing
       (PostfixOperator (PostfixPrimary (PrimaryExpression1
         (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "++")) []
-  , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
-  , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
-  , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
   , expressionTest "foo()" $ fooEmptyFunCall
   , expressionTest "foo(1)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) [])] Nothing))) []
   , expressionTest "foo(1, 2)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) [])] Nothing))) []
@@ -81,7 +78,15 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "a!" $ Expression Nothing (PrefixExpression1 Nothing (PostfixForcedValue (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
   , expressionTest "a?" $ Expression Nothing (PrefixExpression1 Nothing (PostfixOptionChaining (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
   , expressionTest "a[1]" $ Expression Nothing (PrefixExpression1 Nothing (Subscript (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) [Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []])) []
+
+  , moduleTest "import foo" $ importModule Nothing ["foo"]
+  , moduleTest "import foo.math.BitVector" $ importModule Nothing ["foo", "math", "BitVector"]
+  , moduleTest "import typealias foo.a.b" $ importModule (Just "typealias") ["foo", "a", "b"]
   ]
+
+dummyModule = Module Nothing
+
+importModule optImportKind imports = Module (Just [DeclarationStatement (import_ optImportKind (map ImportIdentifier imports))])
 
 fooEmptyFunCall = (Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])
 
@@ -153,13 +158,13 @@ self se =
 wrap :: String -> String
 wrap s = "[[" ++ s ++ "]]"
 
-expressionTest :: T.Text -> Expression -> TestTree
-expressionTest input expression = testCase ("Expression: " ++ wrap (T.unpack input)) $
-  P.parseExpression input @?= Right expression
+moduleTest :: T.Text -> Module -> TestTree
+moduleTest input module_ = testCase ("module: " ++ wrap (T.unpack input)) $
+  P.parse input @?= Right module_
 
-declarationTest :: T.Text -> Declaration -> TestTree
-declarationTest input declaration = testCase ("Declaration: " ++ wrap (T.unpack input)) $
-  P.parseDeclaration input @?= Right declaration
+expressionTest :: T.Text -> Expression -> TestTree
+expressionTest input expression = testCase ("expression: " ++ wrap (T.unpack input)) $
+  P.parseExpression input @?= Right expression
 
 pp :: Pretty pretty => Either d pretty -> Either d L.Text
 pp = right (prettyLazyText 100 . ppr)
