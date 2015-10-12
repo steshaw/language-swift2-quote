@@ -932,7 +932,7 @@ postfixExpression :: Parser PostfixExpression
 postfixExpression = P.choice
   [ PostfixExpression1 <$> primaryExpression
   , PostfixExpression2 <$> postfixExpression <*> postfixOperator
-  , PostfixExpression3 <$> functionCallExpression
+  , FunctionCallE <$> functionCallExpression
   , initializerExpression
   ]
 {-

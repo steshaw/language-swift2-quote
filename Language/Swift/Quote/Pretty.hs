@@ -23,7 +23,7 @@ instance Pretty PostfixExpression where
   ppr (PostfixExpression1 primaryExpression) = ppr primaryExpression
   ppr (PostfixExpression2 optPrefixOperator primaryExpression)
     = ppr optPrefixOperator <> ppr primaryExpression -- TODO
-  ppr (PostfixExpression3 functionCall) = ppr functionCall
+  ppr (FunctionCallE functionCall) = ppr functionCall
   ppr (PostfixExpression4Initalizer prefixExpression) = ppr prefixExpression <> string ".init"
 
 instance Pretty FunctionCall where
