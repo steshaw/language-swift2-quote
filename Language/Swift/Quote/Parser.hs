@@ -14,11 +14,6 @@ import Text.Parsec (try)
 import qualified Text.Parsec.Language as L
 import qualified Text.Parsec.Token as T
 
--- parserToEitheror :: Parser a -> Text -> Either String a
--- parserToEitheror parser input = case parser input of
---   Left err -> Left $ show err
---   Right mod -> Right mod
-
 parseIt :: Parser a -> Text -> Either String a
 parseIt p input = left show (P.parse (ws *> p <* ws) "<stdin>" input)
 
