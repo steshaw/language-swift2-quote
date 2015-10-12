@@ -34,6 +34,11 @@ parseFunctionCall = parseIt functionCallExpression
 parseInitializer :: Text -> Either String PostfixExpression
 parseInitializer = parseIt initializerExpression
 
+initializerExpression :: Parser PostfixExpression
+initializerExpression = do
+  pfe <- postfixExpression
+  initializerExpressionTail pfe
+
 module_ :: Parser Module
 module_ = ws *> (Module <$> topLevelDeclaration <* ws)
 
@@ -944,7 +949,7 @@ postfixExpressionOuter = do
         o <- operator
         trace ("\n\n  got operator = " ++ show o ++ "\n\n") $
           if o == "."
-          then explicitMemberExpressionTail e
+          then try (explicitMemberExpressionTail e) <|>  initializerExpressionTail e
           else pure $ PostfixOperator e o
 
 postfixExpressionInner :: Parser PostfixExpression
@@ -978,12 +983,11 @@ trailingClosure :: Parser Closure
 trailingClosure = closureExpression
 
 -- GRAMMAR OF AN INITIALIZER EXPRESSION
-initializerExpression :: Parser PostfixExpression
-initializerExpression = do
-  e <- prefixExpression
+initializerExpressionTail :: PostfixExpression -> Parser PostfixExpression
+initializerExpressionTail postfixE = do
   _ <- op "."
   _ <- kw "init"
-  return $ PostfixExpression4Initalizer e
+  return $ PostfixExpression4Initalizer postfixE
 
 -- GRAMMAR OF AN EXPLICIT MEMBER EXPRESSION
 

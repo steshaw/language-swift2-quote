@@ -24,7 +24,7 @@ data PostfixExpression
   | ExplicitMemberExpressionDigits PostfixExpression String -- digits
   | ExplicitMemberExpressionIdentifier PostfixExpression IdG
   | FunctionCallE FunctionCall
-  | PostfixExpression4Initalizer PrefixExpression
+  | PostfixExpression4Initalizer PostfixExpression
   deriving (Show, Eq)
 
 data ExpressionElement = ExpressionElement (Maybe String) Expression
