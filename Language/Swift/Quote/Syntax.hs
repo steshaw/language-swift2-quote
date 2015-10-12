@@ -25,6 +25,7 @@ data PostfixExpression
   | ExplicitMemberExpressionIdentifier PostfixExpression IdG
   | FunctionCallE FunctionCall
   | PostfixExpression4Initalizer PostfixExpression
+  | PostfixSelf PostfixExpression
   deriving (Show, Eq)
 
 data ExpressionElement = ExpressionElement (Maybe String) Expression

@@ -38,7 +38,7 @@ initializerExpression :: Parser PostfixExpression
 initializerExpression = do
   pfe <- postfixExpression
   _ <- op "."
-  initializerExpressionTail pfe
+  postfixInitTail pfe
 
 module_ :: Parser Module
 module_ = ws *> (Module <$> topLevelDeclaration <* ws)
@@ -88,7 +88,7 @@ reservedWordsStatements =
   , "return"
   , "switch"
   , "where"
-  , "while."
+  , "while"
   ]
 
 reservedWordsExpressionsTypes :: [String]
@@ -955,7 +955,7 @@ postfixExpressionOuter = do
       dotTail e = do
         o <- op "."
         trace ("\n\n  got dot = " ++ show o ++ "\n\n") $
-          initializerExpressionTail e <|> explicitMemberExpressionTail e
+          postfixInitTail e <|> postfixSelfTail e <|> explicitMemberExpressionTail e
 
 postfixExpressionInner :: Parser PostfixExpression
 postfixExpressionInner = PostfixExpression1 <$> primaryExpression
@@ -985,8 +985,9 @@ trailingClosure = closureExpression
 
 -- GRAMMAR OF AN INITIALIZER EXPRESSION
 -- We have already parsed postfixExpression and ".".
-initializerExpressionTail :: PostfixExpression -> Parser PostfixExpression
-initializerExpressionTail postfixE = do
+postfixInitTail :: PostfixExpression -> Parser PostfixExpression
+postfixInitTail postfixE = do
+  _ <- trace "within postfixInitTail" $ pure ()
   _ <- kw "init"
   return $ PostfixExpression4Initalizer postfixE
 
@@ -999,10 +1000,15 @@ explicitMemberExpressionTail postfixE
   <|> ExplicitMemberExpressionIdentifier <$> pure postfixE <*>
         (IdG <$> identifier <*> optional genericArgumentClause)
 
-{-
-GRAMMAR OF A SELF EXPRESSION
+-- GRAMMAR OF A SELF EXPRESSION
+-- We have already parsed postfixExpression and ".".
+postfixSelfTail :: PostfixExpression -> Parser PostfixExpression
+postfixSelfTail postfixE = do
+  _ <- trace "within postfixSelfTail" $ pure ()
+  _ <- kw "self"
+  return $ PostfixSelf postfixE
 
-postfix-self-expression → postfix-expression­.­self­
+{-
 GRAMMAR OF A DYNAMIC TYPE EXPRESSION
 
 dynamic-type-expression → postfix-expression­.­dynamicType­
