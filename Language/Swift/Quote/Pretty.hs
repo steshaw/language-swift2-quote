@@ -25,6 +25,7 @@ instance Pretty PostfixExpression where
   ppr (FunctionCallE functionCall) = ppr functionCall
   ppr (PostfixExpression4Initalizer postfixExpression) = ppr postfixExpression <> string ".init"
   ppr (PostfixSelf postfixExpression) = ppr postfixExpression <> string ".self"
+  ppr (PostfixDynamicType postfixExpression) = ppr postfixExpression <> string ".dynamicType"
 
 instance Pretty FunctionCall where
   ppr (FunctionCall postfixExpression expressionElements optClosure) =

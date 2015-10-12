@@ -960,7 +960,6 @@ postfixExpressionOuter = do
 postfixExpressionInner :: Parser PostfixExpression
 postfixExpressionInner = PostfixExpression1 <$> primaryExpression
 {-
-postfix-expression → postfix-self-expression­
 postfix-expression → dynamic-type-expression­
 postfix-expression → subscript-expression­
 postfix-expression → forced-value-expression­
@@ -1008,10 +1007,14 @@ postfixSelfTail postfixE = do
   _ <- kw "self"
   return $ PostfixSelf postfixE
 
-{-
-GRAMMAR OF A DYNAMIC TYPE EXPRESSION
+-- GRAMMAR OF A DYNAMIC TYPE EXPRESSION
+postfixDynamicTypeTail :: PostfixExpression -> Parser PostfixExpression
+postfixDynamicTypeTail postfixE = do
+  _ <- trace "within postfixDynamicTypeTail" $ pure ()
+  _ <- kw "dynamicType"
+  return $ PostfixDynamicType postfixE
 
-dynamic-type-expression → postfix-expression­.­dynamicType­
+{-
 GRAMMAR OF A SUBSCRIPT EXPRESSION
 
 subscript-expression → postfix-expression­[­expression-list­]­

@@ -26,6 +26,7 @@ data PostfixExpression
   | FunctionCallE FunctionCall
   | PostfixExpression4Initalizer PostfixExpression
   | PostfixSelf PostfixExpression
+  | PostfixDynamicType PostfixExpression
   deriving (Show, Eq)
 
 data ExpressionElement = ExpressionElement (Maybe String) Expression
