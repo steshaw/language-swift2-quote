@@ -35,6 +35,8 @@ src2ast = testGroup "Source -> AST"
   , expressionTest " false" $ litExp (BooleanLiteral False)
   , expressionTest "false " $ litExp (BooleanLiteral False)
   , expressionTest " false " $ litExp (BooleanLiteral False)
+  , expressionTest "&a" $ Expression Nothing (InOutExpression "a") []
+  , expressionTest "& b" $ Expression Nothing (InOutExpression "b") []
   , expressionTest "self" $ self Self1
   , expressionTest "self.a" $ self (Self2 "a")
   , expressionTest "self. a" $ self (Self2 "a")

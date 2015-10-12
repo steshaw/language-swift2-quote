@@ -767,15 +767,16 @@ expressionList = expression `P.sepBy1` comma
 -- GRAMMAR OF A PREFIX EXPRESSION
 
 prefixExpression :: Parser PrefixExpression
-prefixExpression
-    = do
-        o <- optional prefixOperator
-        pe <- postfixExpression
-        return $ PrefixExpression1 o pe
-  <|> PrefixExpression2 <$> inOutExpression
+prefixExpression = try inOutExpression <|> prefixExpression1
 
-inOutExpression :: Parser String
-inOutExpression = op "&" *> identifier
+prefixExpression1 :: Parser PrefixExpression
+prefixExpression1 = do
+  o <- optional prefixOperator
+  pe <- postfixExpression
+  return $ PrefixExpression1 o pe
+
+inOutExpression :: Parser PrefixExpression
+inOutExpression = InOutExpression <$> (op "&" *> identifier)
 
 -- GRAMMAR OF A TRY EXPRESSION
 

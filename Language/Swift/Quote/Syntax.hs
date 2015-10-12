@@ -9,7 +9,7 @@ data Expression
 
 data PrefixExpression
   = PrefixExpression1 (Maybe String) {- prefixOperator -} PostfixExpression
-  | PrefixExpression2 String -- identifier
+  | InOutExpression String -- identifier
   deriving (Show, Eq)
 
 data IdG = IdG
