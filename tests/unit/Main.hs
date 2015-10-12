@@ -53,8 +53,8 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "self [1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self.init" $ self Self4
-  , expressionTest "a.123" $ self Self4
-  , expressionTest "a.b" $ self Self4
+  , expressionTest "a.123" $ Expression Nothing (PrefixExpression1 Nothing (ExplicitMemberExpressionDigits (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "123")) []
+  , expressionTest "a.b" $ Expression Nothing (PrefixExpression1 Nothing (ExplicitMemberExpressionIdentifier (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) (IdG {idgIdentifier = "b", idgGenericArgs = Nothing}))) []
   , expressionTest "foo" $ primary1 "foo"
   , expressionTest "a" $ primary1 "a"
   , expressionTest "a1" $ primary1 "a1"

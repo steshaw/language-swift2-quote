@@ -943,16 +943,19 @@ postfixExpression = postfixExpressionOuter
 postfixExpressionOuter :: Parser PostfixExpression
 postfixExpressionOuter = do
   e1 <- postfixExpressionInner
-  e2 <- tailE e1 <|> (FunctionCallE <$> functionCallTail e1) <|> pure e1
+  e2 <- postfixOpTail e1
+        <|> dotTail e1
+        <|> (FunctionCallE <$> functionCallTail e1)
+        <|> pure e1
   pure e2
     where
-      tailE :: PostfixExpression -> Parser PostfixExpression
-      tailE e = do
-        o <- operator
-        trace ("\n\n  got operator = " ++ show o ++ "\n\n") $
-          case o of
-            "." -> try (explicitMemberExpressionTail e) <|>  initializerExpressionTail e
-            _   -> pure $ PostfixOperator e o
+      postfixOpTail :: PostfixExpression -> Parser PostfixExpression
+      postfixOpTail e = PostfixOperator <$> pure e <*> operator
+      dotTail :: PostfixExpression -> Parser PostfixExpression
+      dotTail e = do
+        o <- op "."
+        trace ("\n\n  got dot = " ++ show o ++ "\n\n") $
+          initializerExpressionTail e <|> explicitMemberExpressionTail e
 
 postfixExpressionInner :: Parser PostfixExpression
 postfixExpressionInner = PostfixExpression1 <$> primaryExpression
