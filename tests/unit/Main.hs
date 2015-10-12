@@ -60,23 +60,20 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "a++" $ Expression Nothing (PrefixExpression1 Nothing
       (PostfixOperator (PostfixExpression1 (PrimaryExpression1
         (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "++")) []
-
   , initializerTest "1.init" $ initTest1
   , expressionTest "1.init" $ Expression Nothing (PrefixExpression1 Nothing initTest1) []
-
   , initializerTest "foo.init" $ initTest2
   , expressionTest "foo.init" $ Expression Nothing (PrefixExpression1 Nothing initTest2) []
-
   , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
   , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
   , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
   ]
 
+initTest1 :: PostfixExpression
 initTest1 = PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))
 
+initTest2 :: PostfixExpression
 initTest2 = PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing})))
-
-wrongPostfixExpression = PostfixExpression1 (PrimaryExpression1 (IdG "hello" Nothing))
 
 import_ :: Maybe ImportKind -> ImportPath -> Declaration
 import_ = ImportDeclaration (Just DummyAttributes)
