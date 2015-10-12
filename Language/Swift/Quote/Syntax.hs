@@ -122,16 +122,19 @@ data ForInit
 data CodeBlock = CodeBlock (Maybe [Statement])
   deriving (Show, Eq)
 
-data Pattern = Pattern
-  deriving (Show, Eq)
-
 data Declaration
-  = ImportDeclaration (Maybe Attributes) (Maybe ImportKind) ImportPath
+  = ImportDeclaration [Attribute] (Maybe ImportKind) ImportPath
   | VariableDeclaration
+  | ConstantDeclaration [Attribute] [DeclarationModifier] [PatternInitializer]
   | DummyDeclaration
   deriving (Show, Eq)
 
-data Attributes = DummyAttributes
+data DeclarationModifier
+  = Modifier String
+  | AccessLevelModifier String
+  deriving (Show, Eq)
+
+data Attribute = DummyAttribute
   deriving (Show, Eq)
 
 data Type = Type String -- identifier
@@ -143,4 +146,11 @@ type ImportKind = String
 data ImportPathIdentifier
   = ImportIdentifier String
   | ImportOperator String
+  deriving (Show, Eq)
+
+data PatternInitializer = PatternInitializer Pattern (Maybe Expression)
+  deriving (Show, Eq)
+
+data Pattern
+  = ExpressionPattern Expression
   deriving (Show, Eq)

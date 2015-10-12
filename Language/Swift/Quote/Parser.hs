@@ -15,6 +15,7 @@ import Text.Parsec.Text (Parser)
 import Text.Parsec (try)
 import qualified Text.Parsec.Language as L
 import qualified Text.Parsec.Token as T
+import Text.Parsec.Prim (parserFail)
 
 parseIt :: Parser a -> Text -> Either String a
 parseIt p input = left show (P.parse (ws *> p <* ws) "<stdin>" input)
@@ -148,24 +149,16 @@ keywordsinContexts =
 
 reservedOperators :: [String]
 reservedOperators =
-  [ "("
-  , ")"
-  , "{"
-  , "}"
-  , "["
-  , "]"
-  , "."
-  , ","
-  , ":"
-  , ";"
-  , "="
-  , "@"
-  , "#"
-  , "&" -- as a prefix operator
-  , "->"
-  , "`"
-  , "?"
-  , "!"
+  [ "+"
+  , "-"
+  , "/"
+  , "*"
+  -- , "=" -- FIXME this interferes with constantDeclaration.
+  -- , "&" -- as a prefix operator
+  -- , "->"
+  -- , "`"
+  -- , "?"
+  -- , "!"
   ]
 
 -- Ignore Whitespace
@@ -178,14 +171,14 @@ swiftLangDef = T.LanguageDef
   , T.nestedComments = True
   , T.identStart = P.letter
   , T.identLetter = P.alphaNum
-  , T.opStart = P.oneOf "+-*/<>="
-  , T.opLetter = P.oneOf "+-*/<>="
   , T.reservedNames = reservedWordsDeclarations
                           ++ reservedWordsStatements
                           ++ reservedWordsExpressionsTypes
                           ++ keywordsInPatterns
                           ++ keywordsinContexts
-  , T.reservedOpNames = [ "+", "-", "*", "/", "<", ">", "<=", ">="]
+  , T.opStart = P.oneOf "+-*/"
+  , T.opLetter = P.oneOf "+-*/"
+  , T.reservedOpNames = reservedOperators
   , T.caseSensitive = True
   }
 
@@ -263,9 +256,6 @@ repeatWhileStatement = return RepeatWhileStatement
 
 variableDeclaration :: Parser Declaration
 variableDeclaration = return VariableDeclaration
-
-pattern :: Parser Pattern
-pattern = return Pattern
 
 whereClause :: Parser Expression
 whereClause = expression -- TODO
@@ -478,10 +468,9 @@ genericArgumentClause = angles (P.many1 type_)
 -- GRAMMAR OF A DECLARATION
 declaration :: Parser Declaration
 declaration
-  = importDeclaration
+    = importDeclaration
+  <|> constantDeclaration
 {-
-declaration → import-declaration­
-declaration → constant-declaration­
 declaration → variable-declaration­
 declaration → typealias-declaration­
 declaration → function-declaration­
@@ -512,13 +501,13 @@ codeBlock = CodeBlock <$> braces (optional statements)
 importDeclaration :: Parser Declaration
 importDeclaration
   = ImportDeclaration
-      <$> optional attributes
+      <$> (fromMaybe [] <$> optional attributes)
       <*  kw "import"
       <*> optional importKind
       <*> importPath
 
-attributes :: Parser Attributes
-attributes = pure DummyAttributes
+attributes :: Parser [Attribute]
+attributes = P.many attribute
 
 importKind :: Parser ImportKind
 importKind = P.choice
@@ -539,13 +528,26 @@ importPathIdentifier
     = ImportIdentifier <$> identifier
   <|> ImportOperator <$> operator
 
-{-
-GRAMMAR OF A CONSTANT DECLARATION
+-- GRAMMAR OF A CONSTANT DECLARATION
 
-constant-declaration → attributes­opt­declaration-modifiers­opt­let­pattern-initializer-list­
-pattern-initializer-list → pattern-initializer­  pattern-initializer­,­pattern-initializer-list­
-pattern-initializer → pattern­initializer­opt­
-initializer → =­expression­
+constantDeclaration :: Parser Declaration
+constantDeclaration = do
+  attr <- fromMaybe [] <$> optional attributes
+  decl <- fromMaybe [] <$> optional declarationModifiers
+  _ <- kw "let"
+  is <- patternInitializerList
+  return $ ConstantDeclaration attr decl is
+
+patternInitializerList :: Parser [PatternInitializer]
+patternInitializerList = patternInitializer `P.sepBy1` comma
+
+patternInitializer :: Parser PatternInitializer
+patternInitializer = PatternInitializer <$> pattern <*> optional initializer
+
+initializer :: Parser Expression
+initializer = op "=" *> expression
+
+{-
 GRAMMAR OF A VARIABLE DECLARATION
 
 variable-declaration → variable-declaration-head­pattern-initializer-list­
@@ -685,26 +687,77 @@ precedence-clause → precedence­precedence-level­
 precedence-level → A decimal integer between 0 and 255, inclusive
 associativity-clause → associativity­associativity­
 associativity → left­  right­  none­
-GRAMMAR OF A DECLARATION MODIFIER
+-}
 
-declaration-modifier → class­  convenience­  dynamic­  final­  infix­  lazy­  mutating­  nonmutating­  optional­  override­  postfix­  prefix­  required­  static­ unowned­  unowned­(­safe­)­  unowned­(­unsafe­)­  weak­
-declaration-modifier → access-level-modifier­
-declaration-modifiers → declaration-modifier­declaration-modifiers­opt­
-access-level-modifier → internal­  internal­(­set­)­
-access-level-modifier → private­  private­(­set­)­
-access-level-modifier → public­  public­(­set­)­
-Patterns
+-- GRAMMAR OF A DECLARATION MODIFIER
 
-GRAMMAR OF A PATTERN
+declarationModifier :: Parser DeclarationModifier
+declarationModifier = modifier <|> accessLevelModifier
 
-pattern → wildcard-pattern­type-annotation­opt­
-pattern → identifier-pattern­type-annotation­opt­
-pattern → value-binding-pattern­
-pattern → tuple-pattern­type-annotation­opt­
-pattern → enum-case-pattern­
-pattern → optional-pattern­
-pattern → type-casting-pattern­
-pattern → expression-pattern­
+declarationModifiers :: Parser [DeclarationModifier]
+declarationModifiers = P.many1 declarationModifier
+
+modifier :: Parser DeclarationModifier
+modifier = Modifier <$> P.choice
+  [ kw' "class"
+  , kw' "convenience"
+  , kw' "dynamic"
+  , kw' "final"
+  , kw' "infix"
+  , kw' "lazy"
+  , kw' "mutating"
+  , kw' "nonmutating"
+  , kw' "optional"
+  , kw' "override"
+  , kw' "postfix"
+  , kw' "prefix"
+  , kw' "required"
+  , kw' "static"
+  , unowned
+  , kw' "weak"
+  ]
+
+unowned :: Parser String
+unowned = P.choice
+    [ try (unownedP "safe")
+    , try (unownedP "unsafe")
+    , kw' "unowned"
+    ]
+  where
+    unownedP :: String -> Parser String
+    unownedP t = do
+      k <- kw' "unowned"
+      l <- op' "("
+      s <- kw' t
+      r <- op' ")"
+      pure (Prelude.concat [k, l, s, r])
+
+accessLevelModifier :: Parser DeclarationModifier
+accessLevelModifier = do
+  i <- kw' "internal" <|> kw' "private" <|> kw' "public"
+  p <- fromMaybe "" <$> optional setInParens
+  return $ Modifier (i ++ p)
+  where
+    setInParens :: Parser String
+    setInParens = parens (kw "set") *> pure "(set)"
+
+------------------------------------------------------------
+-- Patterns
+------------------------------------------------------------
+
+-- GRAMMAR OF A PATTERN
+pattern :: Parser Pattern
+pattern = ExpressionPattern <$> expression
+-- pattern → wildcard-pattern­type-annotation­opt­
+-- pattern → identifier-pattern­type-annotation­opt­
+-- pattern → value-binding-pattern­
+-- pattern → tuple-pattern­type-annotation­opt­
+-- pattern → enum-case-pattern­
+-- pattern → optional-pattern­
+-- pattern → type-casting-pattern­
+-- pattern → expression-pattern­
+
+{-
 GRAMMAR OF A WILDCARD PATTERN
 
 wildcard-pattern → _­
@@ -733,10 +786,16 @@ as-pattern → pattern­as­type­
 GRAMMAR OF AN EXPRESSION PATTERN
 
 expression-pattern → expression­
-Attributes
+-}
 
-GRAMMAR OF AN ATTRIBUTE
+------------------------------------------------------------
+-- Attributes
+------------------------------------------------------------
 
+-- GRAMMAR OF AN ATTRIBUTE
+attribute :: Parser Attribute
+attribute = parserFail "attribute not implemented" -- TODO
+{-
 attribute → @­attribute-name­attribute-argument-clause­opt­
 attribute-name → identifier­
 attribute-argument-clause → (­balanced-tokens­opt­)­

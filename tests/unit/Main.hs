@@ -84,6 +84,8 @@ src2ast = testGroup "Source -> AST"
   , moduleTest "import typealias foo.a.b" $ singleImport (Just "typealias") ["foo", "a", "b"]
 
   , moduleTest "print(\"Hello world\\n\")" $ Module [ExpressionStatement (Expression Nothing (PrefixOperator Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (StringLiteral "Hello world\n"))))) [])] Nothing))) [])]
+
+  , moduleTest "let n = 1" $ Module [ DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (ExpressionPattern (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "n", idgGenericArgs = Nothing})))) [BinaryExpression2 {beTryOperator = Nothing, bePrefixExpression = PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))}])) Nothing])]
   ]
 
 emptyModule = Module []
@@ -99,7 +101,7 @@ initTest2 :: PostfixExpression
 initTest2 = PostfixExpression4Initalizer (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing})))
 
 import_ :: Maybe ImportKind -> ImportPath -> Declaration
-import_ = ImportDeclaration (Just DummyAttributes)
+import_ = ImportDeclaration []
 
 src2ast2src :: TestTree
 src2ast2src = testGroup "Source -> AST -> Source"
