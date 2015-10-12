@@ -94,34 +94,34 @@ src2ast2src = testGroup "Source -> AST -> Source"
 
 primary1 :: String -> Expression
 primary1 identifier =
-  Expression1 Nothing
+  Expression Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
-        (PrimaryExpression1 identifier Nothing))) (Just [])
+        (PrimaryExpression1 identifier Nothing))) []
 
 typeCastExp :: Literal -> String -> Type -> Expression
 typeCastExp lit typeCastKind type_ =
-  Expression1 Nothing
+  Expression Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
         (PrimaryExpression2
-          (RegularLiteral lit)))) (Just [BinaryExpression4 typeCastKind type_])
+          (RegularLiteral lit)))) [BinaryExpression4 typeCastKind type_]
 
 litExp :: Literal -> Expression
 litExp lit =
-  Expression1 Nothing
+  Expression Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
         (PrimaryExpression2
-          (RegularLiteral lit)))) (Just [])
+          (RegularLiteral lit)))) []
 
 self :: SelfExpression -> Expression
 self se =
-  Expression1 Nothing
+  Expression Nothing
     (PrefixExpression1 Nothing
       (PostfixExpression1
         (PrimaryExpression3
-          se))) (Just [])
+          se))) []
 
 wrap :: String -> String
 wrap s = "[[" ++ s ++ "]]"

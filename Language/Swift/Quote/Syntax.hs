@@ -4,7 +4,7 @@ data Module = Module (Maybe [Statement])
   deriving (Show, Eq)
 
 data Expression
-  = Expression1 (Maybe String) PrefixExpression (Maybe [BinaryExpression])
+  = Expression (Maybe String) PrefixExpression [BinaryExpression]
   deriving (Show, Eq)
 
 data PrefixExpression

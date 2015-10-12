@@ -7,6 +7,7 @@ import Language.Swift.Quote.Syntax
 import Control.Applicative
 import Control.Monad.Identity
 import Control.Arrow (left)
+import Data.Maybe
 import Data.Text
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Text (Parser)
@@ -748,10 +749,10 @@ balanced-token → Any punctuation except (­, )­, [­, ]­, {­, or }­
 -- GRAMMAR OF AN EXPRESSION
 
 expression :: Parser Expression
-expression = Expression1
+expression = Expression
   <$> optional tryOperator
   <*> prefixExpression
-  <*> optional binaryExpressions
+  <*> (fromMaybe [] <$> optional binaryExpressions)
 
 expressionList :: Parser [Expression]
 expressionList = expression `P.sepBy1` comma

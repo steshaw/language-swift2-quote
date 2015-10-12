@@ -11,7 +11,7 @@ prettyPrint :: Module -> Text
 prettyPrint = error "<module>" -- TODO
 
 instance Pretty Expression where
-  ppr (Expression1 optTryOperator prefixExpression optBinaryExpressions) =
+  ppr (Expression optTryOperator prefixExpression optBinaryExpressions) =
     ppr optTryOperator <> ppr prefixExpression -- <> ppr optBinaryExpressions
 
 instance Pretty PrefixExpression where
