@@ -278,8 +278,8 @@ whereClause = expression -- TODO
 statement :: Parser Statement
 statement
     = DeclarationStatement <$> declaration <* optSemicolon
-  -- <|> ExpressionStatement <$> expression <* optSemicolon
-  -- <|> loopStatement <* optSemicolon
+  <|> ExpressionStatement <$> expression <* optSemicolon
+  <|> loopStatement <* optSemicolon
   -- <|> branchStatement <* optSemicolon
   -- <|> labeledStatement <* optSemicolon
   -- <|> controlTransferStatement <* optSemicolon

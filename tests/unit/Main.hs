@@ -79,14 +79,16 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "a?" $ Expression Nothing (PrefixOperator Nothing (PostfixOptionChaining (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
   , expressionTest "a[1]" $ Expression Nothing (PrefixOperator Nothing (Subscript (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) [Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []])) []
 
-  , moduleTest "import foo" $ importModule Nothing ["foo"]
-  , moduleTest "import foo.math.BitVector" $ importModule Nothing ["foo", "math", "BitVector"]
-  , moduleTest "import typealias foo.a.b" $ importModule (Just "typealias") ["foo", "a", "b"]
+  , moduleTest "import foo" $ singleImport Nothing ["foo"]
+  , moduleTest "import foo.math.BitVector" $ singleImport Nothing ["foo", "math", "BitVector"]
+  , moduleTest "import typealias foo.a.b" $ singleImport (Just "typealias") ["foo", "a", "b"]
+
+  , moduleTest "print(\"Hello world\\n\")" $ Module [ExpressionStatement (Expression Nothing (PrefixOperator Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (StringLiteral "Hello world\n"))))) [])] Nothing))) [])]
   ]
 
 emptyModule = Module []
 
-importModule optImportKind imports = Module [DeclarationStatement (import_ optImportKind (map ImportIdentifier imports))]
+singleImport optImportKind imports = Module [DeclarationStatement (import_ optImportKind (map ImportIdentifier imports))]
 
 fooEmptyFunCall = (Expression Nothing (PrefixOperator Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])
 
