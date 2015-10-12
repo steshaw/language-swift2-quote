@@ -55,6 +55,10 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "200 as Double" $ typeCastExp (IntegerLiteral 200) "as" (Type "Double")
   , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (Type "String")
   , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (Type "String")
+  , initializerTest "1.init" $ PostfixExpression4Initalizer (PrefixExpression1 Nothing
+      (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1)))))
+  , initializerTest "foo.init" $ PostfixExpression4Initalizer
+      (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression1 "foo" Nothing)))
   , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
   , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
   , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
@@ -87,8 +91,6 @@ src2ast2src = testGroup "Source -> AST -> Source"
   , ppFunctionCall "foo (a ) " "foo(a)"
   , ppFunctionCall "foo ( 1, 2 , isFred : true)" "foo(1, 2, isFred: true)"
   ]
-
--- parseFunctionCall "foo(1, 2, isFred: true)"
 
 primary1 :: String -> Expression
 primary1 identifier =
@@ -128,6 +130,10 @@ expressionTest :: T.Text -> Expression -> TestTree
 expressionTest input expression = testCase ("Expression: " ++ wrap (T.unpack input)) $
   P.parseExpression input @?= Right expression
 
+initializerTest :: T.Text -> PostfixExpression -> TestTree
+initializerTest input expression = testCase ("initializer: " ++ wrap (T.unpack input)) $
+  P.parseInitializer input @?= Right expression
+
 declarationTest :: T.Text -> Declaration -> TestTree
 declarationTest input declaration = testCase ("Declaration: " ++ wrap (T.unpack input)) $
   P.parseDeclaration input @?= Right declaration
@@ -136,14 +142,14 @@ pp :: Pretty pretty => Either d pretty -> Either d L.Text
 pp = right (prettyLazyText 100 . ppr)
 
 ppExpTest :: T.Text -> String -> TestTree
-ppExpTest input s = testCase ("Expression " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
+ppExpTest input s = testCase ("expression " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
   sosrc @?= Right s
     where ast = P.parseExpression input
           osrc = pp ast
           sosrc = fmap L.unpack osrc
 
 ppFunctionCall :: T.Text -> String -> TestTree
-ppFunctionCall input s = testCase ("FunctionCall " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
+ppFunctionCall input s = testCase ("functionCall " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
   sosrc @?= Right s
     where ast = P.parseFunctionCall input
           osrc = pp ast

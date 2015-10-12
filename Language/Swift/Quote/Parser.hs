@@ -29,6 +29,9 @@ parseDeclaration = parseIt declaration
 parseFunctionCall :: Text -> Either String FunctionCall
 parseFunctionCall = parseIt functionCallExpression
 
+parseInitializer :: Text -> Either String PostfixExpression
+parseInitializer = parseIt initializerExpression
+
 module_ :: Parser Module
 module_ = ws *> (Module <$> topLevelDeclaration <* ws)
 
@@ -930,12 +933,9 @@ postfixExpression = P.choice
   [ PostfixExpression1 <$> primaryExpression
   , PostfixExpression2 <$> postfixExpression <*> postfixOperator
   , PostfixExpression3 <$> functionCallExpression
+  , initializerExpression
   ]
-
 {-
-postfix-expression → postfix-expression­postfix-operator­
-postfix-expression → function-call-expression­
-postfix-expression → initializer-expression­
 postfix-expression → explicit-member-expression­
 postfix-expression → postfix-self-expression­
 postfix-expression → dynamic-type-expression­
@@ -960,10 +960,15 @@ functionCallExpression
 trailingClosure :: Parser Closure
 trailingClosure = closureExpression
 
-{-
-GRAMMAR OF AN INITIALIZER EXPRESSION
+-- GRAMMAR OF AN INITIALIZER EXPRESSION
+initializerExpression :: Parser PostfixExpression
+initializerExpression = do
+  e <- prefixExpression
+  _ <- op "."
+  _ <- kw "init"
+  return $ PostfixExpression4Initalizer e
 
-initializer-expression → postfix-expression­.­init­
+{-
 GRAMMAR OF AN EXPLICIT MEMBER EXPRESSION
 
 explicit-member-expression → postfix-expression­.­decimal-digits­

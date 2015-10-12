@@ -16,6 +16,7 @@ data PostfixExpression
   = PostfixExpression1 PrimaryExpression
   | PostfixExpression2 PostfixExpression String -- postfix-operator
   | PostfixExpression3 FunctionCall
+  | PostfixExpression4Initalizer PrefixExpression
   deriving (Show, Eq)
 
 data ExpressionElement = ExpressionElement (Maybe String) Expression
