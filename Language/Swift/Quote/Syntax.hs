@@ -1,7 +1,5 @@
 module Language.Swift.Quote.Syntax where
 
-import Data.Text (Text)
-
 data Module = Module (Maybe [Statement])
   deriving (Show, Eq)
 
@@ -23,10 +21,10 @@ data PostfixExpression
 data ExpressionElement = ExpressionElement (Maybe String) Expression
   deriving (Show, Eq)
 
-data FunctionCall = FunctionCall PostfixExpression (Maybe (Maybe [ExpressionElement])) (Maybe Closure)
+data FunctionCall = FunctionCall PostfixExpression [ExpressionElement] (Maybe Closure)
   deriving (Show, Eq)
 
-data Closure = Closure
+data Closure = Closure [Statement]
   deriving (Show, Eq)
 
 data PrimaryExpression
@@ -35,7 +33,7 @@ data PrimaryExpression
   | PrimaryExpression3 SelfExpression
   | PrimaryExpression4 SuperclassExpression
   | PrimaryExpression5 Closure -- XXX closure-expression
-  | PrimaryExpression6 (Maybe [ExpressionElement]) -- parenthesized-expression
+  | PrimaryExpression6 [ExpressionElement] -- parenthesized-expression
   | PrimaryExpression7 -- TODO implicit-member-expression
   | PrimaryExpression8 -- wildcard-expression
   deriving (Show, Eq)
@@ -98,6 +96,7 @@ data Statement
   | CompilerControlStatement
   | WhileStatement
   | RepeatWhileStatement
+  | DummyStatement
   deriving (Show, Eq)
 
 data ForInit

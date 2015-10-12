@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Language.Swift.Quote.Pretty where
 
 import Language.Swift.Quote.Syntax
@@ -6,39 +8,54 @@ import Data.Text.Lazy (Text)
 import Text.PrettyPrint.Mainland
 
 prettyPrint :: Module -> Text
-prettyPrint m = error "<module>" -- TODO
-
-ppExpression :: Expression -> Text
-ppExpression (Expression1 Nothing (PrefixExpression1 Nothing primaryExpression) (Just []))
-    = prettyLazyText 100 $ ppr primaryExpression
+prettyPrint = error "<module>" -- TODO
 
 instance Pretty Expression where
-  ppr (Expression1 optTryOperator prefixExpression optBinaryExpressions) = ppr prefixExpression
+  ppr (Expression1 optTryOperator prefixExpression optBinaryExpressions) =
+    ppr optTryOperator <> ppr prefixExpression -- <> ppr optBinaryExpressions
 
 instance Pretty PrefixExpression where
-  ppr (PrefixExpression1 optPrefixOperator primaryExpression) = ppr primaryExpression
+  ppr (PrefixExpression1 optPrefixOperator primaryExpression)
+    = ppr optPrefixOperator <> ppr primaryExpression
   ppr (PrefixExpression2 identifier) = string "&" <> string identifier
 
 instance Pretty PostfixExpression where
   ppr (PostfixExpression1 primaryExpression) = ppr primaryExpression
-  ppr (PostfixExpression2 optPrefixOperator primaryExpression) = string "<TODO>" -- TODO
+  ppr (PostfixExpression2 optPrefixOperator primaryExpression)
+    = ppr optPrefixOperator <> ppr primaryExpression -- TODO
   ppr (PostfixExpression3 functionCall) = ppr functionCall
 
 instance Pretty FunctionCall where
-  ppr (FunctionCall postfixExpression optOptExpressionElements optClosure) =
-    ppr postfixExpression <> ppr optOptExpressionElements <> ppr optClosure
-    -- TODO correct this with brackets and braces as required.
+  ppr (FunctionCall postfixExpression expressionElements optClosure) =
+    ppr postfixExpression
+      <> parens (commasep (map ppr expressionElements))
+      <> ppr optClosure
 
 instance Pretty ExpressionElement where
-  ppr (ExpressionElement optString expression) = ppr optString <> ppr expression
+  ppr (ExpressionElement Nothing expression) = ppr expression
+  ppr (ExpressionElement (Just ident) expression) = ppr ident <> colon <> space <> ppr expression
 
 instance Pretty Closure where
-  ppr (Closure) = string "<closure>"
+  ppr (Closure []) = empty
+  ppr (Closure statements) = braces (ppr statements)
 
 instance Pretty PrimaryExpression where
-  ppr (PrimaryExpression1 identifier genericArgumentList) = ppr identifier <> angles (ppr genericArgumentList)
-  ppr (PrimaryExpression2 literalExpression) =  ppr literalExpression
-  ppr (PrimaryExpression3 selfExpression) =  ppr selfExpression
+  ppr (PrimaryExpression1 identifier genericArgumentList) =
+    ppr identifier <> if null genericArgumentList then string "" else angles (ppr genericArgumentList)
+  ppr (PrimaryExpression2 literalExpression) = ppr literalExpression
+  ppr (PrimaryExpression3 selfExpression) = ppr selfExpression
+  ppr (PrimaryExpression4 superclassExpression) = ppr superclassExpression
+  ppr (PrimaryExpression5 closure) = ppr closure
+  ppr (PrimaryExpression6 expressionElements) = ppr expressionElements
+  ppr PrimaryExpression7 = string "<implicit-member-expression>" -- TODO implicit-member-expression
+  ppr PrimaryExpression8 = string "_"
+
+instance Pretty BinaryExpression where
+  ppr (BinaryExpression1 operator prefixExpression) = ppr operator <> ppr prefixExpression
+  ppr (BinaryExpression2 tryOperator prefixExpression) = ppr tryOperator <> ppr prefixExpression
+  ppr (BinaryExpression3 (optS1, expression) optS2 prefixExpression) =
+    ppr optS1 <> ppr expression <> ppr optS2 <> ppr prefixExpression
+  ppr (BinaryExpression4 s typ) = ppr s <> ppr typ
 
 instance Pretty LiteralExpression where
   ppr (RegularLiteral lit) =  ppr lit
@@ -57,5 +74,11 @@ instance Pretty SelfExpression where
   ppr (Self3 expressions) = string "self" <> brackets (commasep (map ppr expressions))
   ppr Self4 = string "self" <> string "." <> string "init"
 
+instance Pretty SuperclassExpression where
+  ppr (SuperclassExpression) = string "<super>" -- TODO
+
 instance Pretty Type where
-  ppr (Type string) = ppr string
+  ppr (Type ty) = ppr ty
+
+instance Pretty Statement where
+  ppr DummyStatement = string "<dummy-statement>"

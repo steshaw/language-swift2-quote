@@ -1,20 +1,23 @@
 {-# LANGUAGE OverloadedStrings  #-}
 
-import Control.Arrow (left)
-import Test.Tasty
-import Test.Tasty.HUnit
-
-import qualified Language.Swift.Quote.Parser as P
 import Language.Swift.Quote.Syntax
 import Language.Swift.Quote.Pretty
+
+import Control.Arrow (right)
+import qualified Language.Swift.Quote.Parser as P
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
+import Test.Tasty
+import Test.Tasty.HUnit
+import Text.PrettyPrint.Mainland
 
 main :: IO ()
 main = defaultMain $ testGroup "Tests " [src2ast, src2ast2src]
 
+litIntExp :: Integer -> Expression
 litIntExp i = litExp (IntegerLiteral i)
 
+src2ast :: TestTree
 src2ast = testGroup "Source -> AST"
   [ expressionTest "1" $ litIntExp 1
   , expressionTest " 2" $ litIntExp 2
@@ -57,25 +60,35 @@ src2ast = testGroup "Source -> AST"
   , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
   ]
 
+import_ :: Maybe ImportKind -> ImportPath -> Declaration
 import_ = ImportDeclaration (Just DummyAttributes)
 
+src2ast2src :: TestTree
 src2ast2src = testGroup "Source -> AST -> Source"
-  [ ppTest "1" "1"
-  , ppTest "2 " "2"
-  , ppTest " 3" "3"
-  , ppTest " 4 " "4"
-  , ppTest "\"Hello\"" "\"Hello\""
-  , ppTest "\"foo\"" "\"foo\""
-  , ppTest " \"x\"" "\"x\""
-  , ppTest " \"y\" " "\"y\""
-  , ppTest " true " "true"
-  , ppTest "true" "true"
-  , ppTest " \t false   " "false"
-  , ppTest "self" "self"
-  , ppTest "self . id" "self.id"
-  , ppTest "self . init" "self.init"
-  , ppTest "self [1,2,  3] " "self[1, 2, 3]"
+  [ ppExpTest "1" "1"
+  , ppExpTest "2 " "2"
+  , ppExpTest " 3" "3"
+  , ppExpTest " 4 " "4"
+  , ppExpTest "\"Hello\"" "\"Hello\""
+  , ppExpTest "\"foo\"" "\"foo\""
+  , ppExpTest " \"x\"" "\"x\""
+  , ppExpTest " \"y\" " "\"y\""
+  , ppExpTest " true " "true"
+  , ppExpTest "true" "true"
+  , ppExpTest " \t false   " "false"
+  , ppExpTest "self" "self"
+  , ppExpTest "self . id" "self.id"
+  , ppExpTest "self . init" "self.init"
+  , ppExpTest "self [1,2,  3] " "self[1, 2, 3]"
+  , ppFunctionCall "foo()" "foo()"
+  , ppFunctionCall "foo( ) " "foo()"
+  , ppFunctionCall "foo ( ) " "foo()"
+  , ppFunctionCall "foo (false ) " "foo(false)"
+  , ppFunctionCall "foo (a ) " "foo(a)"
+  , ppFunctionCall "foo ( 1, 2 , isFred : true)" "foo(1, 2, isFred: true)"
   ]
+
+-- parseFunctionCall "foo(1, 2, isFred: true)"
 
 primary1 :: String -> Expression
 primary1 identifier =
@@ -116,13 +129,22 @@ declarationTest :: T.Text -> Declaration -> TestTree
 declarationTest input declaration = testCase ("Declaration: [[" ++ T.unpack input ++ "]]") $
   P.parseDeclaration input @?= Right declaration
 
-wrap :: String -> String
-wrap s = "[[" ++ s ++ "]]"
-indent = "  "
+pp1 :: Either d Expression -> Either d L.Text
+pp1 = right (prettyLazyText 100 . ppr)
 
--- ppTest :: T.Text -> String -> TestTree
-ppTest input s = testCase ("Literal " ++ T.unpack input) $
+pp2 :: Either d FunctionCall -> Either d L.Text
+pp2 = right (prettyLazyText 100 . ppr)
+
+ppExpTest :: T.Text -> String -> TestTree
+ppExpTest input s = testCase ("Expression " ++ T.unpack input) $
   sosrc @?= Right s
     where ast = P.parseExpression input
-          osrc = fmap ppExpression ast
+          osrc = pp1 ast
+          sosrc = fmap L.unpack osrc
+
+ppFunctionCall :: T.Text -> String -> TestTree
+ppFunctionCall input s = testCase ("FunctionCall " ++ T.unpack input) $
+  sosrc @?= Right s
+    where ast = P.parseFunctionCall input
+          osrc = pp2 ast
           sosrc = fmap L.unpack osrc

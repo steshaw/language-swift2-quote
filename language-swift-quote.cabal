@@ -21,11 +21,12 @@ library
                        Language.Swift.Quote.Pretty,
                        Language.Swift.Quote.Syntax
   build-depends:       base >= 4.7 && < 5.0
+                     , mainland-pretty
+                     , mtl
                      , parsec
                      , text
-                     , mtl
-                     , mainland-pretty
   default-language:    Haskell2010
+  ghc-options:         -Wall
 
 test-suite unit
   type:                exitcode-stdio-1.0
@@ -33,10 +34,12 @@ test-suite unit
   main-is:             Main.hs
   build-depends:       base >= 4.7 && < 5.0
                      , language-swift-quote
+                     , mainland-pretty
                      , tasty
                      , tasty-hunit
                      , text
   default-language:    Haskell2010
+  ghc-options:         -Wall
 
 source-repository head
   type:     git

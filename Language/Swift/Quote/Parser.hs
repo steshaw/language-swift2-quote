@@ -7,13 +7,12 @@ import Language.Swift.Quote.Syntax
 import Control.Applicative
 import Control.Monad.Identity
 import Control.Arrow (left)
-
 import Data.Text
+import Debug.Trace
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Text (Parser)
 import Text.Parsec (try)
 import qualified Text.Parsec.Language as L
-import Text.Parsec.Expr
 import qualified Text.Parsec.Token as T
 
 -- parserToEitheror :: Parser a -> Text -> Either String a
@@ -21,21 +20,20 @@ import qualified Text.Parsec.Token as T
 --   Left err -> Left $ show err
 --   Right mod -> Right mod
 
-parseIt p input = left show (P.parse p "<stdin>" input)
+parseIt :: Parser a -> Text -> Either String a
+parseIt p input = left show (P.parse (ws *> p <* ws) "<stdin>" input)
 
 parse :: Text -> Either String Module
 parse = parseIt module_
 
 parseExpression :: Text -> Either String Expression
-parseExpression = parseIt expression'
+parseExpression = parseIt expression
 
 parseDeclaration :: Text -> Either String Declaration
 parseDeclaration = parseIt declaration
 
 parseFunctionCall :: Text -> Either String FunctionCall
 parseFunctionCall = parseIt functionCallExpression
-
-expression' = ws *> expression <* ws
 
 module_ :: Parser Module
 module_ = ws *> (Module <$> topLevelDeclaration <* ws)
@@ -44,6 +42,7 @@ module_ = ws *> (Module <$> topLevelDeclaration <* ws)
 -- Lexical Structure
 ------------------------------------------------------------
 
+reservedWordsDeclarations :: [String]
 reservedWordsDeclarations =
  [ "class"
  , "deinit"
@@ -66,6 +65,7 @@ reservedWordsDeclarations =
  , "var"
  ]
 
+reservedWordsStatements :: [String]
 reservedWordsStatements =
   [ "break"
   , "case"
@@ -86,6 +86,7 @@ reservedWordsStatements =
   , "while."
   ]
 
+reservedWordsExpressionsTypes :: [String]
 reservedWordsExpressionsTypes =
   [ "as"
   , "catch"
@@ -107,8 +108,10 @@ reservedWordsExpressionsTypes =
   , "__LINE__"
   ]
 
+keywordsInPatterns :: [String]
 keywordsInPatterns = pure "_"
 
+keywordsinContexts :: [String]
 keywordsinContexts =
   [ "associativity"
   , "convenience"
@@ -138,6 +141,7 @@ keywordsinContexts =
   , "willSet"
   ]
 
+reservedOperators :: [String]
 reservedOperators =
   [ "("
   , ")"
@@ -180,18 +184,38 @@ swiftLangDef = T.LanguageDef
   , T.caseSensitive = True
   }
 
+lexer :: T.GenTokenParser Text u Identity
 lexer = T.makeTokenParser swiftLangDef
 
-identifier = T.identifier lexer
+ws :: Parser ()
 ws = T.whiteSpace lexer
+
+comma :: Parser String
 comma = T.comma lexer
+
+colon :: Parser String
 colon = T.colon lexer
+
+semicolon :: Parser String
 semicolon = T.semi lexer
+
+optSemicolon :: Parser (Maybe String)
 optSemicolon = optional semicolon
+
+braces :: Parser a -> Parser a
 braces = T.braces lexer
+
+parens :: Parser a -> Parser a
 parens = T.parens lexer
+
+brackets :: Parser a -> Parser a
 brackets = T.brackets lexer
+
+angles :: Parser a -> Parser a
 angles = T.angles lexer
+
+identifier :: Parser String
+identifier = T.identifier lexer
 
 kw :: String -> Parser ()
 kw s = ws *> T.reserved lexer s
@@ -246,6 +270,7 @@ whereClause = expression -- TODO
 ------------------------------------------------------------
 
 -- GRAMMAR OF A STATEMENT
+statement :: Parser Statement
 statement
     = ExpressionStatement <$> expression <* optSemicolon
   -- <|> declaration <* optSemicolon
@@ -261,12 +286,14 @@ statements :: Parser [Statement]
 statements = many statement
 
 -- GRAMMAR OF A LOOP STATEMENT
+loopStatement :: Parser Statement
 loopStatement
     = forStatement
   <|> forInStatement
   -- <|> whileStatement
   -- <|> repeatWhileStatement
 
+forStatement :: Parser Statement
 forStatement
     = do
         _ <- kw "for"
@@ -436,8 +463,8 @@ same-type-requirement → type-identifier­==­type­
 -}
 
 -- GRAMMAR OF A GENERIC ARGUMENT CLAUSE
-genericArgumentClause = angles genericArgumentList
-genericArgumentList = P.many1 type_
+genericArgumentClause :: Parser [Type]
+genericArgumentClause = angles (P.many1 type_)
 
 ------------------------------------------------------------
 -- Declarations
@@ -477,6 +504,7 @@ codeBlock = CodeBlock <$> braces (optional statements)
 
 -- GRAMMAR OF AN IMPORT DECLARATION
 
+importDeclaration :: Parser Declaration
 importDeclaration
   = ImportDeclaration
       <$> optional attributes
@@ -484,6 +512,7 @@ importDeclaration
       <*> optional importKind
       <*> importPath
 
+attributes :: Parser Attributes
 attributes = pure DummyAttributes
 
 importKind :: Parser ImportKind
@@ -498,7 +527,7 @@ importKind = P.choice
   ]
 
 importPath :: Parser ImportPath
-importPath = P.sepBy1 importPathIdentifier (op ".")
+importPath = importPathIdentifier `P.sepBy1 ` op "."
 
 importPathIdentifier :: Parser ImportPathIdentifier
 importPathIdentifier
@@ -728,10 +757,11 @@ expression = Expression1
   <*> optional binaryExpressions
 
 expressionList :: Parser [Expression]
-expressionList = P.sepBy1 expression comma
+expressionList = expression `P.sepBy1` comma
 
 -- GRAMMAR OF A PREFIX EXPRESSION
 
+prefixExpression :: Parser PrefixExpression
 prefixExpression
     = do
         o <- optional prefixOperator
@@ -739,6 +769,7 @@ prefixExpression
         return $ PrefixExpression1 o pe
   <|> PrefixExpression2 <$> inOutExpression
 
+inOutExpression :: Parser String
 inOutExpression = op "&" *> identifier
 
 -- GRAMMAR OF A TRY EXPRESSION
@@ -769,14 +800,15 @@ binaryExpression
         return $ BinaryExpression3 co to pe
   <|> typeCastingOperator
 
+binaryExpressions :: Parser [BinaryExpression]
 binaryExpressions = many binaryExpression
 
 -- GRAMMAR OF AN ASSIGNMENT OPERATOR
-
+assignmentOperator :: Parser ()
 assignmentOperator = op "="
 
 -- GRAMMAR OF A CONDITIONAL OPERATOR
-
+conditionalOperator :: Parser (Maybe String, Expression)
 conditionalOperator = do
   _ <- op "?"
   to <- optional tryOperator
@@ -789,18 +821,19 @@ typeCastingOperator
     = try (BinaryExpression4 <$> kw' "is" <*> type_)
   <|> try (BinaryExpression4 <$> kw' "as" <*> type_)
   <|> try (do
-        kw <- kw' "as"
-        op <- op' "?"
-        ty <- type_
-        return $ BinaryExpression4 (kw ++ op) ty)
+        k <- kw' "as"
+        o <- op' "?"
+        t <- type_
+        return $ BinaryExpression4 (k ++ o) t)
   <|> try (do
-        kw <- kw' "as"
-        op <- op' "!"
-        ty <- type_
-        return $ BinaryExpression4 (kw ++ op) ty
+        k <- kw' "as"
+        o <- op' "!"
+        t <- type_
+        return $ BinaryExpression4 (k ++ o) t
       )
 
 -- GRAMMAR OF A PRIMARY EXPRESSION
+primaryExpression :: Parser PrimaryExpression
 primaryExpression
     = PrimaryExpression1 <$> identifier <*> optional genericArgumentClause
   <|> PrimaryExpression2 <$> literalExpression
@@ -811,10 +844,14 @@ primaryExpression
   <|> pure PrimaryExpression7 <* implicitMemberExpression
   <|> pure PrimaryExpression8 <* wildCardExpression
 
+superclassExpression :: Parser SuperclassExpression
 superclassExpression = do {kw "<superclass-expression>"; pure SuperclassExpression}
+
+implicitMemberExpression :: Parser ()
 implicitMemberExpression = do {kw "<implicit-member-expression>"; pure ()}
 
 -- GRAMMAR OF A LITERAL EXPRESSION
+literalExpression :: Parser LiteralExpression
 literalExpression
     = RegularLiteral <$> literal
 -- <|> literalExpression = arrayLiteral <|> dictionaryLiteral
@@ -854,7 +891,8 @@ superclass-initializer-expression → super­.­init­
 
 -- GRAMMAR OF A CLOSURE EXPRESSION
 
-closureExpression = pure Closure
+closureExpression :: Parser Closure
+closureExpression = Closure <$> braces (pure [DummyStatement]) -- statements
 {-
 closure-expression → {­closure-signature­opt­statements­}­
 closure-signature → parameter-clause­function-result­opt­in­
@@ -873,11 +911,11 @@ implicit-member-expression → .­identifier­
 
 -- GRAMMAR OF A PARENTHESIZED EXPRESSION
 
-parenthesizedExpression :: Parser (Maybe [ExpressionElement])
-parenthesizedExpression = parens (optional expressionElementList)
+parenthesizedExpression :: Parser [ExpressionElement]
+parenthesizedExpression = parens expressionElementList
 
 expressionElementList :: Parser [ExpressionElement]
-expressionElementList = P.sepBy1 expressionElement comma
+expressionElementList = expressionElement `P.sepBy` comma
 
 expressionElement :: Parser ExpressionElement
 expressionElement
@@ -885,12 +923,13 @@ expressionElement
   <|> ExpressionElement <$> pure Nothing <*> expression
 
 -- GRAMMAR OF A WILDCARD EXPRESSION
-
+wildCardExpression :: Parser ()
 wildCardExpression = op "_"
 
 -- GRAMMAR OF A POSTFIX EXPRESSION
 
-postfixExpression = P.choice
+postfixExpression :: Parser PostfixExpression
+postfixExpression = trace "\nin postfixExpression\n" $ P.choice
   [ try (PostfixExpression3 <$> functionCallExpression)
   , try (PostfixExpression1 <$> primaryExpression)
   , try (PostfixExpression2 <$> postfixExpression <*> postfixOperator)
@@ -909,17 +948,21 @@ postfix-expression → optional-chaining-expression­
 -}
 
 -- GRAMMAR OF A FUNCTION CALL EXPRESSION
-basicExpression = PostfixExpression1 <$> (PrimaryExpression1 <$> identifier <*> optional genericArgumentClause)
+basicExpression :: Parser PostfixExpression
+basicExpression = PostfixExpression1 <$> (PrimaryExpression1 <$> identifier <*> optional genericArgumentClause) <* ws
+
+functionCallExpression :: Parser FunctionCall
 functionCallExpression
     = FunctionCall
       <$> basicExpression -- FIXME: was postfixExpression
-      <*> (Just <$> parenthesizedExpression)
+      <*> parenthesizedExpression
       <*> pure Nothing
   <|> FunctionCall
       <$> basicExpression -- FIXME: was postfixExpression
-      <*> optional parenthesizedExpression
+      <*> parenthesizedExpression
       <*> (Just <$> trailingClosure)
 
+trailingClosure :: Parser Closure
 trailingClosure = closureExpression
 
 {-
@@ -987,6 +1030,7 @@ numericLiteral
     = optional (op "-") integerLiteral
   <|> optional (op "-") floatingPointLiteral
 -}
+numericLiteral :: Parser Literal
 numericLiteral = integerLiteral <|> floatingPointLiteral
 
 -- GRAMMAR OF AN INTEGER LITERAL
@@ -1092,10 +1136,16 @@ dot-operator-character → .­  operator-character­
 dot-operator-characters → dot-operator-character­dot-operator-characters­opt­
 -}
 -- TODO: simplified!
+operator :: Parser String
 operator = T.operator lexer
 
+binaryOperator :: Parser String
 binaryOperator = operator
+
+prefixOperator :: Parser String
 prefixOperator = operator
+
+postfixOperator :: Parser String
 postfixOperator = operator
 
 ------------------------------------------------------------
@@ -1154,5 +1204,4 @@ type-inheritance-clause → :­class-requirement­
 type-inheritance-clause → :­type-inheritance-list­
 type-inheritance-list → type-identifier­  type-identifier­,­type-inheritance-list­
 class-requirement → class­
-
 -}
