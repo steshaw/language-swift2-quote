@@ -102,6 +102,7 @@ data Statement
     , fiWhereClause :: Maybe Expression
     , fiBlock :: CodeBlock
     }
+  | DeclarationStatement Declaration
   | BranchStatement
   | LabeledStatement
   | ControlTransferStatement

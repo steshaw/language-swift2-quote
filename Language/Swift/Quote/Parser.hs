@@ -278,14 +278,14 @@ whereClause = expression -- TODO
 statement :: Parser Statement
 statement
     = ExpressionStatement <$> expression <* optSemicolon
-  -- <|> declaration <* optSemicolon
-  -- <|> loopStatement <* optSemicolon
-  -- <|> branchStatement <* optSemicolon
-  -- <|> labeledStatement <* optSemicolon
-  -- <|> controlTransferStatement <* optSemicolon
-  -- <|> deferStatement <* optSemicolon
-  -- <|> doStatement <* optSemicolon
-  -- <|> compilerControlStatement <* optSemicolon
+  <|> DeclarationStatement <$> declaration <* optSemicolon
+  <|> loopStatement <* optSemicolon
+  <|> branchStatement <* optSemicolon
+  <|> labeledStatement <* optSemicolon
+  <|> controlTransferStatement <* optSemicolon
+  <|> deferStatement <* optSemicolon
+  <|> doStatement <* optSemicolon
+  <|> compilerControlStatement <* optSemicolon
 
 statements :: Parser [Statement]
 statements = many statement
@@ -956,7 +956,7 @@ postfixExpressionOuter = do
       postfixOpTail e = PostfixOperator <$> pure e <*> operator
       dotTail :: PostfixExpression -> Parser PostfixExpression
       dotTail e = do
-        o <- op "."
+        _ <- op "."
         postfixDynamicTypeTail e
           <|> postfixInitTail e
           <|> postfixSelfTail e
