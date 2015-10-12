@@ -84,9 +84,9 @@ src2ast = testGroup "Source -> AST"
   , moduleTest "import typealias foo.a.b" $ importModule (Just "typealias") ["foo", "a", "b"]
   ]
 
-dummyModule = Module Nothing
+emptyModule = Module []
 
-importModule optImportKind imports = Module (Just [DeclarationStatement (import_ optImportKind (map ImportIdentifier imports))])
+importModule optImportKind imports = Module [DeclarationStatement (import_ optImportKind (map ImportIdentifier imports))]
 
 fooEmptyFunCall = (Expression Nothing (PrefixOperator Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])
 

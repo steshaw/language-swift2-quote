@@ -1,6 +1,6 @@
 module Language.Swift.Quote.Syntax where
 
-data Module = Module (Maybe [Statement])
+data Module = Module [Statement]
   deriving (Show, Eq)
 
 data Expression

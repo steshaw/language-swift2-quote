@@ -478,7 +478,7 @@ genericArgumentClause = angles (P.many1 type_)
 -- GRAMMAR OF A DECLARATION
 declaration :: Parser Declaration
 declaration
-  = trace "\n\ninside declaration\n\n" $ importDeclaration
+  = importDeclaration
 {-
 declaration → import-declaration­
 declaration → constant-declaration­
@@ -499,8 +499,8 @@ declarations → declaration­declarations­opt­
 
 -- GRAMMAR OF A TOP-LEVEL DECLARATION
 
-topLevelDeclaration :: Parser (Maybe [Statement])
-topLevelDeclaration = optional statements
+topLevelDeclaration :: Parser [Statement]
+topLevelDeclaration = fromMaybe [] <$> optional statements
 
 -- GRAMMAR OF A CODE BLOCK
 
