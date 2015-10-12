@@ -7,12 +7,16 @@ import Control.Arrow (right)
 import qualified Language.Swift.Quote.Parser as P
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
+import System.IO
 import Test.Tasty
 import Test.Tasty.HUnit
 import Text.PrettyPrint.Mainland
 
 main :: IO ()
-main = defaultMain $ testGroup "Tests " [src2ast, src2ast2src]
+main = do
+  hSetBuffering stdout NoBuffering
+  hSetBuffering stderr NoBuffering
+  defaultMain $ testGroup "Tests " [src2ast, src2ast2src]
 
 litIntExp :: Integer -> Expression
 litIntExp i = litExp (IntegerLiteral i)
@@ -69,7 +73,13 @@ src2ast = testGroup "Source -> AST"
   , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
   , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
   , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
+  , expressionTest "foo()" $ fooEmptyFunCall
+  , expressionTest "foo(1)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) [])] Nothing))) []
+  , expressionTest "foo(1, 2)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) [])] Nothing))) []
+  , expressionTest "foo(1, 2, isBlue: false)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) []),ExpressionElement (Just "isBlue") (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (BooleanLiteral False))))) [])] Nothing))) []
   ]
+
+fooEmptyFunCall = (Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])
 
 initTest1 :: PostfixExpression
 initTest1 = PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))
@@ -97,12 +107,12 @@ src2ast2src = testGroup "Source -> AST -> Source"
   , ppExpTest "self . id" "self.id"
   , ppExpTest "self . init" "self.init"
   , ppExpTest "self [1,2,  3] " "self[1, 2, 3]"
-  , ppFunctionCall "foo()" "foo()"
-  , ppFunctionCall "foo( ) " "foo()"
-  , ppFunctionCall "foo ( ) " "foo()"
-  , ppFunctionCall "foo (false ) " "foo(false)"
-  , ppFunctionCall "foo (a ) " "foo(a)"
-  , ppFunctionCall "foo ( 1, 2 , isFred : true)" "foo(1, 2, isFred: true)"
+  , ppExpTest "foo()" "foo()"
+  , ppExpTest "foo( ) " "foo()"
+  , ppExpTest "foo ( ) " "foo()"
+  , ppExpTest "foo (false ) " "foo(false)"
+  , ppExpTest "foo (a ) " "foo(a)"
+  , ppExpTest "foo ( 1, 2 , isFred : true)" "foo(1, 2, isFred: true)"
   ]
 
 primary1 :: String -> Expression
@@ -158,12 +168,5 @@ ppExpTest :: T.Text -> String -> TestTree
 ppExpTest input s = testCase ("expression " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
   sosrc @?= Right s
     where ast = P.parseExpression input
-          osrc = pp ast
-          sosrc = fmap L.unpack osrc
-
-ppFunctionCall :: T.Text -> String -> TestTree
-ppFunctionCall input s = testCase ("functionCall " ++ wrap (T.unpack input) ++ " => " ++ wrap s) $
-  sosrc @?= Right s
-    where ast = P.parseFunctionCall input
           osrc = pp ast
           sosrc = fmap L.unpack osrc

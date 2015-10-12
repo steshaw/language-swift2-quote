@@ -943,22 +943,19 @@ postfixExpression = postfixExpressionOuter
 postfixExpressionOuter :: Parser PostfixExpression
 postfixExpressionOuter = do
   e1 <- postfixExpressionInner
-  e2 <- try (tailE e1) <|> pure e1
+  e2 <- tailE e1 <|> (FunctionCallE <$> functionCallTail e1) <|> pure e1
   pure e2
     where
       tailE :: PostfixExpression -> Parser PostfixExpression
       tailE e = do
         o <- operator
         trace ("\n\n  got operator = " ++ show o ++ "\n\n") $
-          if o == "."
-          then try (explicitMemberExpressionTail e) <|>  initializerExpressionTail e
-          else pure $ PostfixOperator e o
+          case o of
+            "." -> try (explicitMemberExpressionTail e) <|>  initializerExpressionTail e
+            _   -> pure $ PostfixOperator e o
 
 postfixExpressionInner :: Parser PostfixExpression
-postfixExpressionInner = P.choice
-  [ PostfixExpression1 <$> primaryExpression
-  , FunctionCallE <$> functionCallExpression
-  ]
+postfixExpressionInner = PostfixExpression1 <$> primaryExpression
 {-
 postfix-expression → postfix-self-expression­
 postfix-expression → dynamic-type-expression­
@@ -969,16 +966,16 @@ postfix-expression → optional-chaining-expression­
 
 -- GRAMMAR OF A FUNCTION CALL EXPRESSION
 
+functionCallTail :: PostfixExpression -> Parser FunctionCall
+functionCallTail postfixE = do
+  pe <- parenthesizedExpression
+  c <- optional trailingClosure
+  pure $ FunctionCall postfixE pe c
+
 functionCallExpression :: Parser FunctionCall
-functionCallExpression
-    = FunctionCall
-      <$> postfixExpression
-      <*> parenthesizedExpression
-      <*> pure Nothing
-  <|> FunctionCall
-      <$> postfixExpression
-      <*> parenthesizedExpression
-      <*> (Just <$> trailingClosure)
+functionCallExpression = do
+  postfixE <- postfixExpression
+  functionCallTail postfixE
 
 trailingClosure :: Parser Closure
 trailingClosure = closureExpression
