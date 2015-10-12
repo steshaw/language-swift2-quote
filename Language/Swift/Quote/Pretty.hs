@@ -20,7 +20,7 @@ instance Pretty PrefixExpression where
   ppr (InOutExpression identifier) = string "&" <> string identifier
 
 instance Pretty PostfixExpression where
-  ppr (PostfixExpression1 primaryExpression) = ppr primaryExpression
+  ppr (PostfixPrimary primaryExpression) = ppr primaryExpression
   ppr (PostfixOperator prefixExpression postfixOperator) = ppr prefixExpression <> ppr postfixOperator
   ppr (FunctionCallE functionCall) = ppr functionCall
   ppr (PostfixExpression4Initalizer postfixExpression) = ppr postfixExpression <> string ".init"

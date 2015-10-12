@@ -19,7 +19,7 @@ data IdG = IdG
   deriving (Show, Eq)
 
 data PostfixExpression
-  = PostfixExpression1 PrimaryExpression
+  = PostfixPrimary PrimaryExpression
   | PostfixOperator PostfixExpression String -- postfix-operator
   | ExplicitMemberExpressionDigits PostfixExpression String -- digits
   | ExplicitMemberExpressionIdentifier PostfixExpression IdG

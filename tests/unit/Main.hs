@@ -53,8 +53,8 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "self [1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
   , expressionTest "self.init" $ self Self4
-  , expressionTest "a.123" $ Expression Nothing (PrefixExpression1 Nothing (ExplicitMemberExpressionDigits (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "123")) []
-  , expressionTest "a.b" $ Expression Nothing (PrefixExpression1 Nothing (ExplicitMemberExpressionIdentifier (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) (IdG {idgIdentifier = "b", idgGenericArgs = Nothing}))) []
+  , expressionTest "a.123" $ Expression Nothing (PrefixExpression1 Nothing (ExplicitMemberExpressionDigits (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "123")) []
+  , expressionTest "a.b" $ Expression Nothing (PrefixExpression1 Nothing (ExplicitMemberExpressionIdentifier (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) (IdG {idgIdentifier = "b", idgGenericArgs = Nothing}))) []
   , expressionTest "foo" $ primary1 "foo"
   , expressionTest "a" $ primary1 "a"
   , expressionTest "a1" $ primary1 "a1"
@@ -64,32 +64,32 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (Type "String")
   , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (Type "String")
   , expressionTest "a++" $ Expression Nothing (PrefixExpression1 Nothing
-      (PostfixOperator (PostfixExpression1 (PrimaryExpression1
+      (PostfixOperator (PostfixPrimary (PrimaryExpression1
         (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) "++")) []
   , declarationTest "import foo" $ import_ Nothing (map ImportIdentifier ["foo"])
   , declarationTest "import foo.math.BitVector" $ import_ Nothing (map ImportIdentifier["foo", "math", "BitVector"])
   , declarationTest "import typealias foo.a.b" $ import_ (pure "typealias") (map ImportIdentifier ["foo", "a", "b"])
   , expressionTest "foo()" $ fooEmptyFunCall
-  , expressionTest "foo(1)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) [])] Nothing))) []
-  , expressionTest "foo(1, 2)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) [])] Nothing))) []
-  , expressionTest "foo(1, 2, isBlue: false)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) []),ExpressionElement (Just "isBlue") (Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (BooleanLiteral False))))) [])] Nothing))) []
-  , expressionTest "1.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1)))))) []
-  , expressionTest "a.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
-  , expressionTest "foo.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))))) []
-  , expressionTest "a.self" $ Expression Nothing (PrefixExpression1 Nothing (PostfixSelf (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
-  , expressionTest "a.dynamicType" $ Expression Nothing (PrefixExpression1 Nothing (PostfixDynamicType (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
-  , expressionTest "a!" $ Expression Nothing (PrefixExpression1 Nothing (PostfixForcedValue (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
-  , expressionTest "a?" $ Expression Nothing (PrefixExpression1 Nothing (PostfixOptionChaining (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
-  , expressionTest "a[1]" $ Expression Nothing (PrefixExpression1 Nothing (Subscript (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) [Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []])) []
+  , expressionTest "foo(1)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) [])] Nothing))) []
+  , expressionTest "foo(1, 2)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) [])] Nothing))) []
+  , expressionTest "foo(1, 2, isBlue: false)" $ Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 2))))) []),ExpressionElement (Just "isBlue") (Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (BooleanLiteral False))))) [])] Nothing))) []
+  , expressionTest "1.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1)))))) []
+  , expressionTest "a.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "foo.init" $ Expression Nothing (PrefixExpression1 Nothing (PostfixExpression4Initalizer (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a.self" $ Expression Nothing (PrefixExpression1 Nothing (PostfixSelf (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a.dynamicType" $ Expression Nothing (PrefixExpression1 Nothing (PostfixDynamicType (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a!" $ Expression Nothing (PrefixExpression1 Nothing (PostfixForcedValue (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a?" $ Expression Nothing (PrefixExpression1 Nothing (PostfixOptionChaining (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a[1]" $ Expression Nothing (PrefixExpression1 Nothing (Subscript (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) [Expression Nothing (PrefixExpression1 Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []])) []
   ]
 
-fooEmptyFunCall = (Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])
+fooEmptyFunCall = (Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])
 
 initTest1 :: PostfixExpression
-initTest1 = PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))
+initTest1 = PostfixExpression4Initalizer (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))
 
 initTest2 :: PostfixExpression
-initTest2 = PostfixExpression4Initalizer (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing})))
+initTest2 = PostfixExpression4Initalizer (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing})))
 
 import_ :: Maybe ImportKind -> ImportPath -> Declaration
 import_ = ImportDeclaration (Just DummyAttributes)
@@ -123,14 +123,14 @@ primary1 :: String -> Expression
 primary1 identifier =
   Expression Nothing
     (PrefixExpression1 Nothing
-      (PostfixExpression1
+      (PostfixPrimary
         (PrimaryExpression1 (IdG identifier Nothing)))) []
 
 typeCastExp :: Literal -> String -> Type -> Expression
 typeCastExp lit typeCastKind type_ =
   Expression Nothing
     (PrefixExpression1 Nothing
-      (PostfixExpression1
+      (PostfixPrimary
         (PrimaryExpression2
           (RegularLiteral lit)))) [BinaryExpression4 typeCastKind type_]
 
@@ -138,7 +138,7 @@ litExp :: Literal -> Expression
 litExp lit =
   Expression Nothing
     (PrefixExpression1 Nothing
-      (PostfixExpression1
+      (PostfixPrimary
         (PrimaryExpression2
           (RegularLiteral lit)))) []
 
@@ -146,7 +146,7 @@ self :: SelfExpression -> Expression
 self se =
   Expression Nothing
     (PrefixExpression1 Nothing
-      (PostfixExpression1
+      (PostfixPrimary
         (PrimaryExpression3
           se))) []
 

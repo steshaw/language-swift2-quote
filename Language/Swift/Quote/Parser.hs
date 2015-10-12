@@ -963,7 +963,7 @@ postfixExpressionOuter = do
           <|> explicitMemberExpressionTail e
 
 postfixExpressionInner :: Parser PostfixExpression
-postfixExpressionInner = PostfixExpression1 <$> primaryExpression
+postfixExpressionInner = PostfixPrimary <$> primaryExpression
 
 -- GRAMMAR OF A FUNCTION CALL EXPRESSION
 
