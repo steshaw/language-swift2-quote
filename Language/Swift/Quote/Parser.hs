@@ -927,9 +927,9 @@ wildCardExpression = op "_"
 
 postfixExpression :: Parser PostfixExpression
 postfixExpression = P.choice
-  [ try (PostfixExpression3 <$> functionCallExpression)
-  , try (PostfixExpression1 <$> primaryExpression)
-  , try (PostfixExpression2 <$> postfixExpression <*> postfixOperator)
+  [ PostfixExpression1 <$> primaryExpression
+  , PostfixExpression2 <$> postfixExpression <*> postfixOperator
+  , PostfixExpression3 <$> functionCallExpression
   ]
 
 {-
