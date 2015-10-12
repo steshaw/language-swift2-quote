@@ -80,6 +80,7 @@ src2ast = testGroup "Source -> AST"
   , expressionTest "a.dynamicType" $ Expression Nothing (PrefixExpression1 Nothing (PostfixDynamicType (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
   , expressionTest "a!" $ Expression Nothing (PrefixExpression1 Nothing (PostfixForcedValue (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
   , expressionTest "a?" $ Expression Nothing (PrefixExpression1 Nothing (PostfixOptionChaining (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))))) []
+  , expressionTest "a[1]" $ Expression Nothing (PrefixExpression1 Nothing (Subscript (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = Nothing}))) [Expression Nothing (PrefixExpression1 Nothing (PostfixExpression1 (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))) []])) []
   ]
 
 fooEmptyFunCall = (Expression Nothing (PrefixExpression1 Nothing (FunctionCallE (FunctionCall (PostfixExpression1 (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = Nothing}))) [] Nothing))) [])

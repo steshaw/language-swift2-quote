@@ -28,6 +28,7 @@ instance Pretty PostfixExpression where
   ppr (PostfixDynamicType postfixExpression) = ppr postfixExpression <> string ".dynamicType"
   ppr (PostfixForcedValue postfixExpression) = ppr postfixExpression <> string "!"
   ppr (PostfixOptionChaining postfixExpression) = ppr postfixExpression <> string "?"
+  ppr (Subscript postfixExpression expressions) = ppr postfixExpression <> brackets (commasep (map ppr expressions))
 
 instance Pretty FunctionCall where
   ppr (FunctionCall postfixExpression expressionElements optClosure) =

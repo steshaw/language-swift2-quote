@@ -29,6 +29,7 @@ data PostfixExpression
   | PostfixDynamicType PostfixExpression
   | PostfixForcedValue PostfixExpression
   | PostfixOptionChaining PostfixExpression
+  | Subscript PostfixExpression [Expression]
   deriving (Show, Eq)
 
 data ExpressionElement = ExpressionElement (Maybe String) Expression

@@ -948,6 +948,7 @@ postfixExpressionOuter = do
         <|> postfixOpTail e1
         <|> dotTail e1
         <|> (FunctionCallE <$> functionCallTail e1)
+        <|> Subscript <$> pure e1 <*> brackets expressionList
         <|> pure e1
   pure e2
     where
@@ -956,17 +957,13 @@ postfixExpressionOuter = do
       dotTail :: PostfixExpression -> Parser PostfixExpression
       dotTail e = do
         o <- op "."
-        trace ("\n\n  got dot = " ++ show o ++ "\n\n") $
-          postfixDynamicTypeTail e
-            <|> postfixInitTail e
-            <|> postfixSelfTail e
-            <|> explicitMemberExpressionTail e
+        postfixDynamicTypeTail e
+          <|> postfixInitTail e
+          <|> postfixSelfTail e
+          <|> explicitMemberExpressionTail e
 
 postfixExpressionInner :: Parser PostfixExpression
 postfixExpressionInner = PostfixExpression1 <$> primaryExpression
-{-
-postfix-expression → subscript-expression­
--}
 
 -- GRAMMAR OF A FUNCTION CALL EXPRESSION
 
@@ -987,13 +984,9 @@ trailingClosure = closureExpression
 -- GRAMMAR OF AN INITIALIZER EXPRESSION
 -- We have already parsed postfixExpression and ".".
 postfixInitTail :: PostfixExpression -> Parser PostfixExpression
-postfixInitTail postfixE = do
-  _ <- trace "within postfixInitTail" $ pure ()
-  _ <- kw "init"
-  return $ PostfixExpression4Initalizer postfixE
+postfixInitTail postfixE = kw "init" *> pure (PostfixExpression4Initalizer postfixE)
 
 -- GRAMMAR OF AN EXPLICIT MEMBER EXPRESSION
-
 -- We have already parsed postExpression and ".".
 explicitMemberExpressionTail :: PostfixExpression -> Parser PostfixExpression
 explicitMemberExpressionTail postfixE
@@ -1004,24 +997,14 @@ explicitMemberExpressionTail postfixE
 -- GRAMMAR OF A SELF EXPRESSION
 -- We have already parsed postfixExpression and ".".
 postfixSelfTail :: PostfixExpression -> Parser PostfixExpression
-postfixSelfTail postfixE = do
-  _ <- trace "within postfixSelfTail" $ pure ()
-  _ <- kw "self"
-  return $ PostfixSelf postfixE
+postfixSelfTail postfixE = kw "self" *> pure (PostfixSelf postfixE)
 
 -- GRAMMAR OF A DYNAMIC TYPE EXPRESSION
 postfixDynamicTypeTail :: PostfixExpression -> Parser PostfixExpression
-postfixDynamicTypeTail postfixE = do
-  _ <- trace "within postfixDynamicTypeTail" $ pure ()
-  _ <- kw "dynamicType"
-  return $ PostfixDynamicType postfixE
+postfixDynamicTypeTail postfixE = kw "dynamicType" *> pure (PostfixDynamicType postfixE)
 
-{-
-GRAMMAR OF A SUBSCRIPT EXPRESSION
-
-subscript-expression → postfix-expression­[­expression-list­]­
--}
-
+-- GRAMMAR OF A SUBSCRIPT EXPRESSION
+-- See Subscript above.
 
 --GRAMMAR OF A FORCED-VALUE EXPRESSION
 -- See PostfixForcedValue
