@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Language.Swift.Quote.Parser where
 
 import Language.Swift.Quote.Syntax
@@ -19,14 +21,19 @@ import qualified Text.Parsec.Token as T
 --   Left err -> Left $ show err
 --   Right mod -> Right mod
 
+parseIt p input = left show (P.parse p "<stdin>" input)
+
 parse :: Text -> Either String Module
-parse input = left show (P.parse module_ "<stdin>" input)
+parse = parseIt module_
 
 parseExpression :: Text -> Either String Expression
-parseExpression input = left show (P.parse expression' "<stdin>" input)
+parseExpression = parseIt expression'
 
 parseDeclaration :: Text -> Either String Declaration
-parseDeclaration input = left show (P.parse declaration "<stdin>" input)
+parseDeclaration = parseIt declaration
+
+parseFunctionCall :: Text -> Either String FunctionCall
+parseFunctionCall = parseIt functionCallExpression
 
 expression' = ws *> expression <* ws
 
@@ -178,10 +185,11 @@ lexer = T.makeTokenParser swiftLangDef
 identifier = T.identifier lexer
 ws = T.whiteSpace lexer
 comma = T.comma lexer
+colon = T.colon lexer
 semicolon = T.semi lexer
 optSemicolon = optional semicolon
 braces = T.braces lexer
-parens = T.braces lexer
+parens = T.parens lexer
 brackets = T.brackets lexer
 angles = T.angles lexer
 
@@ -865,13 +873,16 @@ implicit-member-expression → .­identifier­
 
 -- GRAMMAR OF A PARENTHESIZED EXPRESSION
 
+parenthesizedExpression :: Parser (Maybe [ExpressionElement])
 parenthesizedExpression = parens (optional expressionElementList)
 
+expressionElementList :: Parser [ExpressionElement]
 expressionElementList = P.sepBy1 expressionElement comma
 
+expressionElement :: Parser ExpressionElement
 expressionElement
-    = ExpressionElement <$> pure Nothing <* semicolon <*> expression
-  <|> ExpressionElement <$> (Just <$> identifier) <* semicolon <*> expression
+    = try (ExpressionElement <$> (Just <$> identifier) <* colon <*> expression)
+  <|> ExpressionElement <$> pure Nothing <*> expression
 
 -- GRAMMAR OF A WILDCARD EXPRESSION
 
