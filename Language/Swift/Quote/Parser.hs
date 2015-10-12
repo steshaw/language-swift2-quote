@@ -945,17 +945,15 @@ postfix-expression → optional-chaining-expression­
 -}
 
 -- GRAMMAR OF A FUNCTION CALL EXPRESSION
-basicExpression :: Parser PostfixExpression
-basicExpression = PostfixExpression1 <$> (PrimaryExpression1 <$> identifier <*> optional genericArgumentClause) <* ws
 
 functionCallExpression :: Parser FunctionCall
 functionCallExpression
     = FunctionCall
-      <$> basicExpression -- FIXME: was postfixExpression
+      <$> postfixExpression
       <*> parenthesizedExpression
       <*> pure Nothing
   <|> FunctionCall
-      <$> basicExpression -- FIXME: was postfixExpression
+      <$> postfixExpression
       <*> parenthesizedExpression
       <*> (Just <$> trailingClosure)
 
