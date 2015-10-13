@@ -124,9 +124,13 @@ data CodeBlock = CodeBlock (Maybe [Statement])
 
 data Declaration
   = ImportDeclaration [Attribute] (Maybe ImportKind) ImportPath
-  | VariableDeclaration
+  | DeclVariableDeclaration VariableDeclaration
   | ConstantDeclaration [Attribute] [DeclarationModifier] [PatternInitializer]
   | DummyDeclaration
+  deriving (Show, Eq)
+
+data VariableDeclaration
+  = SimpleVariableDeclaration [PatternInitializer]
   deriving (Show, Eq)
 
 data DeclarationModifier

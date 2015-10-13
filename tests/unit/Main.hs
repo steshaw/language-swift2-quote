@@ -86,6 +86,7 @@ src2ast = testGroup "Source -> AST"
   , moduleTest "print(\"Hello world\\n\")" $ Module [ExpressionStatement (Expression Nothing (PrefixOperator Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = Nothing}))) [ExpressionElement Nothing (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (StringLiteral "Hello world\n"))))) [])] Nothing))) [])]
 
   , moduleTest "let n = 1" $ Module [ DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (ExpressionPattern (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "n", idgGenericArgs = Nothing})))) [BinaryExpression2 {beTryOperator = Nothing, bePrefixExpression = PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))}])) Nothing])]
+  , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (SimpleVariableDeclaration [PatternInitializer (ExpressionPattern (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "d", idgGenericArgs = Nothing})))) [BinaryExpression2 {beTryOperator = Nothing, bePrefixExpression = PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (FloatingPointLiteral 1.0))))}])) Nothing]))]
   ]
 
 emptyModule = Module []

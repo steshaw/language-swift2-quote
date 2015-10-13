@@ -254,9 +254,6 @@ whileStatement = return WhileStatement
 repeatWhileStatement :: Parser Statement
 repeatWhileStatement = return RepeatWhileStatement
 
-variableDeclaration :: Parser Declaration
-variableDeclaration = return VariableDeclaration
-
 whereClause :: Parser Expression
 whereClause = expression -- TODO
 
@@ -470,6 +467,7 @@ declaration :: Parser Declaration
 declaration
     = importDeclaration
   <|> constantDeclaration
+  <|> variableDeclaration
 {-
 declaration → variable-declaration­
 declaration → typealias-declaration­
@@ -532,11 +530,11 @@ importPathIdentifier
 
 constantDeclaration :: Parser Declaration
 constantDeclaration = do
-  attr <- fromMaybe [] <$> optional attributes
-  decl <- fromMaybe [] <$> optional declarationModifiers
+  atts <- fromMaybe [] <$> optional attributes
+  mods <- fromMaybe [] <$> optional declarationModifiers
   _ <- kw "let"
   is <- patternInitializerList
-  return $ ConstantDeclaration attr decl is
+  return $ ConstantDeclaration atts mods is
 
 patternInitializerList :: Parser [PatternInitializer]
 patternInitializerList = patternInitializer `P.sepBy1` comma
@@ -547,31 +545,43 @@ patternInitializer = PatternInitializer <$> pattern <*> optional initializer
 initializer :: Parser Expression
 initializer = op "=" *> expression
 
-{-
-GRAMMAR OF A VARIABLE DECLARATION
+-- GRAMMAR OF A VARIABLE DECLARATION
+variableDeclaration :: Parser Declaration
+variableDeclaration = DeclVariableDeclaration <$> variableDeclarationBody
 
-variable-declaration → variable-declaration-head­pattern-initializer-list­
-variable-declaration → variable-declaration-head­variable-name­type-annotation­code-block­
-variable-declaration → variable-declaration-head­variable-name­type-annotation­getter-setter-block­
-variable-declaration → variable-declaration-head­variable-name­type-annotation­getter-setter-keyword-block­
-variable-declaration → variable-declaration-head­variable-name­initializer­willSet-didSet-block­
-variable-declaration → variable-declaration-head­variable-name­type-annotation­initializer­opt­willSet-didSet-block­
-variable-declaration-head → attributes­opt­declaration-modifiers­opt­var­
-variable-name → identifier­
-getter-setter-block → code-block­
-getter-setter-block → {­getter-clause­setter-clause­opt­}­
-getter-setter-block → {­setter-clause­getter-clause­}­
-getter-clause → attributes­opt­get­code-block­
-setter-clause → attributes­opt­set­setter-name­opt­code-block­
-setter-name → (­identifier­)­
-getter-setter-keyword-block → {­getter-keyword-clause­setter-keyword-clause­opt­}­
-getter-setter-keyword-block → {­setter-keyword-clause­getter-keyword-clause­}­
-getter-keyword-clause → attributes­opt­get­
-setter-keyword-clause → attributes­opt­set­
-willSet-didSet-block → {­willSet-clause­didSet-clause­opt­}­
-willSet-didSet-block → {­didSet-clause­willSet-clause­opt­}­
-willSet-clause → attributes­opt­willSet­setter-name­opt­code-block­
-didSet-clause → attributes­opt­didSet­setter-name­opt­code-block­
+variableDeclarationBody :: Parser VariableDeclaration
+variableDeclarationBody
+  = variableDeclarationHead *> (SimpleVariableDeclaration <$> patternInitializerList)
+
+variableDeclarationHead :: Parser ([Attribute], [DeclarationModifier])
+variableDeclarationHead = do
+  atts <- fromMaybe [] <$> optional attributes
+  mods <- fromMaybe [] <$> optional declarationModifiers
+  _ <- kw "var"
+  return (atts, mods)
+
+-- variable-declaration → variable-declaration-head­variable-name­type-annotation­code-block­
+-- variable-declaration → variable-declaration-head­variable-name­type-annotation­getter-setter-block­
+-- variable-declaration → variable-declaration-head­variable-name­type-annotation­getter-setter-keyword-block­
+-- variable-declaration → variable-declaration-head­variable-name­initializer­willSet-didSet-block­
+-- variable-declaration → variable-declaration-head­variable-name­type-annotation­initializer­opt­willSet-didSet-block­
+-- variable-name → identifier­
+-- getter-setter-block → code-block­
+-- getter-setter-block → {­getter-clause­setter-clause­opt­}­
+-- getter-setter-block → {­setter-clause­getter-clause­}­
+-- getter-clause → attributes­opt­get­code-block­
+-- setter-clause → attributes­opt­set­setter-name­opt­code-block­
+-- setter-name → (­identifier­)­
+-- getter-setter-keyword-block → {­getter-keyword-clause­setter-keyword-clause­opt­}­
+-- getter-setter-keyword-block → {­setter-keyword-clause­getter-keyword-clause­}­
+-- getter-keyword-clause → attributes­opt­get­
+-- setter-keyword-clause → attributes­opt­set­
+-- willSet-didSet-block → {­willSet-clause­didSet-clause­opt­}­
+-- willSet-didSet-block → {­didSet-clause­willSet-clause­opt­}­
+-- willSet-clause → attributes­opt­willSet­setter-name­opt­code-block­
+-- didSet-clause → attributes­opt­didSet­setter-name­opt­code-block­
+
+{-
 GRAMMAR OF A TYPE ALIAS DECLARATION
 
 typealias-declaration → typealias-head­typealias-assignment­
@@ -1115,7 +1125,7 @@ numericLiteral
   <|> optional (op "-") floatingPointLiteral
 -}
 numericLiteral :: Parser Literal
-numericLiteral = integerLiteral <|> floatingPointLiteral
+numericLiteral = try floatingPointLiteral <|> integerLiteral
 
 -- GRAMMAR OF AN INTEGER LITERAL
 
