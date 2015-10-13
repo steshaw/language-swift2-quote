@@ -468,9 +468,8 @@ declaration
     = importDeclaration
   <|> constantDeclaration
   <|> variableDeclaration
+  <|> typealiasDeclaration
 {-
-declaration → variable-declaration­
-declaration → typealias-declaration­
 declaration → function-declaration­
 declaration → enum-declaration­
 declaration → struct-declaration­
@@ -581,13 +580,27 @@ variableDeclarationHead = do
 -- willSet-clause → attributes­opt­willSet­setter-name­opt­code-block­
 -- didSet-clause → attributes­opt­didSet­setter-name­opt­code-block­
 
-{-
-GRAMMAR OF A TYPE ALIAS DECLARATION
+-- GRAMMAR OF A TYPE ALIAS DECLARATION
+typealiasDeclaration = do
+  (atts, m, name) <- typealiasHead
+  t <-  typealiasAssignment
+  return (TypeAlias atts m name t)
 
-typealias-declaration → typealias-head­typealias-assignment­
-typealias-head → attributes­opt­access-level-modifier­opt­typealias­typealias-name­
-typealias-name → identifier­
-typealias-assignment → =­type­
+typealiasHead :: Parser ([Attribute], Maybe DeclarationModifier, String)
+typealiasHead = do
+  atts <- fromMaybe [] <$> optional attributes
+  m <- optional accessLevelModifier
+  _ <- kw "typealias"
+  name <- typealiasName
+  return (atts, m, name)
+
+typealiasName :: Parser String
+typealiasName = identifier
+
+typealiasAssignment :: Parser Type
+typealiasAssignment = op "=" *> type_
+
+{-
 GRAMMAR OF A FUNCTION DECLARATION
 
 function-declaration → function-head­function-name­generic-parameter-clause­opt­function-signature­function-body­opt­

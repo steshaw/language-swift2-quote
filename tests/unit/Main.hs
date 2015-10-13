@@ -87,6 +87,7 @@ src2ast = testGroup "Source -> AST"
 
   , moduleTest "let n = 1" $ Module [ DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (ExpressionPattern (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "n", idgGenericArgs = Nothing})))) [BinaryExpression2 {beTryOperator = Nothing, bePrefixExpression = PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (IntegerLiteral 1))))}])) Nothing])]
   , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (SimpleVariableDeclaration [PatternInitializer (ExpressionPattern (Expression Nothing (PrefixOperator Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "d", idgGenericArgs = Nothing})))) [BinaryExpression2 {beTryOperator = Nothing, bePrefixExpression = PrefixOperator Nothing (PostfixPrimary (PrimaryExpression2 (RegularLiteral (FloatingPointLiteral 1.0))))}])) Nothing]))]
+  , moduleTest "typealias TypeAliasName = String" $ Module [DeclarationStatement (TypeAlias [] Nothing "TypeAliasName" (Type "String"))]
   ]
 
 emptyModule = Module []

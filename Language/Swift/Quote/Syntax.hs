@@ -122,10 +122,13 @@ data ForInit
 data CodeBlock = CodeBlock (Maybe [Statement])
   deriving (Show, Eq)
 
+type TypeAliasName = String
+
 data Declaration
   = ImportDeclaration [Attribute] (Maybe ImportKind) ImportPath
   | DeclVariableDeclaration VariableDeclaration
   | ConstantDeclaration [Attribute] [DeclarationModifier] [PatternInitializer]
+  | TypeAlias [Attribute] (Maybe DeclarationModifier) TypeAliasName Type
   | DummyDeclaration
   deriving (Show, Eq)
 
