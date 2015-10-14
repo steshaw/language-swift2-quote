@@ -42,7 +42,7 @@ gt n = goldenVsStringDiff n diffCmd (s n <.> "golden") (prettyFile (s n))
 goldenTests = testGroup "Golden tests"
   [ gt "hello"
   , gt "example1"
-  , gt "example2"
+  , gt "while1"
   ]
 
 litIntExp :: Integer -> Expression
