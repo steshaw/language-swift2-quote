@@ -153,6 +153,7 @@ reservedOperators =
   , "-"
   , "/"
   , "*"
+  , "="
   -- , "=" -- FIXME this interferes with constantDeclaration.
   -- , "&" -- as a prefix operator
   -- , "->"
@@ -176,8 +177,8 @@ swiftLangDef = T.LanguageDef
                           ++ reservedWordsExpressionsTypes
                           ++ keywordsInPatterns
                           ++ keywordsinContexts
-  , T.opStart = P.oneOf "+-*/"
-  , T.opLetter = P.oneOf "+-*/"
+  , T.opStart = P.oneOf  "=+-*/"
+  , T.opLetter = P.oneOf "=+-*/"
   , T.reservedOpNames = reservedOperators
   , T.caseSensitive = True
   }

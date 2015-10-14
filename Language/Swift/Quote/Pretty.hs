@@ -102,8 +102,8 @@ instance Pretty Statement where
 
 instance Pretty Declaration where
   ppr (ImportDeclaration attributes optImportKind importPath) = string "import" <> (cat . punctuate dot) (map ppr importPath) -- TODO
-  ppr (DeclVariableDeclaration variableDeclaration) = ppr variableDeclaration -- TODO
-  ppr (ConstantDeclaration attributes declarationModifiers patternInitialisers) = string "let" <> ppr patternInitialisers -- TODO
+  ppr (DeclVariableDeclaration variableDeclaration) = ppr variableDeclaration
+  ppr (ConstantDeclaration attributes declarationModifiers patternInitialisers) = string "let" <+> commasep (map ppr patternInitialisers)
   ppr (TypeAlias attributes declaractionModifiers name typ_) = string name <> string "=" <> ppr typ_ -- TODO
   ppr DummyDeclaration = string "<dummy-decl>"
 
@@ -112,10 +112,10 @@ instance Pretty ImportPathIdentifier where
   ppr (ImportOperator string) = ppr string
 
 instance Pretty VariableDeclaration where
-  ppr (SimpleVariableDeclaration patternInitialisers) = ppr patternInitialisers
+  ppr (SimpleVariableDeclaration patternInitialisers) = string "var" <+> commasep (map ppr patternInitialisers)
 
 instance Pretty PatternInitializer where
-  ppr (PatternInitializer pattern optExpression) = ppr pattern <> string "=" <> ppr optExpression
+  ppr (PatternInitializer pattern optExpression) = ppr pattern <+> string "=" <+> string "[[" <+> ppr optExpression <+> string "]]"
 
 instance (Pretty Pattern) where
   ppr (ExpressionPattern expression) = ppr expression
