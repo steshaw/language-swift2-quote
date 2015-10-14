@@ -14,7 +14,7 @@ data PrefixExpression
 
 data IdG = IdG
   { idgIdentifier :: String
-  , idgGenericArgs :: Maybe [Type]
+  , idgGenericArgs :: [Type]
   }
   deriving (Show, Eq)
 

@@ -1,18 +1,23 @@
+{-# LANGUAGE OverloadedStrings  #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.Swift.Quote.Pretty where
 
 import Language.Swift.Quote.Syntax
 
-import Data.Text.Lazy (Text)
+import Data.Text.Lazy (Text, append)
 import Text.PrettyPrint.Mainland
 
 prettyPrint :: Module -> Text
-prettyPrint = error "<module>" -- TODO
+prettyPrint m = append p "\n"
+  where p = prettyLazyText 100 (ppr m)
+
+instance Pretty Module where
+  ppr (Module statements) = stack (map ppr statements)
 
 instance Pretty Expression where
-  ppr (Expression optTryOperator prefixExpression optBinaryExpressions) =
-    ppr optTryOperator <> ppr prefixExpression -- <> ppr optBinaryExpressions
+  ppr (Expression optTryOperator prefixExpression binaryExpressions) =
+    ppr optTryOperator <> ppr prefixExpression <> spread (map ppr binaryExpressions)
 
 instance Pretty PrefixExpression where
   ppr (PrefixOperator optPrefixOperator primaryExpression)
@@ -22,6 +27,8 @@ instance Pretty PrefixExpression where
 instance Pretty PostfixExpression where
   ppr (PostfixPrimary primaryExpression) = ppr primaryExpression
   ppr (PostfixOperator prefixExpression postfixOperator) = ppr prefixExpression <> ppr postfixOperator
+  ppr (ExplicitMemberExpressionDigits postfixExpression digits) = ppr postfixExpression <> string digits
+  ppr (ExplicitMemberExpressionIdentifier postfixExpression idG) = ppr postfixExpression <> ppr idG
   ppr (FunctionCallE functionCall) = ppr functionCall
   ppr (PostfixExpression4Initalizer postfixExpression) = ppr postfixExpression <> string ".init"
   ppr (PostfixSelf postfixExpression) = ppr postfixExpression <> string ".self"
@@ -45,8 +52,7 @@ instance Pretty Closure where
   ppr (Closure statements) = braces (ppr statements)
 
 instance Pretty PrimaryExpression where
-  ppr (PrimaryExpression1 (IdG identifier genericArgumentList)) =
-    ppr identifier <> if null genericArgumentList then string "" else angles (ppr genericArgumentList)
+  ppr (PrimaryExpression1 idG) = ppr idG
   ppr (PrimaryExpression2 literalExpression) = ppr literalExpression
   ppr (PrimaryExpression3 selfExpression) = ppr selfExpression
   ppr (PrimaryExpression4 superclassExpression) = ppr superclassExpression
@@ -54,6 +60,10 @@ instance Pretty PrimaryExpression where
   ppr (PrimaryExpression6 expressionElements) = ppr expressionElements
   ppr PrimaryExpression7 = string "<implicit-member-expression>" -- TODO implicit-member-expression
   ppr PrimaryExpression8 = string "_"
+
+instance Pretty IdG where
+  ppr (IdG identifier []) = ppr identifier
+  ppr (IdG identifier genericArgs) = ppr identifier <> angles (ppr genericArgs)
 
 instance Pretty BinaryExpression where
   ppr (BinaryExpression1 operator prefixExpression) = ppr operator <> ppr prefixExpression
@@ -86,4 +96,26 @@ instance Pretty Type where
   ppr (Type ty) = ppr ty
 
 instance Pretty Statement where
+  ppr (ExpressionStatement expression) = ppr expression
+  ppr (DeclarationStatement declaration) = ppr declaration
   ppr DummyStatement = string "<dummy-statement>"
+
+instance Pretty Declaration where
+  ppr (ImportDeclaration attributes optImportKind importPath) = string "import" <> (cat . punctuate dot) (map ppr importPath) -- TODO
+  ppr (DeclVariableDeclaration variableDeclaration) = ppr variableDeclaration -- TODO
+  ppr (ConstantDeclaration attributes declarationModifiers patternInitialisers) = string "let" <> ppr patternInitialisers -- TODO
+  ppr (TypeAlias attributes declaractionModifiers name typ_) = string name <> string "=" <> ppr typ_ -- TODO
+  ppr DummyDeclaration = string "<dummy-decl>"
+
+instance Pretty ImportPathIdentifier where
+  ppr (ImportIdentifier string) = ppr string
+  ppr (ImportOperator string) = ppr string
+
+instance Pretty VariableDeclaration where
+  ppr (SimpleVariableDeclaration patternInitialisers) = ppr patternInitialisers
+
+instance Pretty PatternInitializer where
+  ppr (PatternInitializer pattern optExpression) = ppr pattern <> string "=" <> ppr optExpression
+
+instance (Pretty Pattern) where
+  ppr (ExpressionPattern expression) = ppr expression

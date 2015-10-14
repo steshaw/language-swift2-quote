@@ -581,6 +581,7 @@ variableDeclarationHead = do
 -- didSet-clause → attributes­opt­didSet­setter-name­opt­code-block­
 
 -- GRAMMAR OF A TYPE ALIAS DECLARATION
+typealiasDeclaration :: Parser Declaration
 typealiasDeclaration = do
   (atts, m, name) <- typealiasHead
   t <-  typealiasAssignment
@@ -923,7 +924,7 @@ typeCastingOperator
 -- GRAMMAR OF A PRIMARY EXPRESSION
 primaryExpression :: Parser PrimaryExpression
 primaryExpression
-    = PrimaryExpression1 <$> (IdG <$> identifier <*> optional genericArgumentClause)
+    = PrimaryExpression1 <$> (IdG <$> identifier <*> (fromMaybe [] <$> optional genericArgumentClause))
   <|> PrimaryExpression2 <$> literalExpression
   <|> PrimaryExpression3 <$> selfExpression
   <|> PrimaryExpression4 <$> superclassExpression
@@ -1074,7 +1075,7 @@ explicitMemberExpressionTail :: PostfixExpression -> Parser PostfixExpression
 explicitMemberExpressionTail postfixE
     = try (ExplicitMemberExpressionDigits <$> pure postfixE <*> decimalDigits)
   <|> ExplicitMemberExpressionIdentifier <$> pure postfixE <*>
-        (IdG <$> identifier <*> optional genericArgumentClause)
+        (IdG <$> identifier <*> (fromMaybe [] <$> optional genericArgumentClause))
 
 -- GRAMMAR OF A SELF EXPRESSION
 -- We have already parsed postfixExpression and ".".
