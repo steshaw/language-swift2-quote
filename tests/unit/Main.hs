@@ -37,11 +37,12 @@ s :: FilePath -> FilePath
 s fileName = "tests/golden" </> fileName <.> "swift"
 
 gt n = goldenVsStringDiff n diffCmd (s n <.> "golden") (prettyFile (s n))
-  where diffCmd ref new = ["diff", "-u", ref, new]
+  where diffCmd ref new = ["diff", "--unified=5", ref, new]
 
 goldenTests = testGroup "Golden tests"
   [ gt "hello"
   , gt "example1"
+  , gt "example2"
   ]
 
 litIntExp :: Integer -> Expression

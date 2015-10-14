@@ -109,7 +109,7 @@ data Statement
   | DeferStatement
   | DoStatement
   | CompilerControlStatement
-  | WhileStatement
+  | WhileStatement Expression CodeBlock
   | RepeatWhileStatement
   | DummyStatement
   deriving (Show, Eq)
@@ -119,7 +119,7 @@ data ForInit
   | FiExpressionList [Expression]
   deriving (Show, Eq)
 
-data CodeBlock = CodeBlock (Maybe [Statement])
+data CodeBlock = CodeBlock [Statement]
   deriving (Show, Eq)
 
 type TypeAliasName = String

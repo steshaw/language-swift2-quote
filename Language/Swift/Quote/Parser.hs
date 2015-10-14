@@ -154,7 +154,6 @@ reservedOperators =
   , "/"
   , "*"
   , "="
-  -- , "=" -- FIXME this interferes with constantDeclaration.
   -- , "&" -- as a prefix operator
   -- , "->"
   -- , "`"
@@ -249,9 +248,6 @@ doStatement = return DoStatement
 compilerControlStatement :: Parser Statement
 compilerControlStatement = return CompilerControlStatement
 
-whileStatement :: Parser Statement
-whileStatement = return WhileStatement
-
 repeatWhileStatement :: Parser Statement
 repeatWhileStatement = return RepeatWhileStatement
 
@@ -283,7 +279,7 @@ loopStatement :: Parser Statement
 loopStatement
     = forStatement
   <|> forInStatement
-  -- <|> whileStatement
+  <|> whileStatement
   -- <|> repeatWhileStatement
 
 forStatement :: Parser Statement
@@ -324,21 +320,25 @@ forInStatement = do
   b <- codeBlock
   pure $ ForInStatement p e w b
 
-{-
-GRAMMAR OF A WHILE STATEMENT
+-- GRAMMAR OF A WHILE STATEMENT
 
-while-statement → while­condition-clause­code-block­
-condition-clause → expression­
-condition-clause → expression­,­condition-list­
-condition-clause → condition-list­
-condition-clause → availability-condition­,­expression­
-condition-list → condition­  condition­,­condition-list­
-condition → availability-condition­  case-condition­  optional-binding-condition­
-case-condition → case­pattern­initializer­where-clause­opt­
-optional-binding-condition → optional-binding-head­optional-binding-continuation-list­opt­where-clause­opt­
-optional-binding-head → let­pattern­initializer­  var­pattern­initializer­
-optional-binding-continuation-list → optional-binding-continuation­ optional-binding-continuation­,­optional-binding-continuation-list­
-optional-binding-continuation → pattern­initializer­  optional-binding-head­
+whileStatement :: Parser Statement
+whileStatement = kw "while" *> (WhileStatement <$> conditionClause <*> codeBlock)
+
+conditionClause :: Parser Expression
+conditionClause = expression
+-- condition-clause → expression­,­condition-list­
+-- condition-clause → condition-list­
+-- condition-clause → availability-condition­,­expression­
+-- condition-list → condition­  condition­,­condition-list­
+-- condition → availability-condition­  case-condition­  optional-binding-condition­
+-- case-condition → case­pattern­initializer­where-clause­opt­
+-- optional-binding-condition → optional-binding-head­optional-binding-continuation-list­opt­where-clause­opt­
+-- optional-binding-head → let­pattern­initializer­  var­pattern­initializer­
+-- optional-binding-continuation-list → optional-binding-continuation­ optional-binding-continuation­,­optional-binding-continuation-list­
+-- optional-binding-continuation → pattern­initializer­  optional-binding-head­
+
+{-
 GRAMMAR OF A REPEAT-WHILE STATEMENT
 
 repeat-while-statement → repeat­code-block­while­expression­
@@ -492,7 +492,7 @@ topLevelDeclaration = fromMaybe [] <$> optional statements
 -- GRAMMAR OF A CODE BLOCK
 
 codeBlock :: Parser CodeBlock
-codeBlock = CodeBlock <$> braces (optional statements)
+codeBlock = CodeBlock <$> braces (fromMaybe [] <$> optional statements)
 
 -- GRAMMAR OF AN IMPORT DECLARATION
 

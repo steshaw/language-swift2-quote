@@ -12,6 +12,8 @@ prettyPrint :: Module -> Text
 prettyPrint m = append p "\n"
   where p = prettyLazyText 100 (ppr m)
 
+ind = indent 2
+
 instance Pretty Module where
   ppr (Module statements) = stack (map ppr statements)
 
@@ -97,6 +99,7 @@ instance Pretty Type where
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression
+  ppr (WhileStatement expression codeBlock) = string "while" <+> ppr expression <+> ppr codeBlock
   ppr (DeclarationStatement declaration) = ppr declaration
   ppr DummyStatement = string "<dummy-statement>"
 
@@ -118,5 +121,10 @@ instance Pretty PatternInitializer where
   ppr (PatternInitializer (ExpressionPattern expression) optExpression) = ppr expression <+> ppr optExpression -- FIXME We currently get an Assignment ConstantDeclaration(AssignmentExpression) instead of ConstantDeclaration(IdentifierExpression, Expression)
   ppr (PatternInitializer pattern optExpression) = ppr pattern <+> string "=" <+> string "[[" <+> ppr optExpression <+> string "]]"
 
-instance (Pretty Pattern) where
+instance Pretty Pattern where
   ppr (ExpressionPattern expression) = ppr expression
+
+instance Pretty CodeBlock where
+  ppr (CodeBlock statements) = lbrace <> line
+    <> ind ((cat . punctuate line) (map ppr statements))
+    <> line <> rbrace
