@@ -36,7 +36,7 @@ prettyFile fileName = do
 s :: FilePath -> FilePath
 s fileName = "tests/golden" </> fileName <.> "swift"
 
-gt n = goldenVsStringDiff n diffCmd (s n) (prettyFile (s n <.> "golden"))
+gt n = goldenVsStringDiff n diffCmd (s n <.> "golden") (prettyFile (s n))
   where diffCmd ref new = ["diff", "-u", ref, new]
 
 goldenTests = testGroup "Golden tests"

@@ -17,7 +17,7 @@ instance Pretty Module where
 
 instance Pretty Expression where
   ppr (Expression optTryOperator prefixExpression binaryExpressions) =
-    ppr optTryOperator <> ppr prefixExpression <> spread (map ppr binaryExpressions)
+    ppr optTryOperator <+> ppr prefixExpression <+> spread (map ppr binaryExpressions)
 
 instance Pretty PrefixExpression where
   ppr (PrefixOperator optPrefixOperator primaryExpression)
