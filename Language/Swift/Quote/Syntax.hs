@@ -80,7 +80,7 @@ data BinaryExpression
     { beOperator :: String
     , bePrefixExpression :: PrefixExpression
     }
-  | BinaryExpression2
+  | BinaryAssignmentExpression
     { beTryOperator :: Maybe String
     , bePrefixExpression :: PrefixExpression
     }

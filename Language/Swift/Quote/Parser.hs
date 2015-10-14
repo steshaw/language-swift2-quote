@@ -882,7 +882,7 @@ binaryExpression
         _ <- assignmentOperator
         to <- optional tryOperator
         pe <- prefixExpression
-        return $ BinaryExpression2 to pe
+        return $ BinaryAssignmentExpression to pe
   <|> do
         co <- conditionalOperator
         to <- optional tryOperator

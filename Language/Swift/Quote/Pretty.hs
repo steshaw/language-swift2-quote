@@ -67,7 +67,7 @@ instance Pretty IdG where
 
 instance Pretty BinaryExpression where
   ppr (BinaryExpression1 operator prefixExpression) = ppr operator <> ppr prefixExpression
-  ppr (BinaryExpression2 tryOperator prefixExpression) = ppr tryOperator <> ppr prefixExpression
+  ppr (BinaryAssignmentExpression tryOperator prefixExpression) = string "=" <+> ppr tryOperator <+> ppr prefixExpression
   ppr (BinaryExpression3 (optS1, expression) optS2 prefixExpression) =
     ppr optS1 <> ppr expression <> ppr optS2 <> ppr prefixExpression
   ppr (BinaryExpression4 s typ) = ppr s <> ppr typ
@@ -104,7 +104,7 @@ instance Pretty Declaration where
   ppr (ImportDeclaration attributes optImportKind importPath) = string "import" <> (cat . punctuate dot) (map ppr importPath) -- TODO
   ppr (DeclVariableDeclaration variableDeclaration) = ppr variableDeclaration
   ppr (ConstantDeclaration attributes declarationModifiers patternInitialisers) = string "let" <+> commasep (map ppr patternInitialisers)
-  ppr (TypeAlias attributes declaractionModifiers name typ_) = string name <> string "=" <> ppr typ_ -- TODO
+  ppr (TypeAlias attributes declaractionModifiers name typ_) = string name <+> string "=" <+> ppr typ_ -- TODO
   ppr DummyDeclaration = string "<dummy-decl>"
 
 instance Pretty ImportPathIdentifier where
@@ -115,6 +115,7 @@ instance Pretty VariableDeclaration where
   ppr (SimpleVariableDeclaration patternInitialisers) = string "var" <+> commasep (map ppr patternInitialisers)
 
 instance Pretty PatternInitializer where
+  ppr (PatternInitializer (ExpressionPattern expression) optExpression) = ppr expression <+> ppr optExpression -- FIXME We currently get an Assignment ConstantDeclaration(AssignmentExpression) instead of ConstantDeclaration(IdentifierExpression, Expression)
   ppr (PatternInitializer pattern optExpression) = ppr pattern <+> string "=" <+> string "[[" <+> ppr optExpression <+> string "]]"
 
 instance (Pretty Pattern) where
