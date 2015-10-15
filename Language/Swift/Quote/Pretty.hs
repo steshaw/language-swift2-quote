@@ -37,7 +37,9 @@ instance Pretty PostfixExpression where
   ppr (PostfixDynamicType postfixExpression) = ppr postfixExpression <> string ".dynamicType"
   ppr (PostfixForcedValue postfixExpression) = ppr postfixExpression <> string "!"
   ppr (PostfixOptionChaining postfixExpression) = ppr postfixExpression <> string "?"
-  ppr (Subscript postfixExpression expressions) = ppr postfixExpression <> brackets (commasep (map ppr expressions))
+  ppr (Subscript postfixExpression expressions) = ppr postfixExpression <> ppExpressions expressions
+
+ppExpressions expressions = brackets (commasep (map ppr expressions))
 
 instance Pretty FunctionCall where
   ppr (FunctionCall postfixExpression expressionElements optClosure) =
@@ -88,7 +90,7 @@ instance Pretty Literal where
 instance Pretty SelfExpression where
   ppr Self1 = string "self"
   ppr (Self2 identifier) = string "self" <> string "." <> string identifier
-  ppr (Self3 expressions) = string "self" <> brackets (commasep (map ppr expressions))
+  ppr (Self3 expressions) = string "self" <> ppExpressions expressions
   ppr Self4 = string "self" <> string "." <> string "init"
 
 instance Pretty SuperclassExpression where
@@ -100,8 +102,14 @@ instance Pretty Type where
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression
   ppr (WhileStatement expression codeBlock) = string "while" <+> ppr expression <+> ppr codeBlock
+  ppr (ForStatement iE cE nE block) = string "for" <+> ppr iE <> semi
+                                           <+> ppr cE <> semi <+> ppr nE <+> ppr block
   ppr (DeclarationStatement declaration) = ppr declaration
   ppr DummyStatement = string "<dummy-statement>"
+
+instance Pretty ForInit where
+  ppr (FiDeclaration declaration) = ppr declaration
+  ppr (FiExpressionList expressions) = ppExpressions expressions
 
 instance Pretty Declaration where
   ppr (ImportDeclaration attributes optImportKind importPath) = string "import" <> (cat . punctuate dot) (map ppr importPath) -- TODO

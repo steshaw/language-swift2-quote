@@ -1,3 +1,3 @@
-for ; true; {
+for ;true; {
     print("Hello");
   }

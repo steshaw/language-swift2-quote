@@ -277,15 +277,13 @@ statements = many statement
 -- GRAMMAR OF A LOOP STATEMENT
 loopStatement :: Parser Statement
 loopStatement
-    = forStatement
-  <|> forInStatement
+    = kw "for" *> (forStatementTail <|> forInStatementTail)
   <|> whileStatement
   -- <|> repeatWhileStatement
 
-forStatement :: Parser Statement
-forStatement
+forStatementTail :: Parser Statement
+forStatementTail
     = do
-        _ <- kw "for"
         (i, e1, e2) <- forMiddle
         b <- codeBlock
         return $ ForStatement i e1 e2 b
@@ -297,11 +295,21 @@ forStatement
 
 forMiddle :: Parser (Maybe ForInit, Maybe Expression, Maybe Expression)
 forMiddle = do
+          _ <- trace "in forMiddle" $ pure ()
           i <- optional forInit
-          _ <- semicolon
+          _ <- trace ("i = " ++ show i) $ pure ()
+          sc1 <- semicolon
+          _ <- trace ("sc1 = " ++ show sc1) $ pure ()
+          s <- P.lookAhead $ many P.anyChar
+          _ <- trace ("any s (before optional expression)= " ++ show s) $ pure ()
           e1 <- optional expression
-          _ <- semicolon
-          e2 <- optional expression
+          _ <- trace ("e1 = " ++ show e1) $ pure ()
+          sc2 <- semicolon
+          _ <- trace ("sc2 = " ++ show sc2) $ pure ()
+          s2 <- P.lookAhead $ many P.anyChar
+          _ <- trace ("any s = " ++ show s2) $ pure ()
+          e2 <- pure Nothing -- optional expression
+          _ <- trace ("e2 = " ++ show i) $ pure ()
           return (i, e1, e2)
 
 forInit :: Parser ForInit
@@ -309,9 +317,8 @@ forInit
     = FiDeclaration <$> variableDeclaration
   <|> FiExpressionList <$> expressionList
 
-forInStatement :: Parser Statement
-forInStatement = do
-  _ <- kw "for"
+forInStatementTail :: Parser Statement
+forInStatementTail = do
   _ <- optional $ kw "case"
   p <- pattern
   _ <- kw "in"
