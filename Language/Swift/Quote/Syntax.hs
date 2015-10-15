@@ -129,6 +129,16 @@ data Declaration
   | DeclVariableDeclaration VariableDeclaration
   | ConstantDeclaration [Attribute] [DeclarationModifier] [PatternInitializer]
   | TypeAlias [Attribute] (Maybe DeclarationModifier) TypeAliasName Type
+  | FunctionDeclaration
+    { funAttrs :: [Attribute]
+    , funDecls :: [DeclarationModifier]
+    , funName :: FunctionName
+    , funGenericParamClause :: Maybe GenericParameterClause
+    , funParameterClauses :: [[Parameter]]
+    , funThrowDecl :: Maybe String -- "throws" or "rethrows"
+    , funResult :: Maybe FunctionResult
+    , funBody :: Maybe CodeBlock
+    }
   | DummyDeclaration
   deriving (Show, Eq)
 
@@ -160,4 +170,31 @@ data PatternInitializer = PatternInitializer Pattern (Maybe Expression)
 
 data Pattern
   = ExpressionPattern Expression
+  deriving (Show, Eq)
+
+data FunctionResult = FunctionResult [Attribute] Type
+  deriving (Show, Eq)
+
+data FunctionName
+  = FunctionNameIdent String
+  | FunctionNameOp String
+  deriving (Show, Eq)
+
+data GenericParameterClause = GenericParameterClause [GenericParameter] (Maybe GenericRequirementClause)
+  deriving (Show, Eq)
+
+data GenericParameter = GenericParameter String
+  deriving (Show, Eq)
+
+data GenericRequirementClause = GenericRequirementClause
+  deriving (Show, Eq)
+
+data Parameter
+  = ParameterLet (Maybe String) String TypeAnnotation (Maybe Expression)
+  | ParameterVar (Maybe String) String TypeAnnotation (Maybe Expression)
+  | ParameterInOut (Maybe String) String TypeAnnotation
+  | ParameterDots (Maybe String) String TypeAnnotation
+  deriving (Show, Eq)
+
+data TypeAnnotation = TypeAnnotation [Attribute] Type
   deriving (Show, Eq)

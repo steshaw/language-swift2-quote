@@ -45,6 +45,12 @@ module_ :: Parser Module
 module_ = Module <$> topLevelDeclaration
 
 ------------------------------------------------------------
+-- Auxilliary functions
+------------------------------------------------------------
+attributeList :: Parser [Attribute]
+attributeList = fromMaybe [] <$> optional attributes
+
+------------------------------------------------------------
 -- Lexical Structure
 ------------------------------------------------------------
 
@@ -440,22 +446,35 @@ line-control-statement → #line­
 line-control-statement → #line­line-number­file-name­
 line-number → A decimal integer greater than zero
 file-name → static-string-literal­
-Generic Parameters and Arguments
-
-GRAMMAR OF A GENERIC PARAMETER CLAUSE
-
-generic-parameter-clause → <­generic-parameter-list­requirement-clause­opt­>­
-generic-parameter-list → generic-parameter­  generic-parameter­,­generic-parameter-list­
-generic-parameter → type-name­
-generic-parameter → type-name­:­type-identifier­
-generic-parameter → type-name­:­protocol-composition-type­
-requirement-clause → where­requirement-list­
-requirement-list → requirement­  requirement­,­requirement-list­
-requirement → conformance-requirement­  same-type-requirement­
-conformance-requirement → type-identifier­:­type-identifier­
-conformance-requirement → type-identifier­:­protocol-composition-type­
-same-type-requirement → type-identifier­==­type­
 -}
+
+------------------------------------------------------------
+-- Generic Parameters and Arguments
+------------------------------------------------------------
+
+-- GRAMMAR OF A GENERIC PARAMETER CLAUSE
+
+genericParameterClause :: Parser GenericParameterClause
+genericParameterClause
+  = angles (GenericParameterClause <$> genericParameterList <*> (optional requirementClause))
+
+genericParameterList :: Parser [GenericParameter]
+genericParameterList = genericParameter `P.sepBy1` comma
+
+genericParameter :: Parser GenericParameter
+genericParameter = GenericParameter <$> identifier
+
+requirementClause :: Parser GenericRequirementClause
+requirementClause = pure GenericRequirementClause
+
+-- generic-parameter → type-name­:­type-identifier­
+-- generic-parameter → type-name­:­protocol-composition-type­
+-- requirement-clause → where­requirement-list­
+-- requirement-list → requirement­  requirement­,­requirement-list­
+-- requirement → conformance-requirement­  same-type-requirement­
+-- conformance-requirement → type-identifier­:­type-identifier­
+-- conformance-requirement → type-identifier­:­protocol-composition-type­
+-- same-type-requirement → type-identifier­==­type­
 
 -- GRAMMAR OF A GENERIC ARGUMENT CLAUSE
 genericArgumentClause :: Parser [Type]
@@ -472,8 +491,8 @@ declaration
   <|> constantDeclaration
   <|> variableDeclaration
   <|> typealiasDeclaration
+  <|> functionDeclaration
 {-
-declaration → function-declaration­
 declaration → enum-declaration­
 declaration → struct-declaration­
 declaration → class-declaration­
@@ -501,7 +520,7 @@ codeBlock = CodeBlock <$> braces (fromMaybe [] <$> optional statements)
 importDeclaration :: Parser Declaration
 importDeclaration
   = ImportDeclaration
-      <$> (fromMaybe [] <$> optional attributes)
+      <$> (attributeList)
       <*  kw "import"
       <*> optional importKind
       <*> importPath
@@ -532,7 +551,7 @@ importPathIdentifier
 
 constantDeclaration :: Parser Declaration
 constantDeclaration = do
-  atts <- fromMaybe [] <$> optional attributes
+  atts <- attributeList
   mods <- fromMaybe [] <$> optional declarationModifiers
   _ <- kw "let"
   is <- patternInitializerList
@@ -557,7 +576,7 @@ variableDeclarationBody
 
 variableDeclarationHead :: Parser ([Attribute], [DeclarationModifier])
 variableDeclarationHead = do
-  atts <- fromMaybe [] <$> optional attributes
+  atts <- attributeList
   mods <- fromMaybe [] <$> optional declarationModifiers
   _ <- kw "var"
   return (atts, mods)
@@ -592,7 +611,7 @@ typealiasDeclaration = do
 
 typealiasHead :: Parser ([Attribute], Maybe DeclarationModifier, String)
 typealiasHead = do
-  atts <- fromMaybe [] <$> optional attributes
+  atts <- attributeList
   m <- optional accessLevelModifier
   _ <- kw "typealias"
   name <- typealiasName
@@ -604,26 +623,88 @@ typealiasName = identifier
 typealiasAssignment :: Parser Type
 typealiasAssignment = op "=" *> type_
 
-{-
-GRAMMAR OF A FUNCTION DECLARATION
+-- GRAMMAR OF A FUNCTION DECLARATION
+functionDeclaration :: Parser Declaration
+functionDeclaration = do
+   (attr, declMods) <- functionHead
+   n <- functionName
+   gs <- optional genericParameterClause
+   (p, t, r) <- functionSignature
+   b <- optional functionBody
+   return $ FunctionDeclaration attr declMods n gs p t r b
 
-function-declaration → function-head­function-name­generic-parameter-clause­opt­function-signature­function-body­opt­
-function-head → attributes­opt­declaration-modifiers­opt­func­
-function-name → identifier­  operator­
-function-signature → parameter-clauses­throws­opt­function-result­opt­
-function-signature → parameter-clauses­rethrows­function-result­opt­
-function-result → ->­attributes­opt­type­
-function-body → code-block­
-parameter-clauses → parameter-clause­parameter-clauses­opt­
-parameter-clause → (­)­  (­parameter-list­)­
-parameter-list → parameter­  parameter­,­parameter-list­
-parameter → let­opt­external-parameter-name­opt­local-parameter-name­type-annotation­default-argument-clause­opt­
-parameter → var­external-parameter-name­opt­local-parameter-name­type-annotation­default-argument-clause­opt­
-parameter → inout­external-parameter-name­opt­local-parameter-name­type-annotation­
-parameter → external-parameter-name­opt­local-parameter-name­type-annotation­...­
-external-parameter-name → identifier­  _­
-local-parameter-name → identifier­  _­
-default-argument-clause → =­expression­
+functionHead :: Parser ([Attribute], [DeclarationModifier])
+functionHead = do
+  a <- attributeList
+  m <- fromMaybe [] <$> optional declarationModifiers
+  _ <- kw "func"
+  return (a, m)
+
+functionName :: Parser FunctionName
+functionName
+    = (FunctionNameIdent <$> identifier)
+  <|> (FunctionNameOp <$> operator)
+
+functionSignature :: Parser ([[Parameter]], Maybe String, Maybe FunctionResult)
+functionSignature = do
+  p <- parameterClauses
+  t <- optional (kw' "throws" <|> kw' "rethrows")
+  r <- optional functionResult
+  return (p, t, r)
+
+functionResult :: Parser FunctionResult
+functionResult = op "->" *> (FunctionResult <$> (attributeList) <*> type_)
+
+functionBody :: Parser CodeBlock
+functionBody = codeBlock
+
+parameterClauses :: Parser [[Parameter]]
+parameterClauses = many parameterClause
+
+parameterClause :: Parser [Parameter]
+parameterClause
+    = try (parens (pure []))
+  <|> parens parameterList
+
+parameterList :: Parser [Parameter]
+parameterList = parameter `P.sepBy1` comma
+
+parameter :: Parser Parameter
+parameter
+    = do
+        _ <- kw "let"
+        extern <- optional externalParameterName
+        local  <- localParameterName
+        t <- typeAnnotation
+        c <- optional defaultArgumentClause
+        return $ ParameterLet extern local t c
+  <|> do
+        _ <- kw "var"
+        extern <- optional externalParameterName
+        local  <- localParameterName
+        t <- typeAnnotation
+        c <- optional defaultArgumentClause
+        return $ ParameterVar extern local t c
+  <|> do
+        _ <- kw "inout"
+        extern <- optional externalParameterName
+        local  <- localParameterName
+        t <- typeAnnotation
+        return $ ParameterInOut extern local t
+  <|> do
+        extern <- optional externalParameterName
+        local  <- localParameterName
+        t <- typeAnnotation
+        _ <- op "..."
+        return $ ParameterDots extern local t
+
+externalParameterName = identifier <|> op' "_"
+localParameterName = identifier <|> op' "_"
+
+defaultArgumentClause :: Parser Expression
+defaultArgumentClause = op "=" *> expression
+
+{-
 GRAMMAR OF AN ENUMERATION DECLARATION
 
 enum-declaration → attributes­opt­access-level-modifier­opt­union-style-enum­
@@ -1270,13 +1351,13 @@ postfixOperator = operator
 -- GRAMMAR OF A TYPE
 type_ :: Parser Type
 type_ = Type <$> identifier
+-- type → array-type­  dictionary-type­  function-type­  type-identifier­  tuple-type­  optional-type­  implicitly-unwrapped-optional-type­  protocol-composition-type­  metatype-type­
+
+-- GRAMMAR OF A TYPE ANNOTATION
+typeAnnotation :: Parser TypeAnnotation
+typeAnnotation = op ":" *> (TypeAnnotation <$> (attributeList) <*> type_)
 
 {-
-
-type → array-type­  dictionary-type­  function-type­  type-identifier­  tuple-type­  optional-type­  implicitly-unwrapped-optional-type­  protocol-composition-type­  metatype-type­
-GRAMMAR OF A TYPE ANNOTATION
-
-type-annotation → :­attributes­opt­type­
 GRAMMAR OF A TYPE IDENTIFIER
 
 type-identifier → type-name­generic-argument-clause­opt­  type-name­generic-argument-clause­opt­.­type-identifier­

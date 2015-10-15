@@ -131,17 +131,42 @@ instance Pretty Declaration where
       <+> string "import"
       <+> ppr optImportKind
       <+> (cat . punctuate dot) (map ppr importPath)
+
   ppr (DeclVariableDeclaration variableDeclaration) = ppr variableDeclaration
+
   ppr (ConstantDeclaration attributes declarationModifiers patternInitialisers)
       = sepBySpace attributes
     <+> sepBySpace declarationModifiers
     <+> string "let"
     <+> commasep (map ppr patternInitialisers)
+
   ppr (TypeAlias attributes optDeclarationModifier name typ_)
-      = sepBySpace attributes
+      = string "typealias"
+    <+> sepBySpace attributes
     <+> ppr optDeclarationModifier
     <+> string name <+> string "=" <+> ppr typ_ -- TODO
+
+  ppr (FunctionDeclaration attrs decls name optGenericParamClause parameterClauses optThrowDecl optResult optBlock)
+      = sepBySpace attrs
+    <+> sepBySpace decls
+    <+> string "func"
+    <+> ppr name
+-- TODO
+    -- <+> ppr optGenericParamClause
+    <> sep (map (parens . commasep . map ppr) parameterClauses)
+    <+> ppr optBlock
+
   ppr DummyDeclaration = string "<dummy-decl>"
+
+instance Pretty FunctionName where
+  ppr (FunctionNameIdent s) = string s
+  ppr (FunctionNameOp s) = string s
+
+instance Pretty Parameter where
+  -- = ParameterLet (Maybe String) String TypeAnnotation (Maybe Expression)
+  -- | ParameterVar (Maybe String) String TypeAnnotation (Maybe Expression)
+  -- | ParameterInOut (Maybe String) String TypeAnnotation
+  -- | ParameterDots (Maybe String) String TypeAnnotation
 
 instance Pretty Attribute where
   ppr = undefined
