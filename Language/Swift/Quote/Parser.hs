@@ -295,21 +295,18 @@ forStatementTail
 
 forMiddle :: Parser (Maybe ForInit, Maybe Expression, Maybe Expression)
 forMiddle = do
-          _ <- trace "in forMiddle" $ pure ()
           i <- optional forInit
           _ <- trace ("i = " ++ show i) $ pure ()
           sc1 <- semicolon
           _ <- trace ("sc1 = " ++ show sc1) $ pure ()
-          s <- P.lookAhead $ many P.anyChar
-          _ <- trace ("any s (before optional expression)= " ++ show s) $ pure ()
           e1 <- optional expression
           _ <- trace ("e1 = " ++ show e1) $ pure ()
           sc2 <- semicolon
           _ <- trace ("sc2 = " ++ show sc2) $ pure ()
-          s2 <- P.lookAhead $ many P.anyChar
-          _ <- trace ("any s = " ++ show s2) $ pure ()
-          e2 <- pure Nothing -- optional expression
-          _ <- trace ("e2 = " ++ show i) $ pure ()
+          e2 <- optional expression
+          _ <- trace ("e2 = " ++ show e2) $ pure ()
+          s3 <- try . P.lookAhead $ many P.anyChar
+          _ <- trace ("any s = " ++ show s3) $ pure ()
           return (i, e1, e2)
 
 forInit :: Parser ForInit
