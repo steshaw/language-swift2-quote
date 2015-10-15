@@ -144,14 +144,15 @@ instance Pretty Declaration where
   ppr DummyDeclaration = string "<dummy-decl>"
 
 instance Pretty Attribute where
+  ppr = undefined
 
 instance Pretty DeclarationModifier where
   ppr (Modifier s) = ppr s
   ppr (AccessLevelModifier s) = ppr s
 
 instance Pretty ImportPathIdentifier where
-  ppr (ImportIdentifier string) = ppr string
-  ppr (ImportOperator string) = ppr string
+  ppr (ImportIdentifier s) = ppr s
+  ppr (ImportOperator s) = ppr s
 
 instance Pretty VariableDeclaration where
   ppr (SimpleVariableDeclaration patternInitialisers) = string "var" <+> commasep (map ppr patternInitialisers)
