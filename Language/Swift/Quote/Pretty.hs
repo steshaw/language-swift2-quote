@@ -12,7 +12,21 @@ prettyPrint :: Module -> Text
 prettyPrint m = append p "\n"
   where p = prettyLazyText 100 (ppr m)
 
+ind :: Doc -> Doc
 ind = indent 2
+
+sepBySpace :: Pretty p => [p] -> Doc
+sepBySpace [] = empty
+sepBySpace p = sep (map ppr p)
+
+ppExps :: [Expression] -> Doc
+ppExps expressions = commasep (map ppr expressions)
+
+ppBracketExps :: [Expression] -> Doc
+ppBracketExps = brackets . ppExps
+
+ppExpressionElements :: [ExpressionElement] -> Doc
+ppExpressionElements = parens . commasep . map ppr
 
 instance Pretty Module where
   ppr (Module statements) = stack (map ppr statements)
@@ -38,15 +52,6 @@ instance Pretty PostfixExpression where
   ppr (PostfixForcedValue postfixExpression) = ppr postfixExpression <> string "!"
   ppr (PostfixOptionChaining postfixExpression) = ppr postfixExpression <> string "?"
   ppr (Subscript postfixExpression expressions) = ppr postfixExpression <> ppBracketExps expressions
-
-ppExps :: [Expression] -> Doc
-ppExps expressions = commasep (map ppr expressions)
-
-ppBracketExps :: [Expression] -> Doc
-ppBracketExps = brackets . ppExps
-
-ppExpressionElements :: [ExpressionElement] -> Doc
-ppExpressionElements = parens . commasep . map ppr
 
 instance Pretty FunctionCall where
   ppr (FunctionCall postfixExpression expressionElements optClosure) =
@@ -121,11 +126,25 @@ instance Pretty ForInit where
   ppr (FiExpressionList expressions) = ppExps expressions
 
 instance Pretty Declaration where
-  ppr (ImportDeclaration attributes optImportKind importPath) = string "import" <> (cat . punctuate dot) (map ppr importPath) -- TODO
+  ppr (ImportDeclaration attributes optImportKind importPath)
+      = sepBySpace attributes
+      <+> string "import"
+      <+> ppr optImportKind
+      <+> (cat . punctuate dot) (map ppr importPath)
   ppr (DeclVariableDeclaration variableDeclaration) = ppr variableDeclaration
-  ppr (ConstantDeclaration attributes declarationModifiers patternInitialisers) = string "let" <+> commasep (map ppr patternInitialisers)
+  ppr (ConstantDeclaration attributes declarationModifiers patternInitialisers)
+      = sepBySpace attributes
+    <+> sepBySpace declarationModifiers
+    <+> string "let"
+    <+> commasep (map ppr patternInitialisers)
   ppr (TypeAlias attributes declaractionModifiers name typ_) = string name <+> string "=" <+> ppr typ_ -- TODO
   ppr DummyDeclaration = string "<dummy-decl>"
+
+instance Pretty Attribute where
+
+instance Pretty DeclarationModifier where
+  ppr (Modifier s) = ppr s
+  ppr (AccessLevelModifier s) = ppr s
 
 instance Pretty ImportPathIdentifier where
   ppr (ImportIdentifier string) = ppr string
