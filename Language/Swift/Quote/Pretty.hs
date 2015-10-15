@@ -137,7 +137,10 @@ instance Pretty Declaration where
     <+> sepBySpace declarationModifiers
     <+> string "let"
     <+> commasep (map ppr patternInitialisers)
-  ppr (TypeAlias attributes declaractionModifiers name typ_) = string name <+> string "=" <+> ppr typ_ -- TODO
+  ppr (TypeAlias attributes optDeclarationModifier name typ_)
+      = sepBySpace attributes
+    <+> ppr optDeclarationModifier
+    <+> string name <+> string "=" <+> ppr typ_ -- TODO
   ppr DummyDeclaration = string "<dummy-decl>"
 
 instance Pretty Attribute where
