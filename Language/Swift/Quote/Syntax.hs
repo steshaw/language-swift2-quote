@@ -47,7 +47,7 @@ data PrimaryExpression
   | PrimaryExpression3 SelfExpression
   | PrimaryExpression4 SuperclassExpression
   | PrimaryExpression5 Closure -- XXX closure-expression
-  | PrimaryExpression6 [ExpressionElement] -- parenthesized-expression
+  | PrimaryParenthesized [ExpressionElement] -- parenthesized-expression
   | PrimaryExpression7 -- TODO implicit-member-expression
   | PrimaryExpression8 -- wildcard-expression
   deriving (Show, Eq)
@@ -110,7 +110,7 @@ data Statement
   | DoStatement
   | CompilerControlStatement
   | WhileStatement Expression CodeBlock
-  | RepeatWhileStatement
+  | RepeatWhileStatement CodeBlock Expression
   | DummyStatement
   deriving (Show, Eq)
 

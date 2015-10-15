@@ -248,9 +248,6 @@ doStatement = return DoStatement
 compilerControlStatement :: Parser Statement
 compilerControlStatement = return CompilerControlStatement
 
-repeatWhileStatement :: Parser Statement
-repeatWhileStatement = return RepeatWhileStatement
-
 whereClause :: Parser Expression
 whereClause = expression -- TODO
 
@@ -279,7 +276,7 @@ loopStatement :: Parser Statement
 loopStatement
     = kw "for" *> (forStatementTail <|> forInStatementTail)
   <|> whileStatement
-  -- <|> repeatWhileStatement
+  <|> repeatWhileStatement
 
 forStatementTail :: Parser Statement
 forStatementTail
@@ -342,10 +339,11 @@ conditionClause = expression
 -- optional-binding-continuation-list → optional-binding-continuation­ optional-binding-continuation­,­optional-binding-continuation-list­
 -- optional-binding-continuation → pattern­initializer­  optional-binding-head­
 
-{-
-GRAMMAR OF A REPEAT-WHILE STATEMENT
+-- GRAMMAR OF A REPEAT-WHILE STATEMENT
+repeatWhileStatement :: Parser Statement
+repeatWhileStatement = kw "repeat" *> (RepeatWhileStatement <$> codeBlock <* kw "while" <*> expression)
 
-repeat-while-statement → repeat­code-block­while­expression­
+{-
 GRAMMAR OF A BRANCH STATEMENT
 
 branch-statement → if-statement­
@@ -934,7 +932,7 @@ primaryExpression
   <|> PrimaryExpression3 <$> selfExpression
   <|> PrimaryExpression4 <$> superclassExpression
   <|> PrimaryExpression5 <$> closureExpression
-  <|> PrimaryExpression6 <$> parenthesizedExpression
+  <|> PrimaryParenthesized <$> parenthesizedExpression
   <|> pure PrimaryExpression7 <* implicitMemberExpression
   <|> pure PrimaryExpression8 <* wildCardExpression
 

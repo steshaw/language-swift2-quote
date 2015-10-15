@@ -37,18 +37,21 @@ instance Pretty PostfixExpression where
   ppr (PostfixDynamicType postfixExpression) = ppr postfixExpression <> string ".dynamicType"
   ppr (PostfixForcedValue postfixExpression) = ppr postfixExpression <> string "!"
   ppr (PostfixOptionChaining postfixExpression) = ppr postfixExpression <> string "?"
-  ppr (Subscript postfixExpression expressions) = ppr postfixExpression <> ppExpList expressions
+  ppr (Subscript postfixExpression expressions) = ppr postfixExpression <> ppBracketExps expressions
 
 ppExps :: [Expression] -> Doc
 ppExps expressions = commasep (map ppr expressions)
 
-ppExpList :: [Expression] -> Doc
-ppExpList expressions = brackets (ppExps expressions)
+ppBracketExps :: [Expression] -> Doc
+ppBracketExps = brackets . ppExps
+
+ppExpressionElements :: [ExpressionElement] -> Doc
+ppExpressionElements = parens . commasep . map ppr
 
 instance Pretty FunctionCall where
   ppr (FunctionCall postfixExpression expressionElements optClosure) =
     ppr postfixExpression
-      <> parens (commasep (map ppr expressionElements))
+      <> ppExpressionElements expressionElements
       <> ppr optClosure
 
 instance Pretty ExpressionElement where
@@ -65,7 +68,8 @@ instance Pretty PrimaryExpression where
   ppr (PrimaryExpression3 selfExpression) = ppr selfExpression
   ppr (PrimaryExpression4 superclassExpression) = ppr superclassExpression
   ppr (PrimaryExpression5 closure) = ppr closure
-  ppr (PrimaryExpression6 expressionElements) = ppr expressionElements
+  ppr (PrimaryParenthesized [expressionElement]) = ppr expressionElement -- FIXME hack because more expressions parse as PrimaryParenthesized than should do.
+  ppr (PrimaryParenthesized expressionElements) = (parens . cat .  map ppr) expressionElements
   ppr PrimaryExpression7 = string "<implicit-member-expression>" -- TODO implicit-member-expression
   ppr PrimaryExpression8 = string "_"
 
@@ -94,7 +98,7 @@ instance Pretty Literal where
 instance Pretty SelfExpression where
   ppr Self1 = string "self"
   ppr (Self2 identifier) = string "self" <> string "." <> string identifier
-  ppr (Self3 expressions) = string "self" <> ppExpList expressions
+  ppr (Self3 expressions) = string "self" <> ppBracketExps expressions
   ppr Self4 = string "self" <> string "." <> string "init"
 
 instance Pretty SuperclassExpression where
@@ -105,7 +109,8 @@ instance Pretty Type where
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression
-  ppr (WhileStatement expression codeBlock) = string "while" <+> ppr expression <+> ppr codeBlock
+  ppr (WhileStatement expression block) = string "while" <+> ppr expression <+> ppr block
+  ppr (RepeatWhileStatement block expression) = string "repeat" <+> ppr block <+> string "while" <+> ppr expression
   ppr (ForStatement iE cE nE block) = string "for" <+> ppr iE <> semi
                                            <+> ppr cE <> semi <+> ppr nE <+> ppr block
   ppr (DeclarationStatement declaration) = ppr declaration
@@ -138,5 +143,5 @@ instance Pretty Pattern where
 
 instance Pretty CodeBlock where
   ppr (CodeBlock statements) = lbrace <> line
-    <> ind ((cat . punctuate line) (map ppr statements))
+    <> ind (stack (map ppr statements))
     <> line <> rbrace

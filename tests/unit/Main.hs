@@ -45,6 +45,7 @@ goldenTests = testGroup "Golden tests"
   , gt "while1"
   , gt "for1"
   , gt "for2"
+  , gt "repeatWhile"
   ]
 
 litIntExp :: Integer -> Expression
