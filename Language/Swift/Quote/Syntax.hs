@@ -103,15 +103,16 @@ data Statement
     , fiBlock :: CodeBlock
     }
   | DeclarationStatement Declaration
-  | BranchStatement
-  | LabeledStatement
-  | ControlTransferStatement
-  | DeferStatement
-  | DoStatement
-  | CompilerControlStatement
+  -- | BranchStatement
+  -- | LabeledStatement
+  -- | ControlTransferStatement
+  | ReturnStatement (Maybe Expression)
+  -- | DeferStatement
+  -- | DoStatement
+  -- | CompilerControlStatement
   | WhileStatement Expression CodeBlock
   | RepeatWhileStatement CodeBlock Expression
-  | DummyStatement
+  -- | DummyStatement
   deriving (Show, Eq)
 
 data ForInit

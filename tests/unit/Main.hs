@@ -48,6 +48,7 @@ goldenTests = testGroup "Golden tests"
   , gt "repeatWhile"
   , gt "typealias"
   , gt "func1"
+  , gt "func2"
   ]
 
 litIntExp :: Integer -> Expression

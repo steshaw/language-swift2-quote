@@ -236,23 +236,23 @@ op' s = op s *> pure s
 ------------------------------------------------------------
 -- SUMMARY OF THE GRAMMAR
 ------------------------------------------------------------
-branchStatement :: Parser Statement
-branchStatement = return BranchStatement
-
-labeledStatement :: Parser Statement
-labeledStatement = return LabeledStatement
-
-controlTransferStatement :: Parser Statement
-controlTransferStatement = return ControlTransferStatement
-
-deferStatement :: Parser Statement
-deferStatement = return DeferStatement
-
-doStatement :: Parser Statement
-doStatement = return DoStatement
-
-compilerControlStatement :: Parser Statement
-compilerControlStatement = return CompilerControlStatement
+-- branchStatement :: Parser Statement
+-- branchStatement = return BranchStatement
+--
+-- labeledStatement :: Parser Statement
+-- labeledStatement = return LabeledStatement
+--
+-- controlTransferStatement :: Parser Statement
+-- controlTransferStatement = return ControlTransferStatement
+--
+-- deferStatement :: Parser Statement
+-- deferStatement = return DeferStatement
+--
+-- doStatement :: Parser Statement
+-- doStatement = return DoStatement
+--
+-- compilerControlStatement :: Parser Statement
+-- compilerControlStatement = return CompilerControlStatement
 
 whereClause :: Parser Expression
 whereClause = expression -- TODO
@@ -269,7 +269,7 @@ statement
   <|> loopStatement <* optSemicolon
   -- <|> branchStatement <* optSemicolon
   -- <|> labeledStatement <* optSemicolon
-  -- <|> controlTransferStatement <* optSemicolon
+  <|> controlTransferStatement <* optSemicolon
   -- <|> deferStatement <* optSemicolon
   -- <|> doStatement <* optSemicolon
   -- <|> compilerControlStatement <* optSemicolon
@@ -377,13 +377,21 @@ GRAMMAR OF A LABELED STATEMENT
 labeled-statement → statement-label­loop-statement­  statement-label­if-statement­ statement-label­switch-statement­
 statement-label → label-name­:­
 label-name → identifier­
-GRAMMAR OF A CONTROL TRANSFER STATEMENT
 
-control-transfer-statement → break-statement­
-control-transfer-statement → continue-statement­
-control-transfer-statement → fallthrough-statement­
-control-transfer-statement → return-statement­
-control-transfer-statement → throw-statement­
+-}
+
+-- GRAMMAR OF A CONTROL TRANSFER STATEMENT
+
+controlTransferStatement :: Parser Statement
+controlTransferStatement = returnStatement
+
+-- control-transfer-statement → break-statement­
+-- control-transfer-statement → continue-statement­
+-- control-transfer-statement → fallthrough-statement­
+-- control-transfer-statement → return-statement­
+-- control-transfer-statement → throw-statement­
+
+{-
 GRAMMAR OF A BREAK STATEMENT
 
 break-statement → break­label-name­opt­
@@ -393,9 +401,13 @@ continue-statement → continue­label-name­opt­
 GRAMMAR OF A FALLTHROUGH STATEMENT
 
 fallthrough-statement → fallthrough­
-GRAMMAR OF A RETURN STATEMENT
+-}
 
-return-statement → return­expression­opt­
+-- GRAMMAR OF A RETURN STATEMENT
+returnStatement :: Parser Statement
+returnStatement = kw "return" *> (ReturnStatement <$> optional expression)
+
+{-
 GRAMMAR OF AN AVAILABILITY CONDITION
 
 availability-condition → #available­(­availability-arguments­)­
@@ -672,11 +684,18 @@ parameterList = parameter `P.sepBy1` comma
 parameter :: Parser Parameter
 parameter
     = do
-        _ <- kw "let"
-        extern <- optional externalParameterName
-        local  <- localParameterName
+        _ <- trace "in parameter production 1" $ pure ()
+        _ <- optional (kw "let")
+        fn <- parameterName
+        _ <- trace "in parameter 2" $ pure ()
+        sn <- optional parameterName
+        _ <- trace "in parameter 3" $ pure ()
+        let (extern, local) = if isJust sn then (Just fn, fromJust sn) else (Nothing, fn)
+        _ <- trace "in parameter 3" $ pure ()
         t <- typeAnnotation
+        _ <- trace "in parameter 4" $ pure ()
         c <- optional defaultArgumentClause
+        _ <- trace "in parameter 5" $ pure ()
         return $ ParameterLet extern local t c
   <|> do
         _ <- kw "var"
@@ -691,15 +710,16 @@ parameter
         local  <- localParameterName
         t <- typeAnnotation
         return $ ParameterInOut extern local t
-  <|> do
+  <|> do -- FIXME move detection to first production
         extern <- optional externalParameterName
         local  <- localParameterName
         t <- typeAnnotation
         _ <- op "..."
         return $ ParameterDots extern local t
 
-externalParameterName = identifier <|> op' "_"
-localParameterName = identifier <|> op' "_"
+parameterName = identifier <|> op' "_"
+externalParameterName = parameterName
+localParameterName = parameterName
 
 defaultArgumentClause :: Parser Expression
 defaultArgumentClause = op "=" *> expression
@@ -1065,7 +1085,7 @@ superclass-initializer-expression → super­.­init­
 -- GRAMMAR OF A CLOSURE EXPRESSION
 
 closureExpression :: Parser Closure
-closureExpression = Closure <$> braces (pure [DummyStatement]) -- statements
+closureExpression = Closure <$> braces (statements) -- statements
 {-
 closure-expression → {­closure-signature­opt­statements­}­
 closure-signature → parameter-clause­function-result­opt­in­

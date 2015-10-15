@@ -119,7 +119,7 @@ instance Pretty Statement where
   ppr (ForStatement iE cE nE block) = string "for" <+> ppr iE <> semi
                                            <+> ppr cE <> semi <+> ppr nE <+> ppr block
   ppr (DeclarationStatement declaration) = ppr declaration
-  ppr DummyStatement = string "<dummy-statement>"
+  ppr (ReturnStatement optExpression) = string "return" <+> ppr optExpression
 
 instance Pretty ForInit where
   ppr (FiDeclaration declaration) = ppr declaration
@@ -154,6 +154,7 @@ instance Pretty Declaration where
 -- TODO
     -- <+> ppr optGenericParamClause
     <> sep (map (parens . commasep . map ppr) parameterClauses)
+    <+> ppr optResult
     <+> ppr optBlock
 
   ppr DummyDeclaration = string "<dummy-decl>"
@@ -162,8 +163,14 @@ instance Pretty FunctionName where
   ppr (FunctionNameIdent s) = string s
   ppr (FunctionNameOp s) = string s
 
+instance Pretty FunctionResult where
+  ppr (FunctionResult attrs type_) = string "->" <+> sepBySpace attrs <+> ppr type_
+
 instance Pretty Parameter where
-  -- = ParameterLet (Maybe String) String TypeAnnotation (Maybe Expression)
+  ppr (ParameterLet optExternName localName typeAnnotation optExpression)
+    = string localName
+    <> string ":"
+    <+> ppr typeAnnotation
   -- | ParameterVar (Maybe String) String TypeAnnotation (Maybe Expression)
   -- | ParameterInOut (Maybe String) String TypeAnnotation
   -- | ParameterDots (Maybe String) String TypeAnnotation
@@ -193,3 +200,6 @@ instance Pretty CodeBlock where
   ppr (CodeBlock statements) = lbrace <> line
     <> ind (stack (map ppr statements))
     <> line <> rbrace
+
+instance Pretty TypeAnnotation where
+  ppr (TypeAnnotation attrs type_) = sepBySpace attrs <+> ppr type_
