@@ -1,0 +1,4 @@
+"<stdin>" (line 1, column 19):
+unexpected ':'
+expecting letter or digit, "<", "`", ".", "(", "[", "=", "is", "as", ",", ";", "import", "class", "convenience", "dynamic", "final", "infix", "lazy", "mutating", "nonmutating", "optional", "override", "postfix", "prefix", "required", "static", "unowned", "weak", "internal", "private", "public", "let", "var", "typealias", "func", "try", "try?", "try!", identifier, float, integer, literal string, "true", "false", "nil", "__FILE__", "__LINE__", "__COLUMN__", "__FUNCTION__", "self", "<superclass-expression>", "{", "<implicit-member-expression>", "_", "for", "while", "repeat", "if", "guard", "switch", "return" or end of input
+attribute not implemented

@@ -9,7 +9,7 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Either
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
-import Data.Text.IO as DTI
+import qualified Data.Text.IO as DTI
 import Debug.Trace
 import System.IO
 import System.FilePath
@@ -24,7 +24,20 @@ main :: IO ()
 main = do
   hSetBuffering stdout NoBuffering
   hSetBuffering stderr NoBuffering
-  defaultMain $ testGroup "Tests " [operatorTests, src2ast, src2ast2src, goldenTests]
+  swifts <- findByExtension [".swift"] "tests/golden"
+  defaultMain $ testGroup "Tests "
+    [ operatorTests
+    , src2ast
+    , src2ast2src
+    , swifts2Goldens swifts
+    ]
+
+swifts2Goldens :: [FilePath] -> TestTree
+swifts2Goldens paths = testGroup "Goldens" $ map swift2Golden paths
+  where
+    swift2Golden s = mkTest s (s <.> "golden")
+    mkTest s g = goldenVsStringDiff (dropExtension s) diffCmd g (prettyFile s)
+    diffCmd ref new = ["diff", "--unified=5", ref, new]
 
 asdf :: T.Text -> String
 asdf input = case parse input of
@@ -35,29 +48,6 @@ prettyFile :: String -> IO C.ByteString
 prettyFile fileName = do
   contents <- DTI.readFile fileName
   return (C.pack (asdf contents))
-
-swift :: FilePath -> FilePath
-swift fileName = "tests/golden" </> fileName <.> "swift"
-
-gt n = goldenVsStringDiff n diffCmd (swift n <.> "golden") (prettyFile (swift n))
-  where diffCmd ref new = ["diff", "--unified=5", ref, new]
-
-goldenTests = testGroup "Golden tests"
-  [ gt "hello"
-  , gt "decls1"
-  , gt "decls2"
-  , gt "while1"
-  , gt "for1"
-  , gt "for2"
-  , gt "repeatWhile"
-  , gt "typealias"
-  , gt "func1"
-  , gt "func2"
-  , gt "expr1"
-  , gt "expr2"
-  , gt "if1"
-  , gt "if2"
-  ]
 
 litIntExp :: Integer -> Expression
 litIntExp i = litExp (IntegerLiteral i)
