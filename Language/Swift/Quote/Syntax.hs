@@ -8,7 +8,7 @@ data Expression
   deriving (Show, Eq)
 
 data PrefixExpression
-  = PrefixOperator (Maybe String) {- prefixOperator -} PostfixExpression
+  = PrefixExpression (Maybe String) {- prefixOperator -} PostfixExpression
   | InOutExpression String -- identifier
   deriving (Show, Eq)
 
@@ -43,13 +43,13 @@ data Closure = Closure [Statement]
 
 data PrimaryExpression
   = PrimaryExpression1 IdG
-  | PrimaryExpression2 LiteralExpression
-  | PrimaryExpression3 SelfExpression
-  | PrimaryExpression4 SuperclassExpression
-  | PrimaryExpression5 Closure -- XXX closure-expression
+  | PrimaryLiteral LiteralExpression
+  | PrimarySelf SelfExpression
+  | PrimarySuper SuperclassExpression
+  | PrimaryClosure Closure -- XXX closure-expression
   | PrimaryParenthesized [ExpressionElement] -- parenthesized-expression
-  | PrimaryExpression7 -- TODO implicit-member-expression
-  | PrimaryExpression8 -- wildcard-expression
+  | PrimaryImplicitMember -- TODO implicit-member-expression
+  | PrimaryWildcard -- wildcard-expression
   deriving (Show, Eq)
 
 data SuperclassExpression = SuperclassExpression -- TODO

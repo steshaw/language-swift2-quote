@@ -37,6 +37,7 @@ test-suite unit
                      , bytestring
                      , filepath
                      , mainland-pretty
+                     , parsec
                      , tasty
                      , tasty-hunit
                      , tasty-golden

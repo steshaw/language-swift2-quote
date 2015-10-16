@@ -36,8 +36,8 @@ instance Pretty Expression where
     ppr optTryOperator <+> ppr prefixExpression <+> spread (map ppr binaryExpressions)
 
 instance Pretty PrefixExpression where
-  ppr (PrefixOperator optPrefixOperator primaryExpression)
-    = ppr optPrefixOperator <> ppr primaryExpression
+  ppr (PrefixExpression optPrefixExpression primaryExpression)
+    = ppr optPrefixExpression <> ppr primaryExpression
   ppr (InOutExpression identifier) = string "&" <> string identifier
 
 instance Pretty PostfixExpression where
@@ -69,21 +69,21 @@ instance Pretty Closure where
 
 instance Pretty PrimaryExpression where
   ppr (PrimaryExpression1 idG) = ppr idG
-  ppr (PrimaryExpression2 literalExpression) = ppr literalExpression
-  ppr (PrimaryExpression3 selfExpression) = ppr selfExpression
-  ppr (PrimaryExpression4 superclassExpression) = ppr superclassExpression
-  ppr (PrimaryExpression5 closure) = ppr closure
+  ppr (PrimaryLiteral literalExpression) = ppr literalExpression
+  ppr (PrimarySelf selfExpression) = ppr selfExpression
+  ppr (PrimarySuper superclassExpression) = ppr superclassExpression
+  ppr (PrimaryClosure closure) = ppr closure
   ppr (PrimaryParenthesized [expressionElement]) = ppr expressionElement -- FIXME hack because more expressions parse as PrimaryParenthesized than should do.
   ppr (PrimaryParenthesized expressionElements) = (parens . cat .  map ppr) expressionElements
-  ppr PrimaryExpression7 = string "<implicit-member-expression>" -- TODO implicit-member-expression
-  ppr PrimaryExpression8 = string "_"
+  ppr PrimaryImplicitMember = string "<implicit-member-expression>" -- TODO implicit-member-expression
+  ppr PrimaryWildcard = string "_"
 
 instance Pretty IdG where
   ppr (IdG identifier []) = ppr identifier
   ppr (IdG identifier genericArgs) = ppr identifier <> angles (ppr genericArgs)
 
 instance Pretty BinaryExpression where
-  ppr (BinaryExpression1 operator prefixExpression) = ppr operator <> ppr prefixExpression
+  ppr (BinaryExpression1 operator prefixExpression) = ppr operator <+> ppr prefixExpression
   ppr (BinaryAssignmentExpression tryOperator prefixExpression) = string "=" <+> ppr tryOperator <+> ppr prefixExpression
   ppr (BinaryExpression3 (optS1, expression) optS2 prefixExpression) =
     ppr optS1 <> ppr expression <> ppr optS2 <> ppr prefixExpression
