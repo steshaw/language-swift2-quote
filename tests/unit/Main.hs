@@ -53,6 +53,7 @@ goldenTests = testGroup "Golden tests"
   , gt "func1"
   , gt "func2"
   , gt "expr1"
+  , gt "expr2"
   ]
 
 litIntExp :: Integer -> Expression
