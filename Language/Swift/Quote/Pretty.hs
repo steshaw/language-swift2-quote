@@ -5,6 +5,7 @@ module Language.Swift.Quote.Pretty where
 
 import Language.Swift.Quote.Syntax
 
+import Data.Maybe
 import Data.Text.Lazy (Text, append)
 import Text.PrettyPrint.Mainland
 
@@ -120,6 +121,13 @@ instance Pretty Statement where
                                            <+> ppr cE <> semi <+> ppr nE <+> ppr block
   ppr (DeclarationStatement declaration) = ppr declaration
   ppr (ReturnStatement optExpression) = string "return" <+> ppr optExpression
+  ppr (IfStatement cond ifBlock Nothing)
+    = string "if" <+> ppr cond <+> ppr ifBlock
+  ppr (IfStatement cond ifBlock (Just eitherBlockIf))
+    = string "if" <+> ppr cond <+> ppr ifBlock <+> string "else" <+> ppBoth eitherBlockIf
+      where
+        ppBoth (Left block) = ppr block
+        ppBoth (Right ifStatement) = ppr ifStatement
 
 instance Pretty ForInit where
   ppr (FiDeclaration declaration) = ppr declaration

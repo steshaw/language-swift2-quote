@@ -258,8 +258,8 @@ statement
     = DeclarationStatement <$> declaration <* optSemicolon
   <|> ExpressionStatement <$> expression <* optSemicolon
   <|> loopStatement <* optSemicolon
-  -- <|> branchStatement <* optSemicolon
-  -- <|> labeledStatement <* optSemicolon
+  <|> branchStatement <* optSemicolon
+  <|> labeledStatement <* optSemicolon
   <|> controlTransferStatement <* optSemicolon
   -- <|> deferStatement <* optSemicolon
   -- <|> doStatement <* optSemicolon
@@ -340,36 +340,58 @@ conditionClause = expression
 repeatWhileStatement :: Parser Statement
 repeatWhileStatement = kw "repeat" *> (RepeatWhileStatement <$> codeBlock <* kw "while" <*> expression)
 
-{-
-GRAMMAR OF A BRANCH STATEMENT
+-- GRAMMAR OF A BRANCH STATEMENT
 
-branch-statement → if-statement­
-branch-statement → guard-statement­
-branch-statement → switch-statement­
-GRAMMAR OF AN IF STATEMENT
+branchStatement :: Parser Statement
+branchStatement = ifStatement <|> guardStatement <|> switchStatement
 
-if-statement → if­condition-clause­code-block­else-clause­opt­
-else-clause → else­code-block­  else­if-statement­
-GRAMMAR OF A GUARD STATEMENT
+-- GRAMMAR OF AN IF STATEMENT
 
-guard-statement → guard­condition-clause­else­code-block­
-GRAMMAR OF A SWITCH STATEMENT
+ifStatement :: Parser Statement
+ifStatement = do
+  _ <- kw "if"
+  c <- conditionClause
+  b <- codeBlock
+  e <- optional elseClause
+  return $ IfStatement c b e
 
-switch-statement → switch­expression­{­switch-cases­opt­}­
-switch-cases → switch-case­switch-cases­opt­
-switch-case → case-label­statements­  default-label­statements­
-case-label → case­case-item-list­:­
-case-item-list → pattern­where-clause­opt­  pattern­where-clause­opt­,­case-item-list­
-default-label → default­:­
-where-clause → where­where-expression­
-where-expression → expression­
-GRAMMAR OF A LABELED STATEMENT
+elseClause :: Parser (Either CodeBlock Statement)
+elseClause = do
+  _ <- kw "else"
+  (Left <$> codeBlock) <|> (Right <$> ifStatement)
 
-labeled-statement → statement-label­loop-statement­  statement-label­if-statement­ statement-label­switch-statement­
-statement-label → label-name­:­
-label-name → identifier­
+-- GRAMMAR OF A GUARD STATEMENT
 
--}
+guardStatement :: Parser Statement
+guardStatement = do
+  _ <- kw "guard"
+  c <- conditionClause
+  _ <- kw "else"
+  b <- codeBlock
+  return $ GuardStatement c b
+
+-- GRAMMAR OF A SWITCH STATEMENT
+
+switchStatement :: Parser Statement
+switchStatement = kw "switch" *> pure SwitchStatement
+-- switch-statement → switch­expression­{­switch-cases­opt­}­
+-- switch-cases → switch-case­switch-cases­opt­
+-- switch-case → case-label­statements­  default-label­statements­
+-- case-label → case­case-item-list­:­
+-- case-item-list → pattern­where-clause­opt­  pattern­where-clause­opt­,­case-item-list­
+-- default-label → default­:­
+-- where-clause → where­where-expression­
+-- where-expression → expression­
+
+-- GRAMMAR OF A LABELED STATEMENT
+labeledStatement :: Parser Statement
+labeledStatement = LabelStatement <$> statementLabel <*> (loopStatement <|> ifStatement <|> switchStatement)
+
+statementLabel :: Parser String
+statementLabel = labelName <* tok ":"
+
+labelName :: Parser String
+labelName = identifier
 
 -- GRAMMAR OF A CONTROL TRANSFER STATEMENT
 

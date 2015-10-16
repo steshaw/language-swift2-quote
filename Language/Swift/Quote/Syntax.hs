@@ -112,8 +112,13 @@ data Statement
   -- | CompilerControlStatement
   | WhileStatement Expression CodeBlock
   | RepeatWhileStatement CodeBlock Expression
-  -- | DummyStatement
+  | GuardStatement ConditionClause CodeBlock
+  | SwitchStatement -- TODO
+  | IfStatement ConditionClause CodeBlock (Maybe (Either CodeBlock {- if -}Statement))
+  | LabelStatement String Statement
   deriving (Show, Eq)
+
+type ConditionClause = Expression
 
 data ForInit
   = FiDeclaration Declaration
