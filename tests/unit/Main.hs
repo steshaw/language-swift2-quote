@@ -44,7 +44,8 @@ gt n = goldenVsStringDiff n diffCmd (swift n <.> "golden") (prettyFile (swift n)
 
 goldenTests = testGroup "Golden tests"
   [ gt "hello"
-  , gt "example1"
+  , gt "decls1"
+  , gt "decls2"
   , gt "while1"
   , gt "for1"
   , gt "for2"
