@@ -43,8 +43,8 @@ instance Pretty PrefixExpression where
 instance Pretty PostfixExpression where
   ppr (PostfixPrimary primaryExpression) = ppr primaryExpression
   ppr (PostfixOperator prefixExpression postfixOperator) = ppr prefixExpression <> ppr postfixOperator
-  ppr (ExplicitMemberExpressionDigits postfixExpression digits) = ppr postfixExpression <> string digits
-  ppr (ExplicitMemberExpressionIdentifier postfixExpression idG) = ppr postfixExpression <> ppr idG
+  ppr (ExplicitMemberExpressionDigits postfixExpression digits) = ppr postfixExpression <> dot <> string digits
+  ppr (ExplicitMemberExpressionIdentifier postfixExpression idG) = ppr postfixExpression <> dot <> ppr idG
   ppr (FunctionCallE functionCall) = ppr functionCall
   ppr (PostfixExpression4Initalizer postfixExpression) = ppr postfixExpression <> string ".init"
   ppr (PostfixSelf postfixExpression) = ppr postfixExpression <> string ".self"
