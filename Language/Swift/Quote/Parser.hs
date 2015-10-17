@@ -53,6 +53,11 @@ module_ = do
 attributeList :: Parser [Attribute]
 attributeList = fromMaybe [] <$> optional attributes
 
+notice :: String -> String
+notice msg = "\n\n\n" ++ msg ++ "\n\n\n"
+
+traceVar n v = trace (notice n ++ " = " ++ show v) $ pure ()
+
 ------------------------------------------------------------
 -- Lexical Structure (old)
 ------------------------------------------------------------
@@ -597,34 +602,59 @@ variableDeclaration = DeclVariableDeclaration <$> variableDeclarationBody
 
 variableDeclarationBody :: Parser VariableDeclaration
 variableDeclarationBody
-  = variableDeclarationHead *> (SimpleVariableDeclaration <$> patternInitializerList)
+  = do
+    (attrs, mods) <- variableDeclarationHead
+    -- (try (VarPatternInitializer attrs mods <$> patternInitializerList))
+    --   <|> variableDeclarationName attrs mods
+
+    (try (variableDeclarationName attrs mods)) <|>
+      (VarPatternInitializer attrs mods <$> patternInitializerList)
+
+variableDeclarationName :: [Attribute] -> [DeclarationModifier] -> Parser VariableDeclaration
+variableDeclarationName attrs mods = do
+  n <- variableName
+  t <- typeAnnotation
+  i <- optional initializer
+  -- variable-declaration → ­­type-annotation (­initializer ­opt) ­willSet-didSet-block­
+  -- variable-declaration → ­­type-annotation­ code-block­
+  -- variable-declaration → ­­type-annotation­ getter-setter-block­
+  -- variable-declaration → ­­type-annotation­ getter-setter-keyword-block­
+  -- variable-declaration → ­­initializer­ willSet-didSet-block­
+  return $ VarSimple attrs mods n t i
 
 variableDeclarationHead :: Parser ([Attribute], [DeclarationModifier])
 variableDeclarationHead = do
-  atts <- attributeList
+  attrs <- attributeList
   mods <- fromMaybe [] <$> optional declarationModifiers
   _ <- kw "var"
-  return (atts, mods)
+  return (attrs, mods)
 
--- variable-declaration → variable-declaration-head­variable-name­type-annotation­code-block­
--- variable-declaration → variable-declaration-head­variable-name­type-annotation­getter-setter-block­
--- variable-declaration → variable-declaration-head­variable-name­type-annotation­getter-setter-keyword-block­
--- variable-declaration → variable-declaration-head­variable-name­initializer­willSet-didSet-block­
--- variable-declaration → variable-declaration-head­variable-name­type-annotation­initializer­opt­willSet-didSet-block­
--- variable-name → identifier­
+variableName :: Parser String
+variableName = identifier
+
+getterSetterBlock = codeBlock
 -- getter-setter-block → code-block­
 -- getter-setter-block → {­getter-clause­setter-clause­opt­}­
 -- getter-setter-block → {­setter-clause­getter-clause­}­
+
 -- getter-clause → attributes­opt­get­code-block­
+
 -- setter-clause → attributes­opt­set­setter-name­opt­code-block­
+
 -- setter-name → (­identifier­)­
+
 -- getter-setter-keyword-block → {­getter-keyword-clause­setter-keyword-clause­opt­}­
 -- getter-setter-keyword-block → {­setter-keyword-clause­getter-keyword-clause­}­
+
 -- getter-keyword-clause → attributes­opt­get­
+
 -- setter-keyword-clause → attributes­opt­set­
+
 -- willSet-didSet-block → {­willSet-clause­didSet-clause­opt­}­
 -- willSet-didSet-block → {­didSet-clause­willSet-clause­opt­}­
+
 -- willSet-clause → attributes­opt­willSet­setter-name­opt­code-block­
+
 -- didSet-clause → attributes­opt­didSet­setter-name­opt­code-block­
 
 -- GRAMMAR OF A TYPE ALIAS DECLARATION

@@ -149,7 +149,8 @@ data Declaration
   deriving (Show, Eq)
 
 data VariableDeclaration
-  = SimpleVariableDeclaration [PatternInitializer]
+  = VarPatternInitializer [Attribute] [DeclarationModifier] [PatternInitializer]
+  | VarSimple [Attribute] [DeclarationModifier] String TypeAnnotation (Maybe Expression)
   deriving (Show, Eq)
 
 data DeclarationModifier

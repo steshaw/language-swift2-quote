@@ -6,6 +6,7 @@ module Language.Swift.Quote.Pretty where
 import Language.Swift.Quote.Syntax
 
 import Data.Text.Lazy (Text, append)
+import Data.Maybe
 import Text.PrettyPrint.Mainland
 
 prettyPrint :: Module -> Text
@@ -194,7 +195,12 @@ instance Pretty ImportPathIdentifier where
   ppr (ImportOperator s) = ppr s
 
 instance Pretty VariableDeclaration where
-  ppr (SimpleVariableDeclaration patternInitialisers) = string "var" <+> commasep (map ppr patternInitialisers)
+  ppr (VarPatternInitializer attrs mods patternInitialisers) = string "var" <+> commasep (map ppr patternInitialisers)
+  ppr (VarSimple attrs mods name typeAnnotation optInitExpr)
+      = string "var"
+    <+> string name
+    <+> ppr typeAnnotation
+    <+> maybe empty (\e -> equals <+> ppr e) optInitExpr
 
 instance Pretty PatternInitializer where
   ppr (PatternInitializer (ExpressionPattern expression) optExpression) = ppr expression <+> ppr optExpression -- FIXME We currently get an Assignment ConstantDeclaration(AssignmentExpression) instead of ConstantDeclaration(IdentifierExpression, Expression)

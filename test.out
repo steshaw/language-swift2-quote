@@ -1,0 +1,30 @@
+
+
+
+variableDeclarationHead:attrs
+
+
+ = []
+
+
+
+variableDeclarationHead:mods
+
+
+ = []
+Tests 
+  Goldens
+    tests/golden/decls3: FAIL (0.04s)
+      Test output was different from 'tests/golden/decls3.swift.golden'. Output of ["diff","--unified=5","tests/golden/decls3.swift.golden","/var/folders/bm/wm78t9y93_9c59w74gtcvjtr0000gn/T/decls3.swift.golden16807282475249.actual"]:
+      --- tests/golden/decls3.swift.golden	2015-10-16 16:50:53.000000000 +1000
+      +++ /var/folders/bm/wm78t9y93_9c59w74gtcvjtr0000gn/T/decls3.swift.golden16807282475249.actual	2015-10-17 11:49:00.000000000 +1000
+      @@ -1,2 +1,4 @@
+      -var welcomeMessage: String
+      -welcomeMessage = "Hello"
+      +"<stdin>" (line 1, column 19):
+      +unexpected ':'
+      +expecting letter or digit, "<", "`", ".", "(", "[", "=", "is", "as", ",", ";", "import", "class", "convenience", "dynamic", "final", "infix", "lazy", "mutating", "nonmutating", "optional", "override", "postfix", "prefix", "required", "static", "unowned", "weak", "internal", "private", "public", "let", "var", "typealias", "func", "try", "try?", "try!", identifier, float, integer, literal string, "true", "false", "nil", "__FILE__", "__LINE__", "__COLUMN__", "__FUNCTION__", "self", "<superclass-expression>", "{", "<implicit-member-expression>", "_", "for", "while", "repeat", "if", "guard", "switch", "return" or end of input
+      +attribute not implemented
+      \ No newline at end of file
+
+1 out of 1 tests failed (0.16s)
