@@ -1390,29 +1390,29 @@ operator
 legalHeadOperatorChars :: String
 legalHeadOperatorChars =
   "/-+!*%<>&|^~?"
-  -- ++ ['\x00A1' .. '\x00A7']
-  -- ++ "\x00A9\x00AB"
-  -- ++ "\x00AC\x00AE"
-  -- ++ ['\x00B0'..'\x00B1'] ++ "\x00B6\x00BB\x00BF\x00D7\x00F7"
-  -- ++ ['\x2016'..'\x2017'] ++ ['\x2020'..'\x2027']
-  -- ++ ['\x2030'..'\x203E']
-  -- ++ ['\x2041'..'\x2053']
--- operator-head → U+2055–U+205E
--- operator-head → U+2190–U+23FF
--- operator-head → U+2500–U+2775
--- operator-head → U+2794–U+2BFF
--- operator-head → U+2E00–U+2E7F
--- operator-head → U+3001–U+3003
--- operator-head → U+3008–U+3030
+  ++ ['\x00A1' .. '\x00A7']
+  ++ "\x00A9\x00AB"
+  ++ "\x00AC\x00AE"
+  ++ ['\x00B0'..'\x00B1'] ++ "\x00B6\x00BB\x00BF\x00D7\x00F7"
+  ++ ['\x2016'..'\x2017'] ++ ['\x2020'..'\x2027']
+  ++ ['\x2030'..'\x203E']
+  ++ ['\x2041'..'\x2053']
+  ++ ['\x2055'..'\x205E']
+  ++ ['\x2190'..'\x23FF']
+  ++ ['\x2500'..'\x2775']
+  ++ ['\x2794'..'\x2BFF']
+  ++ ['\x2E00'..'\x2E7F']
+  ++ ['\x3001'..'\x3003']
+  ++ ['\x3008'..'\x3030']
 
 legalTailOperatorChars :: String
 legalTailOperatorChars = legalHeadOperatorChars
--- operator-character → U+0300–U+036F
--- operator-character → U+1DC0–U+1DFF
--- operator-character → U+20D0–U+20FF
--- operator-character → U+FE00–U+FE0F
--- operator-character → U+FE20–U+FE2F
--- operator-character → U+E0100–U+E01EF
+  ++ ['\x0300'..'\x036F']
+  ++ ['\x1DC0'..'\x1DFF']
+  ++ ['\x20D0'..'\x20FF']
+  ++ ['\xFE00'..'\xFE0F']
+  ++ ['\xFE20'..'\xFE2F']
+  ++ ['\xE0100'..'\xE01FF']
 
 operatorHead :: Parser Char
 operatorHead = P.oneOf legalHeadOperatorChars
