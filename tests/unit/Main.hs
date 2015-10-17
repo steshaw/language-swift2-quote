@@ -36,18 +36,18 @@ swifts2Goldens :: [FilePath] -> TestTree
 swifts2Goldens paths = testGroup "Goldens" $ map swift2Golden paths
   where
     swift2Golden s = mkTest s (s <.> "golden")
-    mkTest s g = goldenVsStringDiff (dropExtension s) diffCmd g (prettyFile s)
+    mkTest s g = goldenVsStringDiff (dropExtension s) diffCmd g (file2ast2bytestring s)
     diffCmd ref new = ["diff", "--unified=5", ref, new]
 
-asdf :: T.Text -> String
-asdf input = case parse input of
+text2ast2string :: T.Text -> String
+text2ast2string input = case parse input of
   (Left err) -> err
   (Right module_) -> L.unpack $ prettyPrint (trace ("\n\n\n" ++ show module_ ++ "\n\n\n") module_)
 
-prettyFile :: String -> IO C.ByteString
-prettyFile fileName = do
+file2ast2bytestring :: String -> IO C.ByteString
+file2ast2bytestring fileName = do
   contents <- DTI.readFile fileName
-  return (C.pack (asdf contents))
+  return (C.pack (text2ast2string contents))
 
 litIntExp :: Integer -> Expression
 litIntExp i = litExp (IntegerLiteral i)
