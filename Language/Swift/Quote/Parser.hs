@@ -390,7 +390,7 @@ switchStatement = kw "switch" *> pure SwitchStatement
 
 -- GRAMMAR OF A LABELED STATEMENT
 labeledStatement :: Parser Statement
-labeledStatement = LabelStatement <$> statementLabel <*> (loopStatement <|> ifStatement <|> switchStatement)
+labeledStatement = LabelelStatement <$> statementLabel <*> (loopStatement <|> ifStatement <|> switchStatement)
 
 statementLabel :: Parser String
 statementLabel = labelName <* tok ":"
@@ -401,25 +401,23 @@ labelName = identifier
 -- GRAMMAR OF A CONTROL TRANSFER STATEMENT
 
 controlTransferStatement :: Parser Statement
-controlTransferStatement = returnStatement
+controlTransferStatement = returnStatement <|> breakStatement
 
--- control-transfer-statement → break-statement­
 -- control-transfer-statement → continue-statement­
 -- control-transfer-statement → fallthrough-statement­
 -- control-transfer-statement → return-statement­
 -- control-transfer-statement → throw-statement­
 
-{-
-GRAMMAR OF A BREAK STATEMENT
+-- GRAMMAR OF A BREAK STATEMENT
+breakStatement :: Parser Statement
+breakStatement = kw "break" *> (BreakStatement <$> optional labelName)
 
-break-statement → break­label-name­opt­
-GRAMMAR OF A CONTINUE STATEMENT
+--GRAMMAR OF A CONTINUE STATEMENT
+continueStatement :: Parser Statement
+continueStatement = kw "continue" *> (ContinueStatement <$> optional labelName)
 
-continue-statement → continue­label-name­opt­
-GRAMMAR OF A FALLTHROUGH STATEMENT
-
-fallthrough-statement → fallthrough­
--}
+-- GRAMMAR OF A FALLTHROUGH STATEMENT
+fallthroughStatement = kw "fallthrough" *> pure FallthroughStatement
 
 -- GRAMMAR OF A RETURN STATEMENT
 returnStatement :: Parser Statement

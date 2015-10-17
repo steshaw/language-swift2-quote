@@ -103,9 +103,6 @@ data Statement
     , fiBlock :: CodeBlock
     }
   | DeclarationStatement Declaration
-  -- | BranchStatement
-  -- | LabeledStatement
-  -- | ControlTransferStatement
   | ReturnStatement (Maybe Expression)
   -- | DeferStatement
   -- | DoStatement
@@ -115,8 +112,13 @@ data Statement
   | GuardStatement ConditionClause CodeBlock
   | SwitchStatement -- TODO
   | IfStatement ConditionClause CodeBlock (Maybe (Either CodeBlock {- if -}Statement))
-  | LabelStatement String Statement
+  | LabelelStatement LabelName Statement
+  | BreakStatement (Maybe LabelName)
+  | ContinueStatement (Maybe LabelName)
+  | FallthroughStatement
   deriving (Show, Eq)
+
+type LabelName = String
 
 type ConditionClause = Expression
 
