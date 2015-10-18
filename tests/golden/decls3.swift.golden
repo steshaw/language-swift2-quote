@@ -1,2 +1,2 @@
-var welcomeMessage: String
-welcomeMessage = "Hello"
+let welcomeMessage: String = "Hello"
+print(welcomeMessage)
