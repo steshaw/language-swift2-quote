@@ -1,0 +1,12 @@
+
+
+
+Module [ExpressionStatement (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []})))) [BinaryAssignmentExpression {beTryOperator = Nothing, bePrefixExpression = PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (BooleanLiteral True))))}]),WhileStatement (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []})))) []) (CodeBlock [ExpressionStatement (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (StringLiteral "Hello"))))) [])] Nothing))) [])])]
+
+
+
+Unit
+  Golden
+    tests/golden/while1: OK (0.02s)
+
+All 1 tests passed (0.17s)

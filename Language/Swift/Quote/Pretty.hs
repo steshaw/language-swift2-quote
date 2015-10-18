@@ -74,7 +74,6 @@ instance Pretty PrimaryExpression where
   ppr (PrimarySelf selfExpression) = ppr selfExpression
   ppr (PrimarySuper superclassExpression) = ppr superclassExpression
   ppr (PrimaryClosure closure) = ppr closure
-  ppr (PrimaryParenthesized [expressionElement]) = ppr expressionElement -- FIXME hack because more expressions parse as PrimaryParenthesized than should do.
   ppr (PrimaryParenthesized expressionElements) = (parens . commasep .  map ppr) expressionElements
   ppr PrimaryImplicitMember = string "<implicit-member-expression>" -- TODO implicit-member-expression
   ppr PrimaryWildcard = string "_"
