@@ -1,0 +1,10 @@
+
+
+Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "cannotBeNegative" (Just (TypeAnnotation [] (Type "UInt8")))) (Just (Expression Nothing (PrefixExpression (Just "-") (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))) []))]),DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "tooBig" (Just (TypeAnnotation [] (Type "Int8")))) (Just (Expression Nothing (PrefixExpression Nothing (ExplicitMemberExpressionIdentifier (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "Int8", idgGenericArgs = []}))) (IdG {idgIdentifier = "max", idgGenericArgs = []}))) [BinaryExpression1 {beOperator = "+", bePrefixExpression = PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))}]))])]
+
+
+Unit
+  Golden
+    tests/golden/integerConversion: OK (0.02s)
+
+All 1 tests passed (0.21s)

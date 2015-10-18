@@ -62,7 +62,7 @@ instance Pretty FunctionCall where
 
 instance Pretty ExpressionElement where
   ppr (ExpressionElement Nothing expression) = ppr expression
-  ppr (ExpressionElement (Just ident) expression) = ppr ident <> colon <> space <> ppr expression
+  ppr (ExpressionElement (Just ident) expression) = ppr ident <> colon <+> ppr expression
 
 instance Pretty Closure where
   ppr (Closure []) = empty
@@ -175,8 +175,8 @@ instance Pretty FunctionResult where
 instance Pretty Parameter where
   ppr (ParameterLet optExternName localName typeAnnotation optExpression)
     = string localName
-    <> string ":"
-    <+> ppr typeAnnotation
+    -- <> string ":"
+    <> ppr typeAnnotation
   -- | ParameterVar (Maybe String) String TypeAnnotation (Maybe Expression)
   -- | ParameterInOut (Maybe String) String TypeAnnotation
   -- | ParameterDots (Maybe String) String TypeAnnotation
@@ -197,7 +197,7 @@ instance Pretty VariableDeclaration where
   ppr (VarSimple attrs mods name typeAnnotation optInitExpr)
       = string "var"
     <+> string name
-    <+> ppr typeAnnotation
+    <> ppr typeAnnotation
     <+> maybe empty (\e -> equals <+> ppr e) optInitExpr
 
 instance Pretty PatternInitializer where
@@ -205,7 +205,7 @@ instance Pretty PatternInitializer where
 
 instance Pretty Pattern where
   ppr (WildcardPattern optTypeAnn) = string "_" <+> ppr optTypeAnn
-  ppr (IdentifierPattern identifierPattern optTypeAnn) = string identifierPattern <+> ppr optTypeAnn
+  ppr (IdentifierPattern identifierPattern optTypeAnn) = string identifierPattern <> ppr optTypeAnn
 -- pattern → value-binding-pattern­
   ppr (TuplePattern tuplePatterns optTypeAnn)
     = parens (commasep (map ppr tuplePatterns)) <+> ppr optTypeAnn
@@ -220,4 +220,4 @@ instance Pretty CodeBlock where
     <> line <> rbrace
 
 instance Pretty TypeAnnotation where
-  ppr (TypeAnnotation attrs type_) = sepBySpace attrs <+> ppr type_
+  ppr (TypeAnnotation attrs type_) = sepBySpace attrs <> string ":" <+> ppr type_
