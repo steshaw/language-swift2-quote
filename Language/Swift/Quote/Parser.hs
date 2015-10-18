@@ -1215,7 +1215,7 @@ postfixExpressionOuter = do
   e1 <- postfixExpressionInner
   e2 <- (op "!" *> pure (PostfixForcedValue e1))
         <|> (op "?" *> pure (PostfixOptionChaining e1))
-        -- <|> postfixOpTail e1 -- FIXME Prevents binary expressions being recognised.
+        <|> try (postfixOpTail e1)
         <|> dotTail e1
         <|> (FunctionCallE <$> functionCallTail e1)
         <|> Subscript <$> pure e1 <*> brackets expressionList
@@ -1223,7 +1223,10 @@ postfixExpressionOuter = do
   pure e2
     where
       postfixOpTail :: PostfixExpression -> Parser PostfixExpression
-      postfixOpTail e = PostfixOperator <$> pure e <*> operator
+      postfixOpTail e = do
+        o <- operator
+        (try . P.notFollowedBy) primaryExpression
+        return $ PostfixOperator e o
       dotTail :: PostfixExpression -> Parser PostfixExpression
       dotTail e = do
         _ <- tok "."
