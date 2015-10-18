@@ -605,7 +605,7 @@ variableDeclarationBody
     -- (try (VarPatternInitializer attrs mods <$> patternInitializerList))
     --   <|> variableDeclarationName attrs mods
 
-    (try (variableDeclarationName attrs mods)) <|>
+    try (variableDeclarationName attrs mods) <|>
       (VarPatternInitializer attrs mods <$> patternInitializerList)
 
 variableDeclarationName :: [Attribute] -> [DeclarationModifier] -> Parser VariableDeclaration

@@ -42,7 +42,7 @@ swifts2Goldens paths = testGroup "Golden" $ map swift2Golden paths
 text2ast2string :: T.Text -> String
 text2ast2string input = case parse input of
   (Left err) -> err
-  (Right module_) -> L.unpack $ prettyPrint (trace ("\n\n\n" ++ show module_ ++ "\n\n\n") module_)
+  (Right m) -> L.unpack $ prettyPrint (trace ("\n\n\n" ++ show m ++ "\n\n\n") m)
 
 file2ast2bytestring :: String -> IO C.ByteString
 file2ast2bytestring fileName = do
@@ -141,7 +141,7 @@ src2ast = testGroup "src2ast"
   , expressionTest "a++" $ Expression Nothing (PrefixExpression Nothing
       (PostfixOperator (PostfixPrimary (PrimaryExpression1
         (IdG {idgIdentifier = "a", idgGenericArgs = []}))) "++")) []
-  , expressionTest "foo()" $ fooEmptyFunCall
+  , expressionTest "foo()" $ (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = []}))) [] Nothing))) [])
   , expressionTest "foo(1)" $ Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1))))) [])] Nothing))) []
   , expressionTest "foo(1, 2)" $ Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 2))))) [])] Nothing))) []
   , expressionTest "foo(1, 2, isBlue: false)" $ Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1))))) []),ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 2))))) []),ExpressionElement (Just "isBlue") (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (BooleanLiteral False))))) [])] Nothing))) []
@@ -167,17 +167,8 @@ src2ast = testGroup "src2ast"
   , moduleTest "typealias TypeAliasName = String" $ Module [DeclarationStatement (TypeAlias [] Nothing "TypeAliasName" (Type "String"))]
   ]
 
-emptyModule = Module []
-
+singleImport :: Maybe ImportKind -> [String] -> Module
 singleImport optImportKind imports = Module [DeclarationStatement (import_ optImportKind (map ImportIdentifier imports))]
-
-fooEmptyFunCall = (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = []}))) [] Nothing))) [])
-
-initTest1 :: PostfixExpression
-initTest1 = PostfixExpression4Initalizer (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1))))
-
-initTest2 :: PostfixExpression
-initTest2 = PostfixExpression4Initalizer (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "foo", idgGenericArgs = []})))
 
 import_ :: Maybe ImportKind -> ImportPath -> Declaration
 import_ = ImportDeclaration []
@@ -208,19 +199,19 @@ src2ast2src = testGroup "src2ast2src"
   ]
 
 primary1 :: String -> Expression
-primary1 identifier =
+primary1 ident =
   Expression Nothing
     (PrefixExpression Nothing
       (PostfixPrimary
-        (PrimaryExpression1 (IdG identifier [])))) []
+        (PrimaryExpression1 (IdG ident [])))) []
 
 typeCastExp :: Literal -> String -> Type -> Expression
-typeCastExp lit typeCastKind type_ =
+typeCastExp lit typeCastKind t =
   Expression Nothing
     (PrefixExpression Nothing
       (PostfixPrimary
         (PrimaryLiteral
-          (RegularLiteral lit)))) [BinaryExpression4 typeCastKind type_]
+          (RegularLiteral lit)))) [BinaryExpression4 typeCastKind t]
 
 litExp :: Literal -> Expression
 litExp lit =
@@ -242,12 +233,12 @@ wrap :: String -> String
 wrap s = "[[" ++ s ++ "]]"
 
 moduleTest :: T.Text -> Module -> TestTree
-moduleTest input module_ = testCase ("module: " ++ wrap (T.unpack input)) $
-  parse input @?= Right module_
+moduleTest input m = testCase ("module: " ++ wrap (T.unpack input)) $
+  parse input @?= Right m
 
 expressionTest :: T.Text -> Expression -> TestTree
-expressionTest input expression = testCase ("expression: " ++ wrap (T.unpack input)) $
-  parseExpression input @?= Right expression
+expressionTest input e = testCase ("expression: " ++ wrap (T.unpack input)) $
+  parseExpression input @?= Right e
 
 pp :: Pretty pretty => Either d pretty -> Either d L.Text
 pp = right (prettyLazyText 100 . ppr)
