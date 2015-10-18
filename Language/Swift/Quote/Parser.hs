@@ -5,6 +5,7 @@ module Language.Swift.Quote.Parser where
 import Language.Swift.Quote.Syntax
 
 import Control.Applicative
+import Control.Monad
 import Control.Monad.Identity
 import Control.Arrow (left)
 import Data.Maybe
@@ -1316,64 +1317,116 @@ implicit-parameter-name → $­decimal-digits­
 -- GRAMMAR OF A LITERAL
 literal :: Parser Literal
 literal = ws *>
-  (numericLiteral <|> stringLiteral <|> booleanLiteral <|> nilLiteral)
+  (try numericLiteral <|> try stringLiteral <|> try booleanLiteral <|> nilLiteral) <* ws
 
--- numeric-literal → - ­opt ­integer-literal |­ - ­opt ­floating-point-literal­
-{-
-numericLiteral
-    = optional (op "-") integerLiteral
-  <|> optional (op "-") floatingPointLiteral
--}
 numericLiteral :: Parser Literal
-numericLiteral = try floatingPointLiteral <|> integerLiteral
+numericLiteral = try optNegFloatingPointLiteral <|> optNegIntegerLiteral
+  where
+    optNegIntegerLiteral = do
+      n <- optional (P.string "-")
+      i <- integerLiteral
+      return $ apply (neg n) i
+    optNegFloatingPointLiteral = do
+      n <- optional (P.string "-")
+      f <- floatingPointLiteral
+      return $ apply (neg n) f
+    neg = maybe "" (const "-")
+    apply n (NumericLiteral s) = NumericLiteral $ n ++ s
+
+booleanLiteral :: Parser Literal
+booleanLiteral = BooleanLiteral <$>
+     (kw "true" *> pure True
+  <|> kw "false" *> pure False)
+
+nilLiteral :: Parser Literal
+nilLiteral = pure NilLiteral <* kw "nil"
 
 -- GRAMMAR OF AN INTEGER LITERAL
+-- TODO use P.lookAhead here with case..of.
+integerLiteral :: Parser Literal
+integerLiteral
+    = NumericLiteral <$>
+         (try binaryLiteral
+      <|> try octalLiteral
+      <|> try hexLiteral
+      <|> decimalLiteral)
+
+binaryLiteral :: Parser String
+binaryLiteral = do
+  b <- P.string "0b"
+  digits <- P.many1 binaryLiteralCharacter
+  return $ b ++ digits
+  where
+    binaryDigit = P.oneOf ['0'..'1']
+    binaryLiteralCharacter = binaryDigit <|> P.char '_'
+
+octalLiteral :: Parser String
+octalLiteral = do
+  o <- P.string "0o"
+  digits <- P.many1 octalLiteralCharacter
+  return $ o ++ digits
+  where
+    octalDigit = P.oneOf ['0'..'7']
+    octalLiteralCharacter = octalDigit <|> P.char '_'
+
+decimalLiteral :: Parser String
+decimalLiteral = P.many1 decimalLiteralCharacter
+  where
+    decimalLiteralCharacter = decimalDigit <|> P.char '_'
+
+decimalDigit :: Parser Char
+decimalDigit = P.oneOf ['0'..'9']
 
 decimalDigits :: Parser String
-decimalDigits = P.many1 P.digit
+decimalDigits = P.many1 decimalDigit
 
-{-
-integer-literal → binary-literal­
-integer-literal → octal-literal­
-integer-literal → decimal-literal­
-integer-literal → hexadecimal-literal­
-binary-literal → 0b­binary-digit­binary-literal-characters­opt­
-binary-digit → Digit 0 or 1
-binary-literal-character → binary-digit­  _­
-binary-literal-characters → binary-literal-character­binary-literal-characters­opt­
-octal-literal → 0o­octal-digit­octal-literal-characters­opt­
-octal-digit → Digit 0 through 7
-octal-literal-character → octal-digit­  _­
-octal-literal-characters → octal-literal-character­octal-literal-characters­opt­
-decimal-literal → decimal-digit­decimal-literal-characters­opt­
-decimal-digit → Digit 0 through 9
-decimal-digits → decimal-digit­decimal-digits­opt­
-decimal-literal-character → decimal-digit­  _­
-decimal-literal-characters → decimal-literal-character­decimal-literal-characters­opt­
-hexadecimal-literal → 0x­hexadecimal-digit­hexadecimal-literal-characters­opt­
-hexadecimal-digit → Digit 0 through 9, a through f, or A through F
-hexadecimal-literal-character → hexadecimal-digit­  _­
-hexadecimal-literal-characters → hexadecimal-literal-character­hexadecimal-literal-characters­opt­
--}
--- TODO: simplified
-integerLiteral :: Parser Literal
-integerLiteral = IntegerLiteral <$> T.integer lexer
+hexLiteral :: Parser String
+hexLiteral = do
+  h <- P.string "0x"
+  digits <- P.many1 hexLiteralCharacter
+  return $ h ++ digits
+  where
+    hexDigit = P.oneOf (['0'..'9'] ++ ['a'..'f'] ++ ['A'..'F'])
+    hexLiteralCharacter = hexDigit <|> P.char '_'
+
+stringyOptional :: Parser String -> Parser String
+stringyOptional p = try p <|> pure ""
 
 -- GRAMMAR OF A FLOATING-POINT LITERAL
-{-
-floating-point-literal → decimal-literal­decimal-fraction­opt­decimal-exponent­opt­
-floating-point-literal → hexadecimal-literal­hexadecimal-fraction­opt­hexadecimal-exponent­
-decimal-fraction → .­decimal-literal­
-decimal-exponent → floating-point-e­sign­opt­decimal-literal­
-hexadecimal-fraction → .­hexadecimal-digit­hexadecimal-literal-characters­opt­
-hexadecimal-exponent → floating-point-p­sign­opt­decimal-literal­
-floating-point-e → e­  E­
-floating-point-p → p­  P­
-sign → +­  -­
--}
--- TODO: simplified
 floatingPointLiteral :: Parser Literal
-floatingPointLiteral = FloatingPointLiteral <$> T.float lexer
+floatingPointLiteral = do
+  d <- decimalLiteral
+  f <- stringyOptional decimalFraction
+  e <- stringyOptional decimalExponent
+  if f == "" && e == "" then fail "we want to parse an integer here" else pure ()
+  return $ NumericLiteral (d ++ f ++ e)
+
+-- floating-point-literal → hexadecimal-literal­hexadecimal-fraction­opt­hexadecimal-exponent­
+
+decimalFraction :: Parser String
+decimalFraction = do
+  dot <- tok' "."
+  dec <- decimalLiteral
+  return $ dot ++ dec
+
+decimalExponent :: Parser String
+decimalExponent = do
+  e <- floatingPointE
+  s <- stringyOptional sign
+  dec <- decimalLiteral
+  return $ e ++ s ++ dec
+
+-- hexadecimal-fraction → .­hexadecimal-digit­hexadecimal-literal-characters­opt­
+-- hexadecimal-exponent → floating-point-p­sign­opt­decimal-literal­
+
+floatingPointE :: Parser String
+floatingPointE = (: []) <$> P.oneOf "eE"
+
+floatingPointP :: Parser String
+floatingPointP = (: []) <$> P.oneOf "pP"
+
+sign :: Parser String
+sign = (: []) <$> P.oneOf "+-"
 
 --GRAMMAR OF A STRING LITERAL
 {-
@@ -1393,18 +1446,8 @@ unicode-scalar-digits → Between one and eight hexadecimal digits
 stringLiteral :: Parser Literal
 stringLiteral = StringLiteral <$> T.stringLiteral lexer
 
-booleanLiteral :: Parser Literal
-booleanLiteral = BooleanLiteral <$>
-     (kw "true" *> pure True
-  <|> kw "false" *> pure False)
-
-nilLiteral :: Parser Literal
-nilLiteral = pure NilLiteral <* kw "nil"
 
 -- GRAMMAR OF OPERATORS
--- TODO: simplified!
--- operator :: Parser String
--- operator = T.reservedOp lexer
 
 operator :: Parser String
 operator

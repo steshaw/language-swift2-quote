@@ -94,8 +94,7 @@ instance Pretty LiteralExpression where
   ppr (SpecialLiteral special) =  ppr special
 
 instance Pretty Literal where
-  ppr (IntegerLiteral n) = integer n
-  ppr (FloatingPointLiteral d) = double d
+  ppr (NumericLiteral s) = string s
   ppr (StringLiteral s) = dquotes (string s)
   ppr (BooleanLiteral b) = if b then text "true" else text "false"
   ppr NilLiteral = text "nil"
@@ -202,7 +201,6 @@ instance Pretty VariableDeclaration where
     <+> maybe empty (\e -> equals <+> ppr e) optInitExpr
 
 instance Pretty PatternInitializer where
---  ppr (PatternInitializer (ExpressionPattern expression) optExpression) = ppr expression <+> ppr optExpression -- FIXME We currently get an Assignment ConstantDeclaration(AssignmentExpression) instead of ConstantDeclaration(IdentifierExpression, Expression)
   ppr (PatternInitializer pattern optExpression) = ppr pattern <+> string "=" <+> ppr optExpression
 
 instance Pretty Pattern where

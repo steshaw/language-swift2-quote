@@ -63,8 +63,7 @@ data SelfExpression
   deriving (Show, Eq)
 
 data Literal
-  = IntegerLiteral Integer
-  | FloatingPointLiteral Double
+  = NumericLiteral String
   | StringLiteral String
   | BooleanLiteral Bool
   | NilLiteral
