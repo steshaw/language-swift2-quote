@@ -75,7 +75,7 @@ instance Pretty PrimaryExpression where
   ppr (PrimarySuper superclassExpression) = ppr superclassExpression
   ppr (PrimaryClosure closure) = ppr closure
   ppr (PrimaryParenthesized [expressionElement]) = ppr expressionElement -- FIXME hack because more expressions parse as PrimaryParenthesized than should do.
-  ppr (PrimaryParenthesized expressionElements) = (parens . cat .  map ppr) expressionElements
+  ppr (PrimaryParenthesized expressionElements) = (parens . commasep .  map ppr) expressionElements
   ppr PrimaryImplicitMember = string "<implicit-member-expression>" -- TODO implicit-member-expression
   ppr PrimaryWildcard = string "_"
 
@@ -203,10 +203,18 @@ instance Pretty VariableDeclaration where
     <+> maybe empty (\e -> equals <+> ppr e) optInitExpr
 
 instance Pretty PatternInitializer where
-  ppr (PatternInitializer (ExpressionPattern expression) optExpression) = ppr expression <+> ppr optExpression -- FIXME We currently get an Assignment ConstantDeclaration(AssignmentExpression) instead of ConstantDeclaration(IdentifierExpression, Expression)
-  ppr (PatternInitializer pattern optExpression) = ppr pattern <+> string "=" <+> string "[[" <+> ppr optExpression <+> string "]]"
+--  ppr (PatternInitializer (ExpressionPattern expression) optExpression) = ppr expression <+> ppr optExpression -- FIXME We currently get an Assignment ConstantDeclaration(AssignmentExpression) instead of ConstantDeclaration(IdentifierExpression, Expression)
+  ppr (PatternInitializer pattern optExpression) = ppr pattern <+> string "=" <+> ppr optExpression
 
 instance Pretty Pattern where
+  ppr (WildcardPattern optTypeAnn) = string "_" <+> ppr optTypeAnn
+  ppr (IdentifierPattern identifierPattern optTypeAnn) = string identifierPattern <+> ppr optTypeAnn
+-- pattern → value-binding-pattern­
+  ppr (TuplePattern tuplePatterns optTypeAnn)
+    = parens (commasep (map ppr tuplePatterns)) <+> ppr optTypeAnn
+-- pattern → enum-case-pattern­
+-- pattern → optional-pattern­
+-- pattern → type-casting-pattern­
   ppr (ExpressionPattern expression) = ppr expression
 
 instance Pretty CodeBlock where

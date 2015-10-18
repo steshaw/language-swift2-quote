@@ -25,7 +25,7 @@ main = do
   hSetBuffering stdout NoBuffering
   hSetBuffering stderr NoBuffering
   swifts <- findByExtension [".swift"] "tests/golden"
-  defaultMain $ testGroup "Tests "
+  defaultMain $ testGroup "Unit"
     [ operatorTests
     , src2ast
     , src2ast2src
@@ -33,7 +33,7 @@ main = do
     ]
 
 swifts2Goldens :: [FilePath] -> TestTree
-swifts2Goldens paths = testGroup "Goldens" $ map swift2Golden paths
+swifts2Goldens paths = testGroup "Golden" $ map swift2Golden paths
   where
     swift2Golden s = mkTest s (s <.> "golden")
     mkTest s g = goldenVsStringDiff (dropExtension s) diffCmd g (file2ast2bytestring s)
@@ -66,7 +66,7 @@ badOperator o input = testCase ("bad operator: " ++ wrap o ++ " input " ++ wrap 
       e = parserToEither (op o) input
 
 operatorTests :: TestTree
-operatorTests = testGroup "Operators"
+operatorTests = testGroup "Operator"
   [ goodOperator "&"    "&"
   , goodOperator "&"    "& "
   , goodOperator "&"    " &"
@@ -97,7 +97,7 @@ operatorTests = testGroup "Operators"
   ]
 
 src2ast :: TestTree
-src2ast = testGroup "Source -> AST"
+src2ast = testGroup "src2ast"
   [ expressionTest "1" $ litIntExp 1
   , expressionTest " 2" $ litIntExp 2
   , expressionTest "3 " $ litIntExp 3
@@ -160,8 +160,10 @@ src2ast = testGroup "Source -> AST"
 
   , moduleTest "print(\"Hello world\\n\")" $ Module [ExpressionStatement (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (StringLiteral "Hello world\n"))))) [])] Nothing))) [])]
 
-  , moduleTest "let n = 1" $ Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (ExpressionPattern (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "n", idgGenericArgs = []})))) [BinaryAssignmentExpression {beTryOperator = Nothing, bePrefixExpression = PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1))))}])) Nothing])]
-  , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (VarPatternInitializer [] [] [PatternInitializer (ExpressionPattern (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "d", idgGenericArgs = []})))) [BinaryAssignmentExpression {beTryOperator = Nothing, bePrefixExpression = PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (FloatingPointLiteral 1.0))))}])) Nothing]))]
+  , moduleTest "let n = 1" $ Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "n" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1))))) []))])]
+
+  , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (VarPatternInitializer [] [] [PatternInitializer (IdentifierPattern "d" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (FloatingPointLiteral 1.0))))) []))]))]
+
   , moduleTest "typealias TypeAliasName = String" $ Module [DeclarationStatement (TypeAlias [] Nothing "TypeAliasName" (Type "String"))]
   ]
 
@@ -181,7 +183,7 @@ import_ :: Maybe ImportKind -> ImportPath -> Declaration
 import_ = ImportDeclaration []
 
 src2ast2src :: TestTree
-src2ast2src = testGroup "Source -> AST -> Source"
+src2ast2src = testGroup "src2ast2src"
   [ ppExpTest "1" "1"
   , ppExpTest "2 " "2"
   , ppExpTest " 3" "3"
@@ -256,13 +258,3 @@ ppExpTest input s = testCase ("expression " ++ wrap (T.unpack input) ++ " => " +
     where ast = parseExpression input
           osrc = pp ast
           sosrc = fmap L.unpack osrc
-
-m1 :: Module
-m1 = Module
-  [ExpressionStatement (Expression Nothing
-  (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1)))))
-   [])
-  ,ExpressionStatement (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 2))))) [])]
-
-e1 :: PrefixExpression
-e1 = PrefixExpression Nothing (PostfixOperator (PostfixPrimary (PrimaryLiteral (RegularLiteral (IntegerLiteral 1)))) "*")

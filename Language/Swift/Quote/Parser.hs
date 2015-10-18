@@ -921,31 +921,40 @@ accessLevelModifier = do
 
 -- GRAMMAR OF A PATTERN
 pattern :: Parser Pattern
-pattern = ExpressionPattern <$> expression
--- pattern → wildcard-pattern­type-annotation­opt­
--- pattern → identifier-pattern­type-annotation­opt­
+pattern
+    = wildcardPattern *> (WildcardPattern <$> optional typeAnnotation)
 -- pattern → value-binding-pattern­
+  <|> TuplePattern <$> tuplePattern <*> optional typeAnnotation
+  <|> IdentifierPattern <$> identifierPattern <*> optional typeAnnotation
+  <|> ExpressionPattern <$> expression
 -- pattern → tuple-pattern­type-annotation­opt­
 -- pattern → enum-case-pattern­
 -- pattern → optional-pattern­
 -- pattern → type-casting-pattern­
--- pattern → expression-pattern­
+
+-- GRAMMAR OF A WILDCARD PATTERN
+wildcardPattern :: Parser ()
+wildcardPattern = kw "_"
+
+-- GRAMMAR OF AN IDENTIFIER PATTERN
+identifierPattern :: Parser String
+identifierPattern = identifier
+
+-- GRAMMAR OF A VALUE-BINDING PATTERN
+
+-- value-binding-pattern → var­pattern­  let­pattern­
+
+-- GRAMMAR OF A TUPLE PATTERN
+tuplePattern :: Parser [Pattern]
+tuplePattern = parens tuplePatterns
+
+tuplePatterns :: Parser [Pattern]
+tuplePatterns = tuplePatternElement `P.sepBy` comma
+
+tuplePatternElement :: Parser Pattern
+tuplePatternElement = pattern
 
 {-
-GRAMMAR OF A WILDCARD PATTERN
-
-wildcard-pattern → _­
-GRAMMAR OF AN IDENTIFIER PATTERN
-
-identifier-pattern → identifier­
-GRAMMAR OF A VALUE-BINDING PATTERN
-
-value-binding-pattern → var­pattern­  let­pattern­
-GRAMMAR OF A TUPLE PATTERN
-
-tuple-pattern → (­tuple-pattern-element-list­opt­)­
-tuple-pattern-element-list → tuple-pattern-element­ tuple-pattern-element­,­tuple-pattern-element-list­
-tuple-pattern-element → pattern­
 GRAMMAR OF AN ENUMERATION CASE PATTERN
 
 enum-case-pattern → type-identifier­opt­.­enum-case-name­tuple-pattern­opt­

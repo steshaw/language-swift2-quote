@@ -174,11 +174,18 @@ data ImportPathIdentifier
   | ImportOperator String
   deriving (Show, Eq)
 
-data PatternInitializer = PatternInitializer Pattern (Maybe Expression)
+type OptInitExpr = Maybe Expression
+
+data PatternInitializer = PatternInitializer Pattern OptInitExpr
   deriving (Show, Eq)
 
+type OptTypeAnnotation = Maybe TypeAnnotation
+
 data Pattern
-  = ExpressionPattern Expression
+  = WildcardPattern OptTypeAnnotation
+  | IdentifierPattern String OptTypeAnnotation
+  | TuplePattern [Pattern] OptTypeAnnotation
+  | ExpressionPattern Expression
   deriving (Show, Eq)
 
 data FunctionResult = FunctionResult [Attribute] Type
