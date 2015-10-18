@@ -1380,26 +1380,44 @@ decimalDigit = P.oneOf ['0'..'9']
 decimalDigits :: Parser String
 decimalDigits = P.many1 decimalDigit
 
+hexadecimalLiteral :: Parser String
+hexadecimalLiteral = P.many1 hexLiteralCharacter
+  where
+    hexLiteralCharacter = hexDigit <|> P.char '_'
+
 hexLiteral :: Parser String
 hexLiteral = do
   h <- P.string "0x"
   digits <- P.many1 hexLiteralCharacter
   return $ h ++ digits
   where
-    hexDigit = P.oneOf (['0'..'9'] ++ ['a'..'f'] ++ ['A'..'F'])
     hexLiteralCharacter = hexDigit <|> P.char '_'
+
+hexDigit :: Parser Char
+hexDigit = P.oneOf (['0'..'9'] ++ ['a'..'f'] ++ ['A'..'F'])
 
 stringyOptional :: Parser String -> Parser String
 stringyOptional p = try p <|> pure ""
 
 -- GRAMMAR OF A FLOATING-POINT LITERAL
 floatingPointLiteral :: Parser Literal
-floatingPointLiteral = do
+floatingPointLiteral = try hexFloatingPoint <|> decFloatingPoint
+
+decFloatingPoint :: Parser Literal
+decFloatingPoint = do
   d <- decimalLiteral
   f <- stringyOptional decimalFraction
   e <- stringyOptional decimalExponent
-  if f == "" && e == "" then fail "we want to parse an integer here" else pure ()
+  if f == "" && e == "" then fail "we want to parse an dec here" else pure ()
   return $ NumericLiteral (d ++ f ++ e)
+
+hexFloatingPoint :: Parser Literal
+hexFloatingPoint = do
+  h <- hexLiteral
+  f <- stringyOptional hexFraction
+  e <- stringyOptional hexExponent
+  if f == "" && e == "" then fail "we want to parse a regular hex here" else pure ()
+  return $ NumericLiteral (h ++ f ++ e)
 
 -- floating-point-literal → hexadecimal-literal­hexadecimal-fraction­opt­hexadecimal-exponent­
 
@@ -1416,8 +1434,18 @@ decimalExponent = do
   dec <- decimalLiteral
   return $ e ++ s ++ dec
 
--- hexadecimal-fraction → .­hexadecimal-digit­hexadecimal-literal-characters­opt­
--- hexadecimal-exponent → floating-point-p­sign­opt­decimal-literal­
+hexFraction :: Parser String
+hexFraction = do
+  dot <- tok' "."
+  hex <- hexadecimalLiteral
+  return $ dot ++ hex
+
+hexExponent :: Parser String
+hexExponent = do
+  e <- floatingPointP
+  s <- stringyOptional sign
+  hex <- decimalLiteral
+  return $ e ++ s ++ hex
 
 floatingPointE :: Parser String
 floatingPointE = (: []) <$> P.oneOf "eE"

@@ -1,10 +1,10 @@
 
 
-Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "welcomeMessage" (Just (TypeAnnotation [] (Type "String")))) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (StringLiteral "Hello"))))) []))]),ExpressionStatement (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "welcomeMessage", idgGenericArgs = []})))) [])] Nothing))) [])]
+Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "decimalDouble" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "12.1875"))))) []))]),DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "exponentDouble" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1.21875e1"))))) []))]),DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "hexadecimalDouble" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "0xC.3p0"))))) []))])]
 
 
 Unit
   Golden
-    tests/golden/decls3: OK (0.02s)
+    tests/golden/floatingPointLiterals: OK (0.05s)
 
-All 1 tests passed (0.15s)
+All 1 tests passed (0.23s)
