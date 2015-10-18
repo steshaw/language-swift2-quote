@@ -99,7 +99,7 @@ operatorTests = testGroup "Operator"
 src2ast :: TestTree
 src2ast = testGroup "src2ast"
   [ expressionTest "1" $ litIntExp 1
-  , expressionTest "-1" $ litIntExp (-1)
+  , expressionTest "-1" $ Expression Nothing (PrefixExpression (Just "-") (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))) []
   , expressionTest " 2" $ litIntExp 2
   , expressionTest "3 " $ litIntExp 3
   , expressionTest " 10 " $ litIntExp 10
