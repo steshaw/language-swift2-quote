@@ -161,6 +161,16 @@ src2ast = testGroup "src2ast"
   , expressionTest "a?" $ Expression Nothing (PrefixExpression Nothing (PostfixOptionChaining (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []}))))) []
   , expressionTest "a[1]" $ Expression Nothing (PrefixExpression Nothing (Subscript (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []}))) [Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))) []])) []
 
+  , expressionTest "try someThrowingFunction() + anotherThrowingFunction()" $ Expression (Just "try") (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "someThrowingFunction", idgGenericArgs = []}))) [] Nothing))) [BinaryExpression1 {beOperator = "+", bePrefixExpression = PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "anotherThrowingFunction", idgGenericArgs = []}))) [] Nothing))}]
+  , expressionTest "(try someThrowingFunction()) + anotherThrowingFunction()" $
+      Expression Nothing (PrefixExpression Nothing (PostfixPrimary
+       (PrimaryParenthesized
+         [ExpressionElement Nothing
+           (Expression (Just "try") (PrefixExpression Nothing
+             (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "someThrowingFunction", idgGenericArgs = []}))) [] Nothing))) [])
+         ]))) [BinaryExpression1 {beOperator = "+", bePrefixExpression = PrefixExpression Nothing 
+           (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "anotherThrowingFunction", idgGenericArgs = []}))) [] Nothing))}]
+
   , moduleTest "import foo" $ singleImport Nothing ["foo"]
   , moduleTest "import foo.math.BitVector" $ singleImport Nothing ["foo", "math", "BitVector"]
   , moduleTest "import typealias foo.a.b" $ singleImport (Just "typealias") ["foo", "a", "b"]

@@ -83,9 +83,11 @@ data BinaryExpression
     { beTryOperator :: Maybe String
     , bePrefixExpression :: PrefixExpression
     }
-  | BinaryExpression3 (Maybe String, Expression) (Maybe String) PrefixExpression
+  | BinaryConditional (Maybe TryOp, Expression) (Maybe TryOp) PrefixExpression
   | BinaryExpression4 String Type
   deriving (Show, Eq)
+
+type TryOp = String
 
 data Statement
   = ExpressionStatement Expression

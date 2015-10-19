@@ -85,8 +85,8 @@ instance Pretty IdG where
 instance Pretty BinaryExpression where
   ppr (BinaryExpression1 operator prefixExpression) = ppr operator <+> ppr prefixExpression
   ppr (BinaryAssignmentExpression tryOperator prefixExpression) = string "=" <+> ppr tryOperator <+> ppr prefixExpression
-  ppr (BinaryExpression3 (optS1, expression) optS2 prefixExpression) =
-    ppr optS1 <> ppr expression <> ppr optS2 <> ppr prefixExpression
+  ppr (BinaryConditional (optTry1, expression) optTry2 prefixExpression) =
+    string "?" <+> ppr optTry1 <+> ppr expression <+> string ":" <+> ppr optTry2 <+> ppr prefixExpression
   ppr (BinaryExpression4 s typ) = ppr s <> ppr typ
 
 instance Pretty LiteralExpression where

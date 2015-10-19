@@ -296,17 +296,10 @@ forStatementTail
 forMiddle :: Parser (Maybe ForInit, Maybe Expression, Maybe Expression)
 forMiddle = do
           i <- optional forInit
-          -- _ <- trace ("i = " ++ show i) $ pure ()
-          sc1 <- semicolon
-          -- _ <- trace ("sc1 = " ++ show sc1) $ pure ()
+          _ <- semicolon
           e1 <- optional expression
-          -- _ <- trace ("e1 = " ++ show e1) $ pure ()
-          sc2 <- semicolon
-          -- _ <- trace ("sc2 = " ++ show sc2) $ pure ()
+          _ <- semicolon
           e2 <- optional expression
-          -- _ <- trace ("e2 = " ++ show e2) $ pure ()
-          s3 <- try . P.lookAhead $ many P.anyChar
-          -- _ <- trace ("any s = " ++ show s3) $ pure ()
           return (i, e1, e2)
 
 forInit :: Parser ForInit
@@ -1046,35 +1039,28 @@ tryOperator
 
 -- GRAMMAR OF A BINARY EXPRESSION
 
-newBinary :: Parser BinaryExpression
-newBinary = do
-  o <- binaryOperator
-  -- o <- op' "*"
-  lit <- numericLiteral
-  return $ BinaryExpression1 o (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral lit))))
-
 binaryExpression :: Parser BinaryExpression
 binaryExpression
     = do
+        co <- conditionalOperator
+        to <- optional tryOperator
+        pe <- prefixExpression
+        return $ BinaryConditional co to pe
+ <|> do
         _ <- assignmentOperator
         to <- optional tryOperator
         pe <- prefixExpression
         return $ BinaryAssignmentExpression to pe
+  <|> typeCastingOperator
   <|> do
         -- _ <- trace "\n\n\nin 2nd case" $ pure ()
         o <- binaryOperator
         -- _ <- trace ("\nbinaryOperator = " ++ show o) $ pure ()
-        s2 <- try . P.lookAhead $ many P.anyChar
+        -- s2 <- try . P.lookAhead $ many P.anyChar
         -- _ <- trace ("\ntrying for prefixExpression in binaryExpression lookAhead s2 = " ++ show s2) $ pure ()
         e <- prefixExpression
         -- _ <- trace ("\nprefix = " ++ show e) $ pure ()
         return $ BinaryExpression1 o e
-  <|> do
-        co <- conditionalOperator
-        to <- optional tryOperator
-        pe <- prefixExpression
-        return $ BinaryExpression3 co to pe
-  <|> typeCastingOperator
 
 binaryExpressions :: Parser [BinaryExpression]
 binaryExpressions = many binaryExpression
@@ -1089,6 +1075,7 @@ conditionalOperator = do
   _ <- op "?"
   to <- optional tryOperator
   e <- expression
+  _ <- tok ":"
   return (to, e)
 
 -- GRAMMAR OF A TYPE-CASTING OPERATOR
@@ -1210,22 +1197,25 @@ wildCardExpression = tok "_"
 postfixExpression :: Parser PostfixExpression
 postfixExpression = postfixExpressionOuter
 
+notFollowedByPrimary :: Parser ()
+notFollowedByPrimary = P.notFollowedBy primaryExpression
+
 postfixExpressionOuter :: Parser PostfixExpression
 postfixExpressionOuter = do
   e1 <- postfixExpressionInner
-  e2 <- (op "!" *> pure (PostfixForcedValue e1))
-        <|> (op "?" *> pure (PostfixOptionChaining e1))
-        <|> try (postfixOpTail e1)
-        <|> dotTail e1
-        <|> (FunctionCallE <$> functionCallTail e1)
-        <|> Subscript <$> pure e1 <*> brackets expressionList
-        <|> pure e1
+  e2 <- forcedValueExpressionTail e1 <* notFollowedByPrimary
+    <|> optionalChainingExpressionTail e1 <* notFollowedByPrimary
+    <|> postfixOpTail e1
+    <|> dotTail e1
+    <|> (FunctionCallE <$> functionCallTail e1)
+    <|> Subscript <$> pure e1 <*> brackets expressionList
+    <|> pure e1
   pure e2
     where
       postfixOpTail :: PostfixExpression -> Parser PostfixExpression
-      postfixOpTail e = do
+      postfixOpTail e = try $ do
         o <- operator
-        (try . P.notFollowedBy) primaryExpression
+        notFollowedByPrimary
         return $ PostfixOperator e o
       dotTail :: PostfixExpression -> Parser PostfixExpression
       dotTail e = do
@@ -1279,11 +1269,16 @@ postfixDynamicTypeTail postfixE = kw "dynamicType" *> pure (PostfixDynamicType p
 -- GRAMMAR OF A SUBSCRIPT EXPRESSION
 -- See Subscript above.
 
---GRAMMAR OF A FORCED-VALUE EXPRESSION
--- See PostfixForcedValue
+-- GRAMMAR OF A FORCED-VALUE EXPRESSION
+forcedValueExpressionTail :: PostfixExpression -> Parser PostfixExpression
+forcedValueExpressionTail e = op "!" *> pure (PostfixForcedValue e)
 
 -- GRAMMAR OF AN OPTIONAL-CHAINING EXPRESSION
--- See PostfixOptionChaining
+optionalChainingExpressionTail :: PostfixExpression -> Parser PostfixExpression
+optionalChainingExpressionTail e = try $ do
+  _ <- op "?"
+  notFollowedByPrimary
+  return $ PostfixOptionChaining e
 
 {-
 Lexical Structure
@@ -1411,7 +1406,7 @@ decFloatingPoint = do
   d <- decimalLiteral
   f <- stringyOptional decimalFraction
   e <- stringyOptional decimalExponent
-  if f == "" && e == "" then fail "we want to parse an dec here" else pure ()
+  when (f == "" && e == "") $ fail "we want to parse an dec here"
   return $ NumericLiteral (d ++ f ++ e)
 
 hexFloatingPoint :: Parser Literal
