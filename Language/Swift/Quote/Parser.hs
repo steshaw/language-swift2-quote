@@ -510,12 +510,12 @@ genericArgumentClause = angles (P.many1 type_)
 declaration :: Parser Declaration
 declaration
     = importDeclaration
-  <|> constantDeclaration
-  <|> variableDeclaration
-  <|> typealiasDeclaration
-  <|> functionDeclaration
+  <|> try constantDeclaration
+  <|> try variableDeclaration
+  <|> try typealiasDeclaration
+  <|> try functionDeclaration
+  <|> try enumDeclaration
 {-
-declaration → enum-declaration­
 declaration → struct-declaration­
 declaration → class-declaration­
 declaration → protocol-declaration­
@@ -765,8 +765,8 @@ defaultArgumentClause :: Parser Expression
 defaultArgumentClause = tok "=" *> expression
 
 -- GRAMMAR OF AN ENUMERATION DECLARATION
-enumDeclaration :: Parser EnumDeclaration
-enumDeclaration = do
+enumDeclaration :: Parser Declaration
+enumDeclaration = EnumDeclaration <$> do
   atts <- attributeList
   optMod <- optional accessLevelModifier
   unionStyleEnum atts optMod <|> rawValueStyleEnum atts optMod
@@ -777,12 +777,12 @@ unionStyleEnum atts optMod = do
   let i = isJust si
   kw "enum"
   n <- enumName
-  ps <- genericParameterClause
+  optP <- optional genericParameterClause
   ti <- optional typeInheritanceClause
   tok "{"
   ms <- P.many unionStyleEnumMember
   tok "}"
-  return $ UnionEnum atts optMod i n ps ti ms
+  return $ UnionEnum atts optMod i n optP ti ms
 
 typeInheritanceClause :: Parser TypeInheritanceClause
 typeInheritanceClause = fail "WIP"

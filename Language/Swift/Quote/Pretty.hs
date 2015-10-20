@@ -9,6 +9,16 @@ import Data.Text.Lazy (Text, append)
 import Data.Maybe
 import Text.PrettyPrint.Mainland
 
+------------------------------------------------------------
+-- Auxiliary
+------------------------------------------------------------
+bracesLines :: [Doc] -> Doc
+bracesLines [] = lbrace <> line <> rbrace
+bracesLines ds
+  = lbrace <> line
+  <> ind (stack ds)
+  <> line <> rbrace
+
 prettyPrint :: Module -> Text
 prettyPrint m = append p "\n"
   where p = prettyLazyText 100 (ppr m)
@@ -28,6 +38,10 @@ ppBracketExps = brackets . ppExps
 
 ppExpressionElements :: [ExpressionElement] -> Doc
 ppExpressionElements = parens . commasep . map ppr
+
+------------------------------------------------------------
+-- Pretty instances
+------------------------------------------------------------
 
 instance Pretty Module where
   ppr (Module statements) = stack (map ppr statements)
@@ -173,7 +187,21 @@ instance Pretty Declaration where
     <+> ppr optResult
     <+> ppr optBlock
 
-  ppr DummyDeclaration = string "<dummy-decl>"
+  -- ppr DummyDeclaration = string "<dummy-decl>"
+
+  ppr (EnumDeclaration enum) = ppr enum
+
+instance Pretty EnumDeclaration where
+  ppr (UnionEnum atts optMod isIndirect name optGPC optTIC members)
+      = string "enum" <+> string name
+    <+> bracesLines (map ppr members)-- TODO
+
+instance Pretty UnionStyleEnumMember where
+    ppr (EnumMemberDeclaration d) = ppr d
+    ppr (EnumMemberCase atts isIndirect cases) = string "case" <+> cat (map printCase cases)
+      where
+        printCase :: (CaseName, Maybe {-Tuple-} Type) -> Doc
+        printCase (n, t) = string n <+> ppr t
 
 instance Pretty FunctionName where
   ppr (FunctionNameIdent s) = string s
@@ -225,9 +253,7 @@ instance Pretty Pattern where
   ppr (ExpressionPattern expression) = ppr expression
 
 instance Pretty CodeBlock where
-  ppr (CodeBlock statements) = lbrace <> line
-    <> ind (stack (map ppr statements))
-    <> line <> rbrace
+  ppr (CodeBlock statements) = bracesLines (map ppr statements)
 
 instance Pretty TypeAnnotation where
   ppr (TypeAnnotation attrs type_) = sepBySpace attrs <> string ":" <+> ppr type_

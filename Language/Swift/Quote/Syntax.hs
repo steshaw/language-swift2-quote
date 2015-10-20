@@ -158,7 +158,8 @@ data Declaration
     , funResult :: Maybe FunctionResult
     , funBody :: Maybe CodeBlock
     }
-  | DummyDeclaration
+  | EnumDeclaration EnumDeclaration
+  -- | DummyDeclaration
   deriving (Show, Eq)
 
 data VariableDeclaration
@@ -176,7 +177,7 @@ data EnumDeclaration
       (Maybe DeclarationModifier)
       IsIndirect
       EnumName
-      GenericParameterClause
+      (Maybe GenericParameterClause)
       (Maybe TypeInheritanceClause)
       [UnionStyleEnumMember]
   | RawEnum
