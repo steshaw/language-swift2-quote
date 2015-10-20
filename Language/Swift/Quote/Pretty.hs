@@ -187,8 +187,6 @@ instance Pretty Declaration where
     <+> ppr optResult
     <+> ppr optBlock
 
-  -- ppr DummyDeclaration = string "<dummy-decl>"
-
   ppr (EnumDeclaration enum) = ppr enum
 
 instance Pretty EnumDeclaration where

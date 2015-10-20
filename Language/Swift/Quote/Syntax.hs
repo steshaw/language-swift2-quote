@@ -159,7 +159,6 @@ data Declaration
     , funBody :: Maybe CodeBlock
     }
   | EnumDeclaration EnumDeclaration
-  -- | DummyDeclaration
   deriving (Show, Eq)
 
 data VariableDeclaration
