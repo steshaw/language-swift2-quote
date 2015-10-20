@@ -1550,7 +1550,7 @@ postfixOperator = operator
 type_ :: Parser Type
 type_ = do
   t <- typeInit
-  optionalTypeTail t <|> pure t
+  (optionalTypeTail t <|> implicitlyUnwrappedOptionalTypeTail t) <|> pure t
 
 typeInit :: Parser Type
 typeInit = SimpleType <$> identifier
@@ -1586,7 +1586,8 @@ optionalTypeTail :: Type -> Parser Type
 optionalTypeTail t = op "?" *> pure (TypeOpt t)
 
 -- GRAMMAR OF AN IMPLICITLY UNWRAPPED OPTIONAL TYPE
--- implicitly-unwrapped-optional-type → type­!­
+implicitlyUnwrappedOptionalTypeTail :: Type -> Parser Type
+implicitlyUnwrappedOptionalTypeTail t = op "!" *> pure (ImplicitlyUnwrappedOptType t)
 
 -- GRAMMAR OF A PROTOCOL COMPOSITION TYPE
 -- protocol-composition-type → protocol­<­protocol-identifier-list­opt­>­

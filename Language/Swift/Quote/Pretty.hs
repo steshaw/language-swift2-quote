@@ -111,6 +111,7 @@ instance Pretty SuperclassExpression where
 instance Pretty Type where
   ppr (SimpleType ty) = ppr ty
   ppr (TypeOpt ty) = ppr ty <> string "?"
+  ppr (ImplicitlyUnwrappedOptType ty) = ppr ty <> string "!"
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression

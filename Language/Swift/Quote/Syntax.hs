@@ -169,6 +169,7 @@ type Identifier = String
 data Type
   = SimpleType Identifier
   | TypeOpt Type
+  | ImplicitlyUnwrappedOptType Type
   deriving (Show, Eq)
 
 type ImportPath = [ImportPathIdentifier]
