@@ -95,9 +95,17 @@ instance Pretty LiteralExpression where
 
 instance Pretty Literal where
   ppr (NumericLiteral s) = string s
-  ppr (StringLiteral s) = dquotes (string s)
+  ppr (StringLiteral s) = ppr s
   ppr (BooleanLiteral b) = if b then text "true" else text "false"
   ppr NilLiteral = text "nil"
+
+instance Pretty StringLiteral where
+  ppr (StaticStringLiteral s) = dquotes (string s)
+  ppr (InterpolatedStringLiteral items) = (dquotes . cat) (map ppr items)
+
+instance Pretty InterpolatedTextItem where
+  ppr (TextItemString s) = string s
+  ppr (TextItemExpr e) = string "\\(" <> ppr e <> string ")"
 
 instance Pretty SelfExpression where
   ppr Self1 = string "self"

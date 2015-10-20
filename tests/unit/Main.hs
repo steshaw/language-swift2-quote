@@ -52,6 +52,9 @@ file2ast2bytestring fileName = do
 litIntExp :: Integer -> Expression
 litIntExp i = litExp (NumericLiteral (show i))
 
+litStrExp :: String -> Expression
+litStrExp s = litExp (StringLiteral (StaticStringLiteral s))
+
 parserToEither :: P.Parser a -> T.Text -> Either String a
 parserToEither p input = left show (PC.parse p "<stdin>" input)
 
@@ -109,10 +112,10 @@ src2ast = testGroup "src2ast"
   , expressionTest "0xb10101111" $ litExp (NumericLiteral "0xb10101111")
   , expressionTest "0xCAFEBABE" $ litExp (NumericLiteral "0xCAFEBABE")
   , expressionTest "0o12345670" $ litExp (NumericLiteral "0o12345670")
-  , expressionTest "\"Hello\"" $ litExp (StringLiteral "Hello")
-  , expressionTest " \"Hello\"" $ litExp (StringLiteral "Hello")
-  , expressionTest "\"Hello\" " $ litExp (StringLiteral "Hello")
-  , expressionTest " \"Hello\" " $ litExp (StringLiteral "Hello")
+  , expressionTest "\"Hello\"" $ litStrExp "Hello"
+  , expressionTest " \"Hello\"" $ litStrExp "Hello"
+  , expressionTest "\"Hello\" " $ litStrExp "Hello"
+  , expressionTest " \"Hello\" " $ litStrExp "Hello"
   , expressionTest "true" $ litExp (BooleanLiteral True)
   , expressionTest "false" $ litExp (BooleanLiteral False)
   , expressionTest " true" $ litExp (BooleanLiteral True)
@@ -143,8 +146,8 @@ src2ast = testGroup "src2ast"
   , expressionTest "xs" $ primary1 "xs"
   , expressionTest "1 is Int" $ typeCastExp (NumericLiteral "1") "is" (SimpleType "Int")
   , expressionTest "200 as Double" $ typeCastExp (NumericLiteral "200") "as" (SimpleType "Double")
-  , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (SimpleType "String")
-  , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (SimpleType "String")
+  , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral (StaticStringLiteral "s")) "as?" (SimpleType "String")
+  , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral (StaticStringLiteral "s")) "as!" (SimpleType "String")
   , expressionTest "a++" $ Expression Nothing (PrefixExpression Nothing
       (PostfixOperator (PostfixPrimary (PrimaryExpression1
         (IdG {idgIdentifier = "a", idgGenericArgs = []}))) "++")) []
@@ -175,7 +178,7 @@ src2ast = testGroup "src2ast"
   , moduleTest "import foo.math.BitVector" $ singleImport Nothing ["foo", "math", "BitVector"]
   , moduleTest "import typealias foo.a.b" $ singleImport (Just "typealias") ["foo", "a", "b"]
 
-  , moduleTest "print(\"Hello world\\n\")" $ Module [ExpressionStatement (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (StringLiteral "Hello world\n"))))) [])] Nothing))) [])]
+  , moduleTest "print(\"Hello world\\n\")" $ Module [ExpressionStatement (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (StringLiteral (StaticStringLiteral"Hello world\n")))))) [])] Nothing))) [])]
 
   , moduleTest "let n = 1" $ Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "n" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))) []))])]
 

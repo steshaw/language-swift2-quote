@@ -64,9 +64,19 @@ data SelfExpression
 
 data Literal
   = NumericLiteral String
-  | StringLiteral String
+  | StringLiteral StringLiteral
   | BooleanLiteral Bool
   | NilLiteral
+  deriving (Show, Eq)
+
+data StringLiteral
+  = StaticStringLiteral String
+  | InterpolatedStringLiteral [InterpolatedTextItem]
+  deriving (Show, Eq)
+
+data InterpolatedTextItem
+  = TextItemString String
+  | TextItemExpr Expression
   deriving (Show, Eq)
 
 data LiteralExpression

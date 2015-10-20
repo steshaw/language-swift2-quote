@@ -1459,24 +1459,64 @@ floatingPointP = (: []) <$> P.oneOf "pP"
 sign :: Parser String
 sign = (: []) <$> P.oneOf "+-"
 
---GRAMMAR OF A STRING LITERAL
-{-
-string-literal → static-string-literal­  interpolated-string-literal­
-static-string-literal → "­quoted-text­opt­"­
-quoted-text → quoted-text-item­quoted-text­opt­
-quoted-text-item → escaped-character­
-quoted-text-item → Any Unicode scalar value except "­, \­, U+000A, or U+000D
-interpolated-string-literal → "­interpolated-text­opt­"­
-interpolated-text → interpolated-text-item­interpolated-text­opt­
-interpolated-text-item → \(­expression­)­  quoted-text-item­
-escaped-character → \0­  \\­  \t­  \n­  \r­  \"­  \'­
-escaped-character → \u­{­unicode-scalar-digits­}­
-unicode-scalar-digits → Between one and eight hexadecimal digits
--}
--- TODO: simplified
+-- GRAMMAR OF A STRING LITERAL
 stringLiteral :: Parser Literal
-stringLiteral = StringLiteral <$> T.stringLiteral lexer
+stringLiteral = StringLiteral <$> (try staticStringLiteral <|> interpolatedStringLiteral)
 
+staticStringLiteral :: Parser StringLiteral
+staticStringLiteral = StaticStringLiteral <$> do
+  _ <- P.char '"'
+  is <- P.many quotedTextItem
+  _ <- P.char '"'
+  return $ Prelude.concat is
+
+quotedTextItem :: Parser String
+quotedTextItem
+    = escapedCharacter
+  <|> P.many1 (P.noneOf "\"\\\x000A\x000D") -- any Unicode scalar value except " (double-quote), \ (backslash), U+000A, or U+000D
+
+interpolatedStringLiteral :: Parser StringLiteral
+interpolatedStringLiteral = InterpolatedStringLiteral <$> do
+  _ <- P.char '"'
+  tis <- P.many interpolatedTextItem
+  _ <- P.char '"'
+  return tis
+
+interpolatedTextItem :: Parser InterpolatedTextItem
+interpolatedTextItem
+    = try $ TextItemExpr <$> do
+        _ <- P.string "\\("
+        e <- expression
+        _ <- P.string ")"
+        return e
+    <|> TextItemString <$> quotedTextItem
+
+escapedCharacter :: Parser String
+escapedCharacter
+    = (try . P.string) "\\0" *> pure "\0"
+  <|> (try . P.string) "\\\\" *> pure "\\"
+  <|> (try . P.string) "\\t" *> pure "\t"
+  <|> (try . P.string) "\\n" *> pure "\n"
+  <|> (try . P.string) "\\r" *> pure "\r"
+  <|> (try . P.string) "\\\"" *> pure "\""
+  <|> (try . P.string) "\\'" *> pure "'"
+  <|> do
+        u <- P.string "\\u"
+        d <- unicodeScalarDigits
+        return $ u ++ d
+
+-- 1..8 hex digits
+unicodeScalarDigits :: Parser String
+unicodeScalarDigits = P.choice
+  [ P.count 8 hexDigit
+  , P.count 7 hexDigit
+  , P.count 6 hexDigit
+  , P.count 5 hexDigit
+  , P.count 4 hexDigit
+  , P.count 3 hexDigit
+  , P.count 2 hexDigit
+  , P.count 1 hexDigit
+  ]
 
 -- GRAMMAR OF OPERATORS
 
