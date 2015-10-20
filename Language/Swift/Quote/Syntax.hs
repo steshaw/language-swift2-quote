@@ -141,7 +141,12 @@ data ForInit
 data CodeBlock = CodeBlock [Statement]
   deriving (Show, Eq)
 
-type TypeAliasName = String
+type Name = String
+type TypeAliasName = Name
+type StructName = Name
+type ClassName = Name
+data StructType = Struct | Class
+  deriving (Show, Eq)
 
 data Declaration
   = ImportDeclaration [Attribute] (Maybe ImportKind) ImportPath
@@ -159,6 +164,14 @@ data Declaration
     , funBody :: Maybe CodeBlock
     }
   | EnumDeclaration EnumDeclaration
+  | StructDeclaration
+      StructType
+      [Attribute]
+      (Maybe DeclarationModifier)
+      StructName
+      (Maybe GenericParameterClause)
+      (Maybe TypeInheritanceClause)
+      [Declaration]
   deriving (Show, Eq)
 
 data VariableDeclaration

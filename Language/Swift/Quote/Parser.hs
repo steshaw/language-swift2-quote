@@ -515,9 +515,9 @@ declaration
   <|> try typealiasDeclaration
   <|> try functionDeclaration
   <|> try enumDeclaration
+  <|> try structDeclaration
+  <|> try classDeclaration
 {-
-declaration → struct-declaration­
-declaration → class-declaration­
 declaration → protocol-declaration­
 declaration → initializer-declaration­
 declaration → deinitializer-declaration­
@@ -830,17 +830,37 @@ rawValueStyleEnum att optMod = fail "WIP rawValueStyleEnum"
 -- raw-value-assignment → =­raw-value-literal­
 -- raw-value-literal → numeric-literal­  static-string-literal­  boolean-literal­
 
+structDeclaration' keyword ctor = do
+  atts <- attributeList
+  optMod <- optional accessLevelModifier
+  kw keyword
+  n <- structName
+  optGPC <- optional genericParameterClause
+  optTIC <- optional typeInheritanceClause
+  decls <- structBody
+  return $ ctor atts optMod n optGPC optTIC decls
+
+structBody :: Parser [Declaration]
+structBody = do
+  tok "{"
+  ms <- P.many declaration
+  tok "}"
+  return ms
+
+structName :: Parser String
+structName = identifier
+
+-- GRAMMAR OF A STRUCTURE DECLARATION
+
+structDeclaration :: Parser Declaration
+structDeclaration = structDeclaration' "struct" (StructDeclaration Struct)
+
+-- GRAMMAR OF A CLASS DECLARATION
+
+classDeclaration :: Parser Declaration
+classDeclaration = structDeclaration' "class" (StructDeclaration Class)
+
 {-
-GRAMMAR OF A STRUCTURE DECLARATION
-
-struct-declaration → attributes­opt­access-level-modifier­opt­struct­struct-name­generic-parameter-clause­opt­type-inheritance-clause­opt­struct-body­
-struct-name → identifier­
-struct-body → {­declarations­opt­}­
-GRAMMAR OF A CLASS DECLARATION
-
-class-declaration → attributes­opt­access-level-modifier­opt­class­class-name­generic-parameter-clause­opt­type-inheritance-clause­opt­class-body­
-class-name → identifier­
-class-body → {­declarations­opt­}­
 GRAMMAR OF A PROTOCOL DECLARATION
 
 protocol-declaration → attributes­opt­access-level-modifier­opt­protocol­protocol-name­type-inheritance-clause­opt­protocol-body­

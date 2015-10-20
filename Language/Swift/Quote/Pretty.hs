@@ -188,6 +188,11 @@ instance Pretty Declaration where
     <+> ppr optBlock
 
   ppr (EnumDeclaration enum) = ppr enum
+  ppr (StructDeclaration ty atts optMod name optGPC optTIC decls) = ppr ty <+> string name <+> bracesLines (map ppr decls)
+
+instance Pretty StructType where
+  ppr Struct = string "struct"
+  ppr Class = string "class"
 
 instance Pretty EnumDeclaration where
   ppr (UnionEnum atts optMod isIndirect name optGPC optTIC members)
