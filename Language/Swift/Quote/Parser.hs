@@ -764,27 +764,73 @@ localParameterName = parameterName
 defaultArgumentClause :: Parser Expression
 defaultArgumentClause = tok "=" *> expression
 
-{-
-GRAMMAR OF AN ENUMERATION DECLARATION
+-- GRAMMAR OF AN ENUMERATION DECLARATION
+enumDeclaration :: Parser EnumDeclaration
+enumDeclaration = do
+  atts <- attributeList
+  optMod <- optional accessLevelModifier
+  unionStyleEnum atts optMod <|> rawValueStyleEnum atts optMod
 
-enum-declaration → attributes­opt­access-level-modifier­opt­union-style-enum­
-enum-declaration → attributes­opt­access-level-modifier­opt­raw-value-style-enum­
-union-style-enum → indirect­opt­enum­enum-name­generic-parameter-clause­opt­type-inheritance-clause­opt­{­union-style-enum-members­opt­}­
-union-style-enum-members → union-style-enum-member­union-style-enum-members­opt­
-union-style-enum-member → declaration­  union-style-enum-case-clause­
-union-style-enum-case-clause → attributes­opt­indirect­opt­case­union-style-enum-case-list­
-union-style-enum-case-list → union-style-enum-case­ union-style-enum-case­,­union-style-enum-case-list­
-union-style-enum-case → enum-case-name­tuple-type­opt­
-enum-name → identifier­
-enum-case-name → identifier­
-raw-value-style-enum → enum­enum-name­generic-parameter-clause­opt­type-inheritance-clause­{­raw-value-style-enum-members­}­
-raw-value-style-enum-members → raw-value-style-enum-member­raw-value-style-enum-members­opt­
-raw-value-style-enum-member → declaration­  raw-value-style-enum-case-clause­
-raw-value-style-enum-case-clause → attributes­opt­case­raw-value-style-enum-case-list­
-raw-value-style-enum-case-list → raw-value-style-enum-case­ raw-value-style-enum-case­,­raw-value-style-enum-case-list­
-raw-value-style-enum-case → enum-case-name­raw-value-assignment­opt­
-raw-value-assignment → =­raw-value-literal­
-raw-value-literal → numeric-literal­  static-string-literal­  boolean-literal­
+unionStyleEnum :: [Attribute] -> (Maybe DeclarationModifier) -> Parser EnumDeclaration
+unionStyleEnum atts optMod = do
+  si <- optional (kw "indirect")
+  let i = isJust si
+  kw "enum"
+  n <- enumName
+  ps <- genericParameterClause
+  ti <- optional typeInheritanceClause
+  tok "{"
+  ms <- P.many unionStyleEnumMember
+  tok "}"
+  return $ UnionEnum atts optMod i n ps ti ms
+
+typeInheritanceClause :: Parser TypeInheritanceClause
+typeInheritanceClause = fail "WIP"
+
+unionStyleEnumMember :: Parser UnionStyleEnumMember
+unionStyleEnumMember
+    = EnumMemberDeclaration <$> declaration
+  <|> unionStyleEnumCaseClause
+
+unionStyleEnumCaseClause :: Parser UnionStyleEnumMember
+unionStyleEnumCaseClause = do
+  atts <- attributeList
+  si <- optional (kw "indirect")
+  let i = isJust si
+  kw "case"
+  cs <- unionStyleEnumCaseList
+  return $ EnumMemberCase atts i cs
+
+unionStyleEnumCaseList :: Parser [(EnumName, Maybe Type)]
+unionStyleEnumCaseList = unionStyleEnumCase `P.sepBy` comma
+
+unionStyleEnumCase :: Parser (EnumName, Maybe Type)
+unionStyleEnumCase = do
+  n <- enumCaseName
+  tt <- optional tupleType
+  return (n, tt)
+
+tupleType :: Parser Type
+tupleType = fail "WIP tupleType"
+
+enumName :: Parser String
+enumName = identifier
+
+enumCaseName :: Parser String
+enumCaseName = identifier
+
+rawValueStyleEnum :: [Attribute] -> (Maybe DeclarationModifier) -> Parser EnumDeclaration
+rawValueStyleEnum att optMod = fail "WIP rawValueStyleEnum"
+-- raw-value-style-enum → enum­enum-name­generic-parameter-clause­opt­type-inheritance-clause­{­raw-value-style-enum-members­}­
+-- raw-value-style-enum-members → raw-value-style-enum-member­raw-value-style-enum-members­opt­
+-- raw-value-style-enum-member → declaration­  raw-value-style-enum-case-clause­
+-- raw-value-style-enum-case-clause → attributes­opt­case­raw-value-style-enum-case-list­
+-- raw-value-style-enum-case-list → raw-value-style-enum-case­ raw-value-style-enum-case­,­raw-value-style-enum-case-list­
+-- raw-value-style-enum-case → enum-case-name­raw-value-assignment­opt­
+-- raw-value-assignment → =­raw-value-literal­
+-- raw-value-literal → numeric-literal­  static-string-literal­  boolean-literal­
+
+{-
 GRAMMAR OF A STRUCTURE DECLARATION
 
 struct-declaration → attributes­opt­access-level-modifier­opt­struct­struct-name­generic-parameter-clause­opt­type-inheritance-clause­opt­struct-body­

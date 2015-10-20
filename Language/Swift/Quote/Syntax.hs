@@ -166,6 +166,29 @@ data VariableDeclaration
   | VarSimple [Attribute] [DeclarationModifier] String TypeAnnotation (Maybe Expression)
   deriving (Show, Eq)
 
+type IsIndirect = Bool
+type EnumName = String
+type TypeInheritanceClause = ()
+
+data EnumDeclaration
+  = UnionEnum
+      [Attribute]
+      (Maybe DeclarationModifier)
+      IsIndirect
+      EnumName
+      GenericParameterClause
+      (Maybe TypeInheritanceClause)
+      [UnionStyleEnumMember]
+  | RawEnum
+  deriving (Show, Eq)
+
+type CaseName = String
+
+data UnionStyleEnumMember
+    = EnumMemberDeclaration Declaration
+    | EnumMemberCase [Attribute] IsIndirect [(CaseName, Maybe {-Tuple-} Type)]
+  deriving (Show, Eq)
+
 data DeclarationModifier
   = Modifier String
   | AccessLevelModifier String
