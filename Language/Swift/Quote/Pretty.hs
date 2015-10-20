@@ -198,7 +198,7 @@ instance Pretty EnumDeclaration where
 
 instance Pretty UnionStyleEnumMember where
     ppr (EnumMemberDeclaration d) = ppr d
-    ppr (EnumMemberCase atts isIndirect cases) = string "case" <+> cat (map printCase cases)
+    ppr (EnumMemberCase atts isIndirect cases) = string "case" <+> commasep (map printCase cases)
       where
         printCase :: (CaseName, Maybe {-Tuple-} Type) -> Doc
         printCase (n, t) = string n <+> ppr t
