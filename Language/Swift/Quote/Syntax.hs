@@ -164,7 +164,11 @@ data DeclarationModifier
 data Attribute = DummyAttribute
   deriving (Show, Eq)
 
-data Type = Type String -- identifier
+type Identifier = String
+
+data Type
+  = SimpleType Identifier
+  | TypeOpt Type
   deriving (Show, Eq)
 
 type ImportPath = [ImportPathIdentifier]

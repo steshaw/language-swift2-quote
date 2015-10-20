@@ -1548,54 +1548,58 @@ postfixOperator = operator
 
 -- GRAMMAR OF A TYPE
 type_ :: Parser Type
-type_ = Type <$> identifier
+type_ = do
+  t <- typeInit
+  optionalTypeTail t <|> pure t
+
+typeInit :: Parser Type
+typeInit = SimpleType <$> identifier
 -- type → array-type­  dictionary-type­  function-type­  type-identifier­  tuple-type­  optional-type­  implicitly-unwrapped-optional-type­  protocol-composition-type­  metatype-type­
 
 -- GRAMMAR OF A TYPE ANNOTATION
 typeAnnotation :: Parser TypeAnnotation
 typeAnnotation = tok ":" *> (TypeAnnotation <$> attributeList <*> type_)
 
-{-
-GRAMMAR OF A TYPE IDENTIFIER
+-- GRAMMAR OF A TYPE IDENTIFIER
+-- type-identifier → type-name­generic-argument-clause­opt­  type-name­generic-argument-clause­opt­.­type-identifier­
+-- type-name → identifier­
 
-type-identifier → type-name­generic-argument-clause­opt­  type-name­generic-argument-clause­opt­.­type-identifier­
-type-name → identifier­
-GRAMMAR OF A TUPLE TYPE
+-- GRAMMAR OF A TUPLE TYPE
+-- tuple-type → (­tuple-type-body­opt­)­
+-- tuple-type-body → tuple-type-element-list­...­opt­
+-- tuple-type-element-list → tuple-type-element­  tuple-type-element­,­tuple-type-element-list­
+-- tuple-type-element → attributes­opt­inout­opt­type­  inout­opt­element-name­type-annotation­
+-- element-name → identifier­
 
-tuple-type → (­tuple-type-body­opt­)­
-tuple-type-body → tuple-type-element-list­...­opt­
-tuple-type-element-list → tuple-type-element­  tuple-type-element­,­tuple-type-element-list­
-tuple-type-element → attributes­opt­inout­opt­type­  inout­opt­element-name­type-annotation­
-element-name → identifier­
-GRAMMAR OF A FUNCTION TYPE
+-- GRAMMAR OF A FUNCTION TYPE
+-- function-type → type­throws­opt­->­type­
+-- function-type → type­rethrows­->­type­
 
-function-type → type­throws­opt­->­type­
-function-type → type­rethrows­->­type­
-GRAMMAR OF AN ARRAY TYPE
+-- GRAMMAR OF AN ARRAY TYPE
+-- array-type → [­type­]­
 
-array-type → [­type­]­
-GRAMMAR OF A DICTIONARY TYPE
+-- GRAMMAR OF A DICTIONARY TYPE
+-- dictionary-type → [­type­:­type­]­
 
-dictionary-type → [­type­:­type­]­
-GRAMMAR OF AN OPTIONAL TYPE
+-- GRAMMAR OF AN OPTIONAL TYPE
+optionalTypeTail :: Type -> Parser Type
+optionalTypeTail t = op "?" *> pure (TypeOpt t)
 
-optional-type → type­?­
-GRAMMAR OF AN IMPLICITLY UNWRAPPED OPTIONAL TYPE
+-- GRAMMAR OF AN IMPLICITLY UNWRAPPED OPTIONAL TYPE
+-- implicitly-unwrapped-optional-type → type­!­
 
-implicitly-unwrapped-optional-type → type­!­
-GRAMMAR OF A PROTOCOL COMPOSITION TYPE
+-- GRAMMAR OF A PROTOCOL COMPOSITION TYPE
+-- protocol-composition-type → protocol­<­protocol-identifier-list­opt­>­
+-- protocol-identifier-list → protocol-identifier­  protocol-identifier­,­protocol-identifier-list­
+-- protocol-identifier → type-identifier­
 
-protocol-composition-type → protocol­<­protocol-identifier-list­opt­>­
-protocol-identifier-list → protocol-identifier­  protocol-identifier­,­protocol-identifier-list­
-protocol-identifier → type-identifier­
-GRAMMAR OF A METATYPE TYPE
+-- GRAMMAR OF A METATYPE TYPE
+-- metatype-type → type­.­Type­  type­.­Protocol­
 
-metatype-type → type­.­Type­  type­.­Protocol­
-GRAMMAR OF A TYPE INHERITANCE CLAUSE
+-- GRAMMAR OF A TYPE INHERITANCE CLAUSE
+-- type-inheritance-clause → :­class-requirement­,­type-inheritance-list­
+-- type-inheritance-clause → :­class-requirement­
+-- type-inheritance-clause → :­type-inheritance-list­
+-- type-inheritance-list → type-identifier­  type-identifier­,­type-inheritance-list­
 
-type-inheritance-clause → :­class-requirement­,­type-inheritance-list­
-type-inheritance-clause → :­class-requirement­
-type-inheritance-clause → :­type-inheritance-list­
-type-inheritance-list → type-identifier­  type-identifier­,­type-inheritance-list­
-class-requirement → class­
--}
+-- class-requirement → class­

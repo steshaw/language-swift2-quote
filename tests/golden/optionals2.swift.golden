@@ -1,0 +1,2 @@
+var serverResponseCode: Int? = 404
+serverResponseCode = nil

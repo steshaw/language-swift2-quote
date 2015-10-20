@@ -109,7 +109,8 @@ instance Pretty SuperclassExpression where
   ppr (SuperclassExpression) = string "<super>" -- TODO
 
 instance Pretty Type where
-  ppr (Type ty) = ppr ty
+  ppr (SimpleType ty) = ppr ty
+  ppr (TypeOpt ty) = ppr ty <> string "?"
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression

@@ -141,10 +141,10 @@ src2ast = testGroup "src2ast"
   , expressionTest "a" $ primary1 "a"
   , expressionTest "a1" $ primary1 "a1"
   , expressionTest "xs" $ primary1 "xs"
-  , expressionTest "1 is Int" $ typeCastExp (NumericLiteral "1") "is" (Type "Int")
-  , expressionTest "200 as Double" $ typeCastExp (NumericLiteral "200") "as" (Type "Double")
-  , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (Type "String")
-  , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (Type "String")
+  , expressionTest "1 is Int" $ typeCastExp (NumericLiteral "1") "is" (SimpleType "Int")
+  , expressionTest "200 as Double" $ typeCastExp (NumericLiteral "200") "as" (SimpleType "Double")
+  , expressionTest "\"s\" as? String" $ typeCastExp (StringLiteral "s") "as?" (SimpleType "String")
+  , expressionTest "\"s\" as! String" $ typeCastExp (StringLiteral "s") "as!" (SimpleType "String")
   , expressionTest "a++" $ Expression Nothing (PrefixExpression Nothing
       (PostfixOperator (PostfixPrimary (PrimaryExpression1
         (IdG {idgIdentifier = "a", idgGenericArgs = []}))) "++")) []
@@ -168,7 +168,7 @@ src2ast = testGroup "src2ast"
          [ExpressionElement Nothing
            (Expression (Just "try") (PrefixExpression Nothing
              (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "someThrowingFunction", idgGenericArgs = []}))) [] Nothing))) [])
-         ]))) [BinaryExpression1 {beOperator = "+", bePrefixExpression = PrefixExpression Nothing 
+         ]))) [BinaryExpression1 {beOperator = "+", bePrefixExpression = PrefixExpression Nothing
            (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "anotherThrowingFunction", idgGenericArgs = []}))) [] Nothing))}]
 
   , moduleTest "import foo" $ singleImport Nothing ["foo"]
@@ -181,7 +181,7 @@ src2ast = testGroup "src2ast"
 
   , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (VarPatternInitializer [] [] [PatternInitializer (IdentifierPattern "d" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1.0"))))) []))]))]
 
-  , moduleTest "typealias TypeAliasName = String" $ Module [DeclarationStatement (TypeAlias [] Nothing "TypeAliasName" (Type "String"))]
+  , moduleTest "typealias TypeAliasName = String" $ Module [DeclarationStatement (TypeAlias [] Nothing "TypeAliasName" (SimpleType "String"))]
   ]
 
 singleImport :: Maybe ImportKind -> [String] -> Module
