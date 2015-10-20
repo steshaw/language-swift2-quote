@@ -1067,7 +1067,12 @@ binaryExpressions = many binaryExpression
 
 -- GRAMMAR OF AN ASSIGNMENT OPERATOR
 assignmentOperator :: Parser ()
-assignmentOperator = tok "="
+assignmentOperator = try $ do
+  ws
+  _ <- P.char '='
+  try (P.notFollowedBy operatorCharacter)
+  ws
+  return ()
 
 -- GRAMMAR OF A CONDITIONAL OPERATOR
 conditionalOperator :: Parser (Maybe String, Expression)
@@ -1495,7 +1500,7 @@ operator
 -- XXX removing '=' for now...
 legalHeadOperatorChars :: String
 legalHeadOperatorChars =
-  "/-+!*%<>&|^~?"
+  "=/-+!*%<>&|^~?"
   ++ ['\x00A1' .. '\x00A7']
   ++ "\x00A9\x00AB"
   ++ "\x00AC\x00AE"
@@ -1512,7 +1517,7 @@ legalHeadOperatorChars =
   ++ ['\x3008'..'\x3030']
 
 legalTailOperatorChars :: String
-legalTailOperatorChars = legalHeadOperatorChars ++ "="
+legalTailOperatorChars = legalHeadOperatorChars
   ++ ['\x0300'..'\x036F']
   ++ ['\x1DC0'..'\x1DFF']
   ++ ['\x20D0'..'\x20FF']
