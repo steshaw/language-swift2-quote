@@ -1182,9 +1182,6 @@ primaryExpression
   <|> pure PrimaryImplicitMember <* implicitMemberExpression
   <|> pure PrimaryWildcard <* wildCardExpression
 
-superclassExpression :: Parser SuperclassExpression
-superclassExpression = do {kw "<superclass-expression>"; pure SuperclassExpression}
-
 implicitMemberExpression :: Parser ()
 implicitMemberExpression = do {kw "<implicit-member-expression>"; pure ()}
 
@@ -1225,20 +1222,24 @@ dictionaryLiteralItem = (,) <$> (expression <* tok ":") <*> expression
 -- GRAMMAR OF A SELF EXPRESSION
 selfExpression :: Parser SelfExpression
 selfExpression = kw "self" *> P.choice
-  [ try (pure SelfDotId <* tok "." <*> identifier)
+  [ try (pure SelfMethod <* tok "." <*> identifier)
   , try (pure SelfSubscript <*> brackets expressionList)
   , try (pure SelfInit <* tok "." <* kw "init")
   , try (pure Self)
   ]
 
-{-
-GRAMMAR OF A SUPERCLASS EXPRESSION
+-- GRAMMAR OF A SUPERCLASS EXPRESSION
+superclassExpression :: Parser SuperclassExpression
+superclassExpression = kw "super" *> P.choice
+  [ try (pure SuperMethod <* tok "." <*> identifier)
+  , try (pure SuperSubscript <*> brackets expressionList)
+  , try (pure SuperInit <* tok "." <* kw "init")
+  ]
 
-superclass-expression → superclass-method-expression­  superclass-subscript-expression­ superclass-initializer-expression­
-superclass-method-expression → super­.­identifier­
-superclass-subscript-expression → super­[­expression-list­]­
-superclass-initializer-expression → super­.­init­
--}
+-- superclass-expression → superclass-method-expression­  superclass-subscript-expression­ superclass-initializer-expression­
+-- superclass-method-expression → super­.­identifier­
+-- superclass-subscript-expression → super­[­expression-list­]­
+-- superclass-initializer-expression → super­.­init­
 
 -- GRAMMAR OF A CLOSURE EXPRESSION
 

@@ -52,14 +52,19 @@ data PrimaryExpression
   | PrimaryWildcard -- wildcard-expression
   deriving (Show, Eq)
 
-data SuperclassExpression = SuperclassExpression -- TODO
-  deriving (Show, Eq)
+type Identifier = String
 
 data SelfExpression
   = Self
-  | SelfDotId String -- identifier
+  | SelfMethod Identifier
   | SelfSubscript [Expression]
   | SelfInit
+  deriving (Show, Eq)
+
+data SuperclassExpression
+  = SuperMethod Identifier
+  | SuperSubscript [Expression]
+  | SuperInit
   deriving (Show, Eq)
 
 data Literal
@@ -211,8 +216,6 @@ data DeclarationModifier
 
 data Attribute = DummyAttribute
   deriving (Show, Eq)
-
-type Identifier = String
 
 data Type
   = SimpleType Identifier

@@ -127,11 +127,11 @@ src2ast = testGroup "src2ast"
   , expressionTest "&a" $ Expression Nothing (InOutExpression "a") []
   , expressionTest "& b" $ Expression Nothing (InOutExpression "b") []
   , expressionTest "self" $ self Self
-  , expressionTest "self.a" $ self (SelfDotId "a")
-  , expressionTest "self. a" $ self (SelfDotId "a")
-  , expressionTest "self . a" $ self (SelfDotId "a")
-  , expressionTest " self . a" $ self (SelfDotId "a")
-  , expressionTest " self . a " $ self (SelfDotId "a")
+  , expressionTest "self.a" $ self (SelfMethod "a")
+  , expressionTest "self. a" $ self (SelfMethod "a")
+  , expressionTest "self . a" $ self (SelfMethod "a")
+  , expressionTest " self . a" $ self (SelfMethod "a")
+  , expressionTest " self . a " $ self (SelfMethod "a")
   , expressionTest "self[1]" $ self (SelfSubscript [litIntExp 1])
   , expressionTest "self[1,2]" $ self (SelfSubscript [litIntExp 1, litIntExp 2])
   , expressionTest "self[1, 2]" $ self (SelfSubscript [litIntExp 1, litIntExp 2])
