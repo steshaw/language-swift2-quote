@@ -162,12 +162,6 @@ keywordsinContexts =
   , "willSet"
   ]
 
--- reservedOperators :: [String]
--- reservedOperators = []
---
--- legalOpChars :: String
--- legalOpChars = ":!#$%&*+./<=>?@\\^|-~"
-
 -- Ignore Whitespace
 -- C-style comments with nesting.
 swiftLangDef :: L.GenLanguageDef Text st Identity
