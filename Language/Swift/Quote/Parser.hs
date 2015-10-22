@@ -208,7 +208,11 @@ optSemicolon :: Parser (Maybe String)
 optSemicolon = optional semicolon
 
 braces :: Parser a -> Parser a
-braces = T.braces lexer
+braces p = do
+  tok "{"
+  a <- p
+  tok "}"
+  return a
 
 parens :: Parser a -> Parser a
 parens = T.parens lexer
@@ -1188,7 +1192,8 @@ implicitMemberExpression = do {kw "<implicit-member-expression>"; pure ()}
 literalExpression :: Parser LiteralExpression
 literalExpression
     = RegularLiteral <$> literal
--- <|> literalExpression = arrayLiteral <|> dictionaryLiteral
+  <|> arrayLiteral
+-- <|> dictionaryLiteral
   <|> SpecialLiteral <$> P.choice
         [ kw' "__FILE__"
         , kw' "__LINE__"
@@ -1196,10 +1201,13 @@ literalExpression
         , kw' "__FUNCTION__"
         ]
 
+arrayLiteral :: Parser LiteralExpression
+arrayLiteral = ArrayLiteral <$> brackets (arrayLiteralItem `P.sepBy` comma)
+
+arrayLiteralItem :: Parser Expression
+arrayLiteralItem = expression
+
 {-
-array-literal → [­array-literal-items­opt­]­
-array-literal-items → array-literal-item­,­opt­  array-literal-item­,­array-literal-items­
-array-literal-item → expression­
 dictionary-literal → [­dictionary-literal-items­]­  [­:­]­
 dictionary-literal-items → dictionary-literal-item­,­opt­ dictionary-literal-item­,­dictionary-literal-items­
 dictionary-literal-item → expression­:­expression­

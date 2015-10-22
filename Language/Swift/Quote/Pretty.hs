@@ -106,6 +106,7 @@ instance Pretty BinaryExpression where
 instance Pretty LiteralExpression where
   ppr (RegularLiteral lit) =  ppr lit
   ppr (SpecialLiteral special) =  ppr special
+  ppr (ArrayLiteral items) = (brackets . commasep) (map ppr items)
 
 instance Pretty Literal where
   ppr (NumericLiteral s) = string s

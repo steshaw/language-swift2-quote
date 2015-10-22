@@ -81,6 +81,7 @@ data InterpolatedTextItem
 
 data LiteralExpression
   = RegularLiteral Literal
+  | ArrayLiteral [Expression]
   | SpecialLiteral String
   deriving (Show, Eq)
 
