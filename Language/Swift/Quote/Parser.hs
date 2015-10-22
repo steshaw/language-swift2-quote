@@ -1620,7 +1620,6 @@ operator
         _ <- ws
         return (h : cs)
 
--- XXX removing '=' for now...
 legalHeadOperatorChars :: String
 legalHeadOperatorChars =
   "=/-+!*%<>&|^~?"
