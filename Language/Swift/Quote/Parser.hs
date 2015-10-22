@@ -1225,10 +1225,10 @@ dictionaryLiteralItem = (,) <$> (expression <* tok ":") <*> expression
 -- GRAMMAR OF A SELF EXPRESSION
 selfExpression :: Parser SelfExpression
 selfExpression = kw "self" *> P.choice
-  [ try (pure Self2 <* tok "." <*> identifier)
-  , try (pure Self3 <*> brackets expressionList)
-  , try (pure Self4 <* tok "." <* kw "init")
-  , try (pure Self1)
+  [ try (pure SelfDotId <* tok "." <*> identifier)
+  , try (pure SelfSubscript <*> brackets expressionList)
+  , try (pure SelfInit <* tok "." <* kw "init")
+  , try (pure Self)
   ]
 
 {-

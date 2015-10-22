@@ -56,10 +56,10 @@ data SuperclassExpression = SuperclassExpression -- TODO
   deriving (Show, Eq)
 
 data SelfExpression
-  = Self1
-  | Self2 String -- identifier
-  | Self3 [Expression]
-  | Self4
+  = Self
+  | SelfDotId String -- identifier
+  | SelfSubscript [Expression]
+  | SelfInit
   deriving (Show, Eq)
 
 data Literal

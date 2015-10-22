@@ -127,10 +127,10 @@ instance Pretty InterpolatedTextItem where
   ppr (TextItemExpr e) = string "\\(" <> ppr e <> string ")"
 
 instance Pretty SelfExpression where
-  ppr Self1 = string "self"
-  ppr (Self2 identifier) = string "self" <> string "." <> string identifier
-  ppr (Self3 expressions) = string "self" <> ppBracketExps expressions
-  ppr Self4 = string "self" <> string "." <> string "init"
+  ppr Self = string "self"
+  ppr (SelfDotId identifier) = string "self" <> string "." <> string identifier
+  ppr (SelfSubscript expressions) = string "self" <> ppBracketExps expressions
+  ppr SelfInit = string "self" <> string "." <> string "init"
 
 instance Pretty SuperclassExpression where
   ppr (SuperclassExpression) = string "<super>" -- TODO

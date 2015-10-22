@@ -126,18 +126,18 @@ src2ast = testGroup "src2ast"
   , expressionTest " false " $ litExp (BooleanLiteral False)
   , expressionTest "&a" $ Expression Nothing (InOutExpression "a") []
   , expressionTest "& b" $ Expression Nothing (InOutExpression "b") []
-  , expressionTest "self" $ self Self1
-  , expressionTest "self.a" $ self (Self2 "a")
-  , expressionTest "self. a" $ self (Self2 "a")
-  , expressionTest "self . a" $ self (Self2 "a")
-  , expressionTest " self . a" $ self (Self2 "a")
-  , expressionTest " self . a " $ self (Self2 "a")
-  , expressionTest "self[1]" $ self (Self3 [litIntExp 1])
-  , expressionTest "self[1,2]" $ self (Self3 [litIntExp 1, litIntExp 2])
-  , expressionTest "self[1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
-  , expressionTest "self [1, 2]" $ self (Self3 [litIntExp 1, litIntExp 2])
-  , expressionTest "self [ 1, 2 ]" $ self (Self3 [litIntExp 1, litIntExp 2])
-  , expressionTest "self.init" $ self Self4
+  , expressionTest "self" $ self Self
+  , expressionTest "self.a" $ self (SelfDotId "a")
+  , expressionTest "self. a" $ self (SelfDotId "a")
+  , expressionTest "self . a" $ self (SelfDotId "a")
+  , expressionTest " self . a" $ self (SelfDotId "a")
+  , expressionTest " self . a " $ self (SelfDotId "a")
+  , expressionTest "self[1]" $ self (SelfSubscript [litIntExp 1])
+  , expressionTest "self[1,2]" $ self (SelfSubscript [litIntExp 1, litIntExp 2])
+  , expressionTest "self[1, 2]" $ self (SelfSubscript [litIntExp 1, litIntExp 2])
+  , expressionTest "self [1, 2]" $ self (SelfSubscript [litIntExp 1, litIntExp 2])
+  , expressionTest "self [ 1, 2 ]" $ self (SelfSubscript [litIntExp 1, litIntExp 2])
+  , expressionTest "self.init" $ self SelfInit
   , expressionTest "a.123" $ Expression Nothing (PrefixExpression Nothing (ExplicitMemberExpressionDigits (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []}))) "123")) []
   , expressionTest "a.b" $ Expression Nothing (PrefixExpression Nothing (ExplicitMemberExpressionIdentifier (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []}))) (IdG {idgIdentifier = "b", idgGenericArgs = []}))) []
   , expressionTest "foo" $ primary1 "foo"
