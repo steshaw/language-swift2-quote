@@ -775,7 +775,7 @@ enumDeclaration = EnumDeclaration <$> do
   optMod <- optional accessLevelModifier
   unionStyleEnum atts optMod <|> rawValueStyleEnum atts optMod
 
-unionStyleEnum :: [Attribute] -> (Maybe DeclarationModifier) -> Parser EnumDeclaration
+unionStyleEnum :: [Attribute] -> Maybe DeclarationModifier -> Parser EnumDeclaration
 unionStyleEnum atts optMod = do
   si <- optional (kw "indirect")
   let i = isJust si
@@ -823,7 +823,7 @@ enumName = identifier
 enumCaseName :: Parser String
 enumCaseName = identifier
 
-rawValueStyleEnum :: [Attribute] -> (Maybe DeclarationModifier) -> Parser EnumDeclaration
+rawValueStyleEnum :: [Attribute] -> Maybe DeclarationModifier -> Parser EnumDeclaration
 rawValueStyleEnum att optMod = fail "WIP rawValueStyleEnum"
 -- raw-value-style-enum → enum­enum-name­generic-parameter-clause­opt­type-inheritance-clause­{­raw-value-style-enum-members­}­
 -- raw-value-style-enum-members → raw-value-style-enum-member­raw-value-style-enum-members­opt­
@@ -1192,8 +1192,8 @@ implicitMemberExpression = do {kw "<implicit-member-expression>"; pure ()}
 literalExpression :: Parser LiteralExpression
 literalExpression
     = RegularLiteral <$> literal
-  <|> arrayLiteral
--- <|> dictionaryLiteral
+  <|> try arrayLiteral
+  <|> dictionaryLiteral
   <|> SpecialLiteral <$> P.choice
         [ kw' "__FILE__"
         , kw' "__LINE__"
@@ -1202,16 +1202,25 @@ literalExpression
         ]
 
 arrayLiteral :: Parser LiteralExpression
-arrayLiteral = ArrayLiteral <$> brackets (arrayLiteralItem `P.sepBy` comma)
+arrayLiteral = ArrayLiteral <$> arrayLiteralItems
+
+arrayLiteralItems :: Parser [Expression]
+arrayLiteralItems = brackets (arrayLiteralItem `P.sepBy` comma)
 
 arrayLiteralItem :: Parser Expression
 arrayLiteralItem = expression
 
-{-
-dictionary-literal → [­dictionary-literal-items­]­  [­:­]­
-dictionary-literal-items → dictionary-literal-item­,­opt­ dictionary-literal-item­,­dictionary-literal-items­
-dictionary-literal-item → expression­:­expression­
--}
+dictionaryLiteral :: Parser LiteralExpression
+dictionaryLiteral = DictionaryLiteral <$> (items <|> noItems)
+  where
+    items = brackets dictionaryLiteralItems
+    noItems = brackets (op ":") *> pure []
+
+dictionaryLiteralItems :: Parser [(Expression, Expression)]
+dictionaryLiteralItems = dictionaryLiteralItem `P.sepBy1` comma
+
+dictionaryLiteralItem :: Parser (Expression, Expression)
+dictionaryLiteralItem = (,) <$> (expression <* tok ":") <*> expression
 
 -- GRAMMAR OF A SELF EXPRESSION
 selfExpression :: Parser SelfExpression

@@ -107,6 +107,10 @@ instance Pretty LiteralExpression where
   ppr (RegularLiteral lit) =  ppr lit
   ppr (SpecialLiteral special) =  ppr special
   ppr (ArrayLiteral items) = (brackets . commasep) (map ppr items)
+  ppr (DictionaryLiteral items)
+    = (brackets . commasep) (map pprTuple items)
+      where
+        pprTuple (e1, e2) = ppr e1 <+> string ":" <+> ppr e2
 
 instance Pretty Literal where
   ppr (NumericLiteral s) = string s
