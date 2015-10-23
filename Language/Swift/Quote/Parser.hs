@@ -259,15 +259,15 @@ whereClause = expression -- TODO
 -- GRAMMAR OF A STATEMENT
 statement :: Parser Statement
 statement
-    = DeclarationStatement <$> declaration <* optSemicolon
-  <|> ExpressionStatement <$> expression <* optSemicolon
+   = try labeledStatement <* optSemicolon
   <|> loopStatement <* optSemicolon
   <|> branchStatement <* optSemicolon
-  <|> labeledStatement <* optSemicolon
   <|> controlTransferStatement <* optSemicolon
   <|> deferStatement <* optSemicolon
   -- <|> doStatement <* optSemicolon
   -- <|> compilerControlStatement <* optSemicolon
+  <|> DeclarationStatement <$> declaration <* optSemicolon
+  <|> ExpressionStatement <$> expression <* optSemicolon
 
 statements :: Parser [Statement]
 statements = many statement
@@ -393,12 +393,12 @@ labelName = identifier
 -- GRAMMAR OF A CONTROL TRANSFER STATEMENT
 
 controlTransferStatement :: Parser Statement
-controlTransferStatement = returnStatement <|> breakStatement
-
--- control-transfer-statement → continue-statement­
--- control-transfer-statement → fallthrough-statement­
--- control-transfer-statement → return-statement­
--- control-transfer-statement → throw-statement­
+controlTransferStatement
+    = breakStatement
+  <|> continueStatement
+  <|> returnStatement
+  <|> fallthroughStatement
+  <|> throwStatement
 
 -- GRAMMAR OF A BREAK STATEMENT
 breakStatement :: Parser Statement
@@ -409,6 +409,7 @@ continueStatement :: Parser Statement
 continueStatement = kw "continue" *> (ContinueStatement <$> optional labelName)
 
 -- GRAMMAR OF A FALLTHROUGH STATEMENT
+fallthroughStatement :: Parser Statement
 fallthroughStatement = kw "fallthrough" *> pure FallthroughStatement
 
 -- GRAMMAR OF A RETURN STATEMENT
@@ -428,10 +429,11 @@ platform-name → watchOS­
 platform-version → decimal-digits­
 platform-version → decimal-digits­.­decimal-digits­
 platform-version → decimal-digits­.­decimal-digits­.­decimal-digits­
-GRAMMAR OF A THROW STATEMENT
-
-throw-statement → throw­expression­
 -}
+
+-- GRAMMAR OF A THROW STATEMENT
+throwStatement :: Parser Statement
+throwStatement = kw "throw" *> (ThrowStatement <$> expression)
 
 -- GRAMMAR OF A DEFER STATEMENT
 deferStatement :: Parser Statement

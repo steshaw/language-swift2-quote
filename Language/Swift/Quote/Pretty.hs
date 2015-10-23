@@ -158,6 +158,7 @@ instance Pretty Statement where
         ppBoth (Left block) = ppr block
         ppBoth (Right ifStatement) = ppr ifStatement
   ppr (DeferStatement block) = string "defer" <+> ppr block
+  ppr (ThrowStatement expression) = string "throw" <+> ppr expression
 
 instance Pretty ForInit where
   ppr (FiDeclaration declaration) = ppr declaration

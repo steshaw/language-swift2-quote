@@ -122,9 +122,6 @@ data Statement
     }
   | DeclarationStatement Declaration
   | ReturnStatement (Maybe Expression)
-  -- | DeferStatement
-  -- | DoStatement
-  -- | CompilerControlStatement
   | WhileStatement Expression CodeBlock
   | RepeatWhileStatement CodeBlock Expression
   | GuardStatement ConditionClause CodeBlock
@@ -134,7 +131,10 @@ data Statement
   | BreakStatement (Maybe LabelName)
   | ContinueStatement (Maybe LabelName)
   | FallthroughStatement
+  | ThrowStatement Expression
   | DeferStatement CodeBlock
+  -- | DoStatement
+  -- | CompilerControlStatement
   deriving (Show, Eq)
 
 type LabelName = String

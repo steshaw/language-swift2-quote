@@ -1,0 +1,3 @@
+func ack() {
+  throw "ack"
+}
