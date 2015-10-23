@@ -16,6 +16,7 @@ import Text.Parsec.Text (Parser)
 import Text.Parsec (try)
 import qualified Text.Parsec.Language as L
 import qualified Text.Parsec.Token as T
+import qualified Text.Parsec.Expr as E
 import Text.Parsec.Prim (parserFail)
 
 parseIt :: Parser a -> Text -> Either String a
@@ -261,12 +262,12 @@ whereClause
 statement :: Parser Statement
 statement
    = try labeledStatement <* optSemicolon
+  <|> try compilerControlStatement <* optSemicolon
   <|> loopStatement <* optSemicolon
   <|> branchStatement <* optSemicolon
   <|> controlTransferStatement <* optSemicolon
   <|> deferStatement <* optSemicolon
   <|> doStatement <* optSemicolon
-  -- <|> compilerControlStatement <* optSemicolon
   <|> DeclarationStatement <$> declaration <* optSemicolon
   <|> ExpressionStatement <$> expression <* optSemicolon
 
@@ -456,35 +457,93 @@ catchClause = do
   b <- codeBlock
   return $ CatchClause p c b
 
-{-
-GRAMMAR OF A COMPILER CONTROL STATEMENT
+-- GRAMMAR OF A COMPILER CONTROL STATEMENT
+compilerControlStatement :: Parser Statement
+compilerControlStatement
+    = try buildConfigurationStatement
+  <|> lineControlStatement
 
-compiler-control-statement → build-configuration-statement­
-compiler-control-statement → line-control-statement­
-GRAMMAR OF A BUILD CONFIGURATION STATEMENT
+-- GRAMMAR OF A BUILD CONFIGURATION STATEMENT
+buildConfigurationStatement :: Parser Statement
+buildConfigurationStatement = do
+  tok "#if"
+  c <- buildConfiguration
+  ss <- statements
+  eis <- P.many buildConfigurationElseifClause
+  ec <- optional buildConfigurationElseClause
+  tok "#endif"
+  return $ BuildConfigurationStatement c ss eis ec
 
-build-configuration-statement → #if­build-configuration­statements­opt­build-configuration-elseif-clauses­opt­build-configuration-else-clause­opt­#endif­
-build-configuration-elseif-clauses → build-configuration-elseif-clause­build-configuration-elseif-clauses­opt­
-build-configuration-elseif-clause → #elseif­build-configuration­statements­opt­
-build-configuration-else-clause → #else­statements­opt­
-build-configuration → platform-testing-function­
-build-configuration → identifier­
-build-configuration → boolean-literal­
-build-configuration → (­build-configuration­)­
-build-configuration → !­build-configuration­
-build-configuration → build-configuration­&&­build-configuration­
-build-configuration → build-configuration­||­build-configuration­
-platform-testing-function → os­(­operating-system­)­
-platform-testing-function → arch­(­architecture­)­
-operating-system → OSX­  iOS­  watchOS­  tvOS­
-architecture → i386­  x86_64­  arm­  arm64­
-GRAMMAR OF A LINE CONTROL STATEMENT
+buildConfigurationElseifClause :: Parser BuildConfigurationElseifClause
+buildConfigurationElseifClause = do
+  tok "#elseif"
+  c <- buildConfiguration
+  ss <- statements
+  return $ BuildConfigurationElseifClause c ss
 
-line-control-statement → #line­
-line-control-statement → #line­line-number­file-name­
-line-number → A decimal integer greater than zero
-file-name → static-string-literal­
--}
+buildConfigurationElseClause :: Parser BuildConfigurationElseClause
+buildConfigurationElseClause = do
+  tok "#else"
+  ss <- statements
+  return $ BuildConfigurationElseClause ss
+
+buildConfiguration :: Parser BuildConfiguration
+buildConfiguration = buildConfigurationTerm `P.chainl1` buildConfigurationOrOp
+  where
+    buildConfigurationOrOp = op "||" *> pure BuildConfigurationOr
+
+buildConfigurationTerm :: Parser BuildConfiguration
+buildConfigurationTerm = buildConfigurationPrimary `P.chainl1` buildConfigurationAndOp
+  where
+    buildConfigurationAndOp = op "&&" *> pure BuildConfigurationAnd
+
+buildConfigurationPrimary :: Parser BuildConfiguration
+buildConfigurationPrimary
+    = BuildConfigurationId <$> identifier
+  <|> BuildConfigurationBool <$> booleanLiteral
+  <|> platformTestingFunction
+  <|> op "!" *> buildConfiguration
+  <|> braces buildConfiguration
+
+platformTestingFunction :: Parser BuildConfiguration
+platformTestingFunction
+    = OperatingSystemTest <$> (P.string "os" *> braces operatingSystem)
+  <|> ArchitectureTest <$> (P.string "arch" *> braces architecture)
+
+operatingSystem :: Parser String
+operatingSystem
+    = P.string "OSX"
+  <|> P.string "ioS"
+  <|> P.string "watchOS"
+  <|> P.string "tvOS"
+
+architecture :: Parser String
+architecture
+     = P.string "i386"
+   <|> P.string "x86_64"
+   <|> P.string "arm"
+   <|> P.string "arm64"
+
+-- GRAMMAR OF A LINE CONTROL STATEMENT
+lineControlStatement :: Parser Statement
+lineControlStatement = try specifedLine <|> line
+  where
+    line = P.string "#line" *> pure LineControlLine
+    specifedLine = do
+      _ <- P.string "#line"
+      n <- lineNumber
+      fn <- fileName
+      return $ LineControlSpecified n fn
+
+lineNumber :: Parser Integer
+lineNumber = do
+  ds <- decimalDigits
+  let n = read ds
+  when (n <= 0) $ fail "lineNumber must be > 0"
+  return n
+
+fileName :: Parser String
+fileName = staticStringLiteralInner
 
 ------------------------------------------------------------
 -- Generic Parameters and Arguments
@@ -1560,7 +1619,10 @@ stringLiteral :: Parser Literal
 stringLiteral = StringLiteral <$> (try staticStringLiteral <|> interpolatedStringLiteral)
 
 staticStringLiteral :: Parser StringLiteral
-staticStringLiteral = StaticStringLiteral <$> do
+staticStringLiteral = StaticStringLiteral <$> staticStringLiteralInner
+
+staticStringLiteralInner :: Parser String
+staticStringLiteralInner = do
   _ <- P.char '"'
   is <- P.many quotedTextItem
   _ <- P.char '"'

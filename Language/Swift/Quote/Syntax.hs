@@ -134,7 +134,10 @@ data Statement
   | ThrowStatement Expression
   | DeferStatement CodeBlock
   | DoStatement CodeBlock [CatchClause]
-  -- | CompilerControlStatement
+  | LineControlLine
+  | LineControlSpecified {- lineNum -} Integer {- fileName -} String
+  | BuildConfigurationStatement BuildConfiguration [Statement] [BuildConfigurationElseifClause]
+                                (Maybe BuildConfigurationElseClause)
   deriving (Show, Eq)
 
 data CatchClause = CatchClause (Maybe Pattern) (Maybe WhereClause) CodeBlock
@@ -277,4 +280,20 @@ data Parameter
   deriving (Show, Eq)
 
 data TypeAnnotation = TypeAnnotation [Attribute] Type
+  deriving (Show, Eq)
+
+data BuildConfigurationElseifClause = BuildConfigurationElseifClause BuildConfiguration [Statement]
+  deriving (Show, Eq)
+
+data BuildConfigurationElseClause = BuildConfigurationElseClause [Statement]
+  deriving (Show, Eq)
+
+data BuildConfiguration
+  = OperatingSystemTest String
+  | ArchitectureTest String
+  | BuildConfigurationId String
+  | BuildConfigurationBool Literal
+  | BuildConfigurationNegate BuildConfiguration
+  | BuildConfigurationOr BuildConfiguration BuildConfiguration
+  | BuildConfigurationAnd BuildConfiguration BuildConfiguration
   deriving (Show, Eq)
