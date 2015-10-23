@@ -134,6 +134,7 @@ data Statement
   | BreakStatement (Maybe LabelName)
   | ContinueStatement (Maybe LabelName)
   | FallthroughStatement
+  | DeferStatement CodeBlock
   deriving (Show, Eq)
 
 type LabelName = String

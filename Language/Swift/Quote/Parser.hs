@@ -265,7 +265,7 @@ statement
   <|> branchStatement <* optSemicolon
   <|> labeledStatement <* optSemicolon
   <|> controlTransferStatement <* optSemicolon
-  -- <|> deferStatement <* optSemicolon
+  <|> deferStatement <* optSemicolon
   -- <|> doStatement <* optSemicolon
   -- <|> compilerControlStatement <* optSemicolon
 
@@ -431,9 +431,13 @@ platform-version → decimal-digits­.­decimal-digits­.­decimal-digits­
 GRAMMAR OF A THROW STATEMENT
 
 throw-statement → throw­expression­
-GRAMMAR OF A DEFER STATEMENT
+-}
 
-defer-statement → defer­code-block­
+-- GRAMMAR OF A DEFER STATEMENT
+deferStatement :: Parser Statement
+deferStatement = kw "defer" *> (DeferStatement <$> codeBlock)
+
+{-
 GRAMMAR OF A DO STATEMENT
 
 do-statement → do­code-block­catch-clauses­opt­
