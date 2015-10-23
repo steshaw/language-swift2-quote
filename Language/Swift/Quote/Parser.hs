@@ -249,8 +249,9 @@ tok s = tok' s *> pure ()
 -- SUMMARY OF THE GRAMMAR
 ------------------------------------------------------------
 
-whereClause :: Parser Expression
-whereClause = expression -- TODO
+whereClause :: Parser WhereClause
+whereClause
+    = WhereClause <$> expression -- TODO
 
 ------------------------------------------------------------
 -- Statements
@@ -264,7 +265,7 @@ statement
   <|> branchStatement <* optSemicolon
   <|> controlTransferStatement <* optSemicolon
   <|> deferStatement <* optSemicolon
-  -- <|> doStatement <* optSemicolon
+  <|> doStatement <* optSemicolon
   -- <|> compilerControlStatement <* optSemicolon
   <|> DeclarationStatement <$> declaration <* optSemicolon
   <|> ExpressionStatement <$> expression <* optSemicolon
@@ -439,12 +440,23 @@ throwStatement = kw "throw" *> (ThrowStatement <$> expression)
 deferStatement :: Parser Statement
 deferStatement = kw "defer" *> (DeferStatement <$> codeBlock)
 
-{-
-GRAMMAR OF A DO STATEMENT
+-- GRAMMAR OF A DO STATEMENT
+doStatement :: Parser Statement
+doStatement = do
+  kw "do"
+  b <- codeBlock
+  cs <- P.many catchClause
+  return $ DoStatement b cs
 
-do-statement → do­code-block­catch-clauses­opt­
-catch-clauses → catch-clause­catch-clauses­opt­
-catch-clause → catch­pattern­opt­where-clause­opt­code-block­
+catchClause :: Parser CatchClause
+catchClause = do
+  kw "catch"
+  p <- optional pattern
+  c <- optional (kw "where" *> whereClause)
+  b <- codeBlock
+  return $ CatchClause p c b
+
+{-
 GRAMMAR OF A COMPILER CONTROL STATEMENT
 
 compiler-control-statement → build-configuration-statement­

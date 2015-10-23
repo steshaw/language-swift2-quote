@@ -117,7 +117,7 @@ data Statement
   | ForInStatement
     { fiPattern :: Pattern
     , fiExpression :: Expression
-    , fiWhereClause :: Maybe Expression
+    , fiWhereClause :: Maybe WhereClause
     , fiBlock :: CodeBlock
     }
   | DeclarationStatement Declaration
@@ -133,8 +133,14 @@ data Statement
   | FallthroughStatement
   | ThrowStatement Expression
   | DeferStatement CodeBlock
-  -- | DoStatement
+  | DoStatement CodeBlock [CatchClause]
   -- | CompilerControlStatement
+  deriving (Show, Eq)
+
+data CatchClause = CatchClause (Maybe Pattern) (Maybe WhereClause) CodeBlock
+  deriving (Show, Eq)
+
+data WhereClause = WhereClause Expression
   deriving (Show, Eq)
 
 type LabelName = String

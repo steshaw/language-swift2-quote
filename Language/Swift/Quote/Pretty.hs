@@ -159,6 +159,14 @@ instance Pretty Statement where
         ppBoth (Right ifStatement) = ppr ifStatement
   ppr (DeferStatement block) = string "defer" <+> ppr block
   ppr (ThrowStatement expression) = string "throw" <+> ppr expression
+  ppr (DoStatement block clauses) = string "do" <+> ppr block <+> (spread . map ppr) clauses
+
+instance Pretty CatchClause where
+  ppr (CatchClause optPattern optWhere block)
+    = string "catch" <+> ppr optPattern <+> ppr optWhere <+> ppr block
+
+instance Pretty WhereClause where
+  ppr (WhereClause e) = ppr e
 
 instance Pretty ForInit where
   ppr (FiDeclaration declaration) = ppr declaration
