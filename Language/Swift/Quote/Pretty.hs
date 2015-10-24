@@ -215,7 +215,7 @@ instance Pretty Declaration where
     <+> ppr throws
     <+> ppr block
 
-  ppr (DeinitializerDeclaration atts block) = sepBySpace atts <+> ppr block
+  ppr (DeinitializerDeclaration atts block) = sepBySpace atts <+> string "deinit" <+> ppr block
 
 instance Pretty InitKind where
   ppr Init = string "init"
