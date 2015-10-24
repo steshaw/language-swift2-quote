@@ -200,6 +200,14 @@ data Declaration
   | DeinitializerDeclaration
       [Attribute]
       CodeBlock
+  | ExtensionDeclaration
+      (Maybe DeclarationModifier)
+      TypeIdentifier
+      (Maybe TypeInheritanceClause)
+      ExtensionBody
+  deriving (Show, Eq)
+
+data ExtensionBody = ExtensionBody [Declaration]
   deriving (Show, Eq)
 
 data VariableDeclaration
@@ -314,3 +322,8 @@ data InitKind
   | InitOption
   | InitForce
   deriving (Show, Eq)
+
+data TypeIdentifier = TypeIdentifier [(TypeName, [Type])]
+  deriving (Show, Eq)
+
+type TypeName = Identifier

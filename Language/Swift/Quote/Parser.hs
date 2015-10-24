@@ -579,6 +579,9 @@ requirementClause = pure GenericRequirementClause
 genericArgumentClause :: Parser [Type]
 genericArgumentClause = angles (P.many1 type_)
 
+genericArgumentClause0 :: Parser [Type]
+genericArgumentClause0 = fromMaybe [] <$> (optional genericArgumentClause)
+
 ------------------------------------------------------------
 -- Declarations
 ------------------------------------------------------------
@@ -597,12 +600,15 @@ declaration
   -- <|> try protocolDeclaration
   <|> try initializerDeclaration
   <|> try deinitializerDeclaration
+  <|> try extensionDeclaration
 {-
 declaration → extension-declaration­
 declaration → subscript-declaration­
 declaration → operator-declaration­
-declarations → declaration­declarations­opt­
 -}
+
+declarations1 = P.many1 declaration
+declarations0 = P.many declaration
 
 -- GRAMMAR OF A TOP-LEVEL DECLARATION
 
@@ -1035,11 +1041,20 @@ deinitializerDeclaration = do
   block <- codeBlock
   return $ DeinitializerDeclaration atts block
 
-{-
-GRAMMAR OF AN EXTENSION DECLARATION
+-- GRAMMAR OF AN EXTENSION DECLARATION
+extensionDeclaration :: Parser Declaration
+extensionDeclaration = do
+  acm <- optional accessLevelModifier
+  kw "extension"
+  t <- typeIdentifier
+  optTIC <- optional typeInheritanceClause
+  b <- extensionBody
+  return $ ExtensionDeclaration acm t optTIC b
 
-extension-declaration → access-level-modifier­opt­extension­type-identifier­type-inheritance-clause­opt­extension-body­
-extension-body → {­declarations­opt­}­
+extensionBody :: Parser ExtensionBody
+extensionBody = ExtensionBody <$> braces declarations0
+
+{-
 GRAMMAR OF A SUBSCRIPT DECLARATION
 
 subscript-declaration → subscript-head­subscript-result­code-block­
@@ -1825,8 +1840,13 @@ typeAnnotation :: Parser TypeAnnotation
 typeAnnotation = tok ":" *> (TypeAnnotation <$> attributes' <*> type_)
 
 -- GRAMMAR OF A TYPE IDENTIFIER
--- type-identifier → type-name­generic-argument-clause­opt­  type-name­generic-argument-clause­opt­.­type-identifier­
--- type-name → identifier­
+typeIdentifier :: Parser TypeIdentifier
+typeIdentifier = TypeIdentifier <$> (nameOptGAC `P.sepBy1` tok ".")
+  where
+    nameOptGAC = (,) <$> typeName <*> genericArgumentClause0
+
+typeName :: Parser TypeName
+typeName = identifier
 
 -- GRAMMAR OF A TUPLE TYPE
 -- tuple-type → (­tuple-type-body­opt­)­

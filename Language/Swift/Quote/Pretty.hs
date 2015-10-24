@@ -217,6 +217,16 @@ instance Pretty Declaration where
 
   ppr (DeinitializerDeclaration atts block) = sepBySpace atts <+> string "deinit" <+> ppr block
 
+  ppr (ExtensionDeclaration optDM ti optTIC body)
+    = ppr optDM
+    <+> string "extension"
+    <+> ppr ti
+    <+> ppr optTIC
+    <+> ppr body
+
+instance Pretty ExtensionBody where
+  ppr (ExtensionBody decls) = bracesLines (map ppr decls)
+
 instance Pretty InitKind where
   ppr Init = string "init"
   ppr InitOption = string "init?"
@@ -295,3 +305,11 @@ instance Pretty TypeAnnotation where
 
 instance Pretty GenericParameterClause where
   ppr (GenericParameterClause params optReqClause) = string "<todo>"
+
+-- data TypeIdentifier = TypeIdentifier [(TypeName, [Type])]
+instance Pretty TypeIdentifier where
+  ppr (TypeIdentifier typeArguments) = (cat . punctuate dot) (map p typeArguments)
+    where
+      p :: (TypeName, [Type]) -> Doc
+      p (n, []) = ppr n
+      p (n, ts) = ppr n <> (angles . commasep) (map ppr ts)
