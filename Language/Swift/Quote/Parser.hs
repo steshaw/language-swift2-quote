@@ -51,11 +51,6 @@ module_ = do
 ------------------------------------------------------------
 -- Auxiliary
 ------------------------------------------------------------
-attributes' :: Parser [Attribute]
-attributes' = fromMaybe [] <$> optional attributes
-
-declarationModifiers' :: Parser [DeclarationModifier]
-declarationModifiers' = fromMaybe [] <$> optional declarationModifiers
 
 notice :: String -> String
 notice msg = "\n\n\n" ++ msg ++ "\n\n\n"
@@ -274,7 +269,10 @@ statement
   <|> ExpressionStatement <$> expression <* optSemicolon
 
 statements :: Parser [Statement]
-statements = many statement
+statements = P.many statement
+
+statements0 :: Parser [Statement]
+statements0 = fromMaybe [] <$> optional statements
 
 -- GRAMMAR OF A LOOP STATEMENT
 loopStatement :: Parser Statement
@@ -602,7 +600,6 @@ declaration
   <|> try deinitializerDeclaration
   <|> try extensionDeclaration
 {-
-declaration → extension-declaration­
 declaration → subscript-declaration­
 declaration → operator-declaration­
 -}
@@ -613,25 +610,28 @@ declarations0 = P.many declaration
 -- GRAMMAR OF A TOP-LEVEL DECLARATION
 
 topLevelDeclaration :: Parser [Statement]
-topLevelDeclaration = fromMaybe [] <$> optional statements
+topLevelDeclaration = statements0
 
 -- GRAMMAR OF A CODE BLOCK
 
 codeBlock :: Parser CodeBlock
-codeBlock = CodeBlock <$> braces (fromMaybe [] <$> optional statements)
+codeBlock = CodeBlock <$> braces statements0
 
 -- GRAMMAR OF AN IMPORT DECLARATION
 
 importDeclaration :: Parser Declaration
 importDeclaration
   = ImportDeclaration
-      <$> attributes'
+      <$> attributes0
       <*  kw "import"
       <*> optional importKind
       <*> importPath
 
 attributes :: Parser [Attribute]
 attributes = P.many attribute
+
+attributes0 :: Parser [Attribute]
+attributes0 = fromMaybe [] <$> optional attributes
 
 importKind :: Parser ImportKind
 importKind = P.choice
@@ -656,8 +656,8 @@ importPathIdentifier
 
 constantDeclaration :: Parser Declaration
 constantDeclaration = do
-  atts <- attributes'
-  mods <- declarationModifiers'
+  atts <- attributes0
+  mods <- declarationModifiers0
   _ <- kw "let"
   is <- patternInitializerList
   return $ ConstantDeclaration atts mods is
@@ -699,24 +699,37 @@ variableDeclarationName attrs mods = do
 
 variableDeclarationHead :: Parser ([Attribute], [DeclarationModifier])
 variableDeclarationHead = do
-  attrs <- attributes'
-  mods <- declarationModifiers'
+  attrs <- attributes0
+  mods <- declarationModifiers0
   _ <- kw "var"
   return (attrs, mods)
 
 variableName :: Parser String
 variableName = identifier
 
-getterSetterBlock = codeBlock
--- getter-setter-block → code-block­
--- getter-setter-block → {­getter-clause­setter-clause­opt­}­
--- getter-setter-block → {­setter-clause­getter-clause­}­
+getterSetterBlock :: Parser GetSetBlock
+getterSetterBlock
+    = GetSetBlock <$> codeBlock
+  <|> braces other
+  where
+    other = getterFirst <|> setterFirst
+    getterFirst = do
+      optGC <- Just <$> getterClause
+      optSC <- optional setterClause
+      return $ GetSet optGC optSC
+    setterFirst = do
+      optSC <- Just <$> setterClause
+      optGC <- optional getterClause
+      return $ GetSet optGC optSC
 
--- getter-clause → attributes­opt­get­code-block­
+getterClause :: Parser GetterClause
+getterClause = GetterClause <$> attributes0 <*> (kw "get" *> codeBlock)
 
--- setter-clause → attributes­opt­set­setter-name­opt­code-block­
+setterClause :: Parser SetterClause
+setterClause = SetterClause <$> attributes0 <*> (kw "set" *> optional setterName) <*> codeBlock
 
--- setter-name → (­identifier­)­
+setterName :: Parser Identifier
+setterName = braces identifier
 
 -- getter-setter-keyword-block → {­getter-keyword-clause­setter-keyword-clause­opt­}­
 -- getter-setter-keyword-block → {­setter-keyword-clause­getter-keyword-clause­}­
@@ -741,7 +754,7 @@ typealiasDeclaration = do
 
 typealiasHead :: Parser ([Attribute], Maybe DeclarationModifier, String)
 typealiasHead = do
-  atts <- attributes'
+  atts <- attributes0
   m <- optional accessLevelModifier
   _ <- kw "typealias"
   name <- typealiasName
@@ -765,8 +778,8 @@ functionDeclaration = do
 
 functionHead :: Parser ([Attribute], [DeclarationModifier])
 functionHead = do
-  a <- attributes'
-  m <- declarationModifiers'
+  a <- attributes0
+  m <- declarationModifiers0
   _ <- kw "func"
   return (a, m)
 
@@ -783,13 +796,13 @@ functionSignature = do
   return (p, t, r)
 
 functionResult :: Parser FunctionResult
-functionResult = op "->" *> (FunctionResult <$> attributes' <*> type_)
+functionResult = op "->" *> (FunctionResult <$> attributes0 <*> type_)
 
 functionBody :: Parser CodeBlock
 functionBody = codeBlock
 
 parameterClauses :: Parser [[Parameter]]
-parameterClauses = many parameterClause
+parameterClauses = P.many parameterClause
 
 parameterClause :: Parser [Parameter]
 parameterClause
@@ -850,7 +863,7 @@ defaultArgumentClause = tok "=" *> expression
 -- GRAMMAR OF AN ENUMERATION DECLARATION
 enumDeclaration :: Parser Declaration
 enumDeclaration = EnumDeclaration <$> do
-  atts <- attributes'
+  atts <- attributes0
   optMod <- optional accessLevelModifier
   unionStyleEnum atts optMod <|> rawValueStyleEnum atts optMod
 
@@ -874,7 +887,7 @@ unionStyleEnumMember
 
 unionStyleEnumCaseClause :: Parser UnionStyleEnumMember
 unionStyleEnumCaseClause = do
-  atts <- attributes'
+  atts <- attributes0
   si <- optional (kw "indirect")
   let i = isJust si
   kw "case"
@@ -911,7 +924,7 @@ rawValueStyleEnum att optMod = fail "WIP rawValueStyleEnum"
 -- raw-value-literal → numeric-literal­  static-string-literal­  boolean-literal­
 
 structDeclaration' keyword ctor = do
-  atts <- attributes'
+  atts <- attributes0
   optMod <- optional accessLevelModifier
   kw keyword
   n <- structName
@@ -943,7 +956,7 @@ classDeclaration = structDeclaration' "class" (StructDeclaration Class)
 -- GRAMMAR OF A PROTOCOL DECLARATION
 -- protocolDeclaration :: Parser Declaration
 -- protocolDeclaration = do
---   atts <- attributes'
+--   atts <- attributes0
 --   optMod <- optional accessLevelModifier
 --   kw "protocol"
 --   n <- protocolName
@@ -1016,8 +1029,8 @@ throwsDeclaration = kw' "throws" <|> kw' "rethrows" <|> pure ""
 
 initializerHead :: Parser ([Attribute], [DeclarationModifier], InitKind)
 initializerHead = do
-  atts <- attributes'
-  mods <- declarationModifiers'
+  atts <- attributes0
+  mods <- declarationModifiers0
   i <- initKind
   return (atts, mods, i)
     where
@@ -1033,7 +1046,7 @@ initializerBody = codeBlock
 -- GRAMMAR OF A DEINITIALIZER DECLARATION
 deinitializerDeclaration :: Parser Declaration
 deinitializerDeclaration = do
-  atts <- attributes'
+  atts <- attributes0
   kw "deinit"
   block <- codeBlock
   return $ DeinitializerDeclaration atts block
@@ -1051,26 +1064,43 @@ extensionDeclaration = do
 extensionBody :: Parser ExtensionBody
 extensionBody = ExtensionBody <$> braces declarations0
 
-{-
-GRAMMAR OF A SUBSCRIPT DECLARATION
+-- GRAMMAR OF A SUBSCRIPT DECLARATION
+subscriptDeclaration = do
+  (atts, mods, pc) <- subscriptHead
+  blockyThingo <- blocky
+  return $ SubscriptDeclaration atts mods pc blockyThingo
+  where
+    blocky
+        = SubscriptCodeBlock <$> codeBlock
+      <|> SubscriptGetSetBlock <$> getterSetterBlock
+      {- <|> SubscriptGetSetKeyBlock getterSetterKeywordBlock -} -- TODO getterSetterKeywordBlock
 
-subscript-declaration → subscript-head­subscript-result­code-block­
-subscript-declaration → subscript-head­subscript-result­getter-setter-block­
-subscript-declaration → subscript-head­subscript-result­getter-setter-keyword-block­
-subscript-head → attributes­opt­declaration-modifiers­opt­subscript­parameter-clause­
-subscript-result → ->­attributes­opt­type­
-GRAMMAR OF AN OPERATOR DECLARATION
+subscriptHead :: Parser ([Attribute], [DeclarationModifier], [Parameter])
+subscriptHead = do
+  atts <- attributes0
+  mods <- declarationModifiers0
+  kw "subscript"
+  pc <- parameterClause
+  return (atts, mods, pc)
 
-operator-declaration → prefix-operator-declaration­  postfix-operator-declaration­ infix-operator-declaration­
-prefix-operator-declaration → prefix­operator­operator­{­}­
-postfix-operator-declaration → postfix­operator­operator­{­}­
-infix-operator-declaration → infix­operator­operator­{­infix-operator-attributes­opt­}­
-infix-operator-attributes → precedence-clause­opt­associativity-clause­opt­
-precedence-clause → precedence­precedence-level­
-precedence-level → A decimal integer between 0 and 255, inclusive
-associativity-clause → associativity­associativity­
-associativity → left­  right­  none­
--}
+subscriptResult :: Parser ([Attribute], Type)
+subscriptResult = do
+  atts <- attributes0
+  t <- type_
+  return (atts, t)
+
+
+-- GRAMMAR OF AN OPERATOR DECLARATION
+
+-- operator-declaration → prefix-operator-declaration­  postfix-operator-declaration­ infix-operator-declaration­
+-- prefix-operator-declaration → prefix­operator­operator­{­}­
+-- postfix-operator-declaration → postfix­operator­operator­{­}­
+-- infix-operator-declaration → infix­operator­operator­{­infix-operator-attributes­opt­}­
+-- infix-operator-attributes → precedence-clause­opt­associativity-clause­opt­
+-- precedence-clause → precedence­precedence-level­
+-- precedence-level → A decimal integer between 0 and 255, inclusive
+-- associativity-clause → associativity­associativity­
+-- associativity → left­  right­  none­
 
 -- GRAMMAR OF A DECLARATION MODIFIER
 
@@ -1079,6 +1109,9 @@ declarationModifier = modifier <|> accessLevelModifier
 
 declarationModifiers :: Parser [DeclarationModifier]
 declarationModifiers = P.many1 declarationModifier
+
+declarationModifiers0 :: Parser [DeclarationModifier]
+declarationModifiers0 = fromMaybe [] <$> optional declarationModifiers
 
 modifier :: Parser DeclarationModifier
 modifier = Modifier <$> P.choice
@@ -1217,12 +1250,12 @@ expression = do
   -- _ <- trace ("\n\n\n in expression  t = " ++ show t) $ pure ()
   p <- prefixExpression
   -- _ <- trace ("\n  prefix = " ++ show p) $ pure ()
-  -- s1 <- try . P.lookAhead $ many P.anyChar
+  -- s1 <- try . P.lookAhead $ P.many P.anyChar
   -- _ <- trace ("ahead s1 = " ++ show s1) $ pure ()
   -- bs <- (fromMaybe [] <$> optional binaryExpressions)
   bs <- optional binaryExpressions
   -- _ <- trace ("\n  bs = " ++ show bs) $ pure ()
-  s2 <- try . P.lookAhead $ many P.anyChar
+  s2 <- try . P.lookAhead $ P.many P.anyChar
   -- _ <- trace ("ahead s2 = " ++ show s2) $ pure ()
   -- _ <- trace ("\n  binaries = " ++ show bs) $ pure ()
   return $ Expression t p (fromMaybe [] bs)
@@ -1278,7 +1311,7 @@ binaryExpression
         return $ BinaryExpression1 o e
 
 binaryExpressions :: Parser [BinaryExpression]
-binaryExpressions = many binaryExpression
+binaryExpressions = P.many binaryExpression
 
 -- GRAMMAR OF AN ASSIGNMENT OPERATOR
 assignmentOperator :: Parser ()
@@ -1834,7 +1867,7 @@ typeInit = SimpleType <$> identifier
 
 -- GRAMMAR OF A TYPE ANNOTATION
 typeAnnotation :: Parser TypeAnnotation
-typeAnnotation = tok ":" *> (TypeAnnotation <$> attributes' <*> type_)
+typeAnnotation = tok ":" *> (TypeAnnotation <$> attributes0 <*> type_)
 
 -- GRAMMAR OF A TYPE IDENTIFIER
 typeIdentifier :: Parser TypeIdentifier

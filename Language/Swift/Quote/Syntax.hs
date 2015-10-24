@@ -205,6 +205,16 @@ data Declaration
       TypeIdentifier
       (Maybe TypeInheritanceClause)
       ExtensionBody
+  | SubscriptDeclaration
+      [Attribute]
+      [DeclarationModifier]
+      [Parameter] -- ParameterClause
+      SubscriptBlock
+  deriving (Show, Eq)
+
+data SubscriptBlock
+  = SubscriptCodeBlock CodeBlock
+  | SubscriptGetSetBlock GetSetBlock
   deriving (Show, Eq)
 
 data ExtensionBody = ExtensionBody [Declaration]
@@ -331,3 +341,14 @@ data TypeIdentifier = TypeIdentifier [(TypeName, [Type])]
   deriving (Show, Eq)
 
 type TypeName = Identifier
+
+data GetterClause = GetterClause [Attribute] CodeBlock
+  deriving (Show, Eq)
+
+data SetterClause = SetterClause [Attribute] (Maybe Identifier) CodeBlock
+  deriving (Show, Eq)
+
+data GetSetBlock
+  = GetSetBlock CodeBlock
+  | GetSet (Maybe GetterClause) (Maybe SetterClause)
+  deriving (Show, Eq)
