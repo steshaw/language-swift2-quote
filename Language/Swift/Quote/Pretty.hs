@@ -203,18 +203,24 @@ instance Pretty Declaration where
     <+> ppr optBlock
 
   ppr (EnumDeclaration enum) = ppr enum
-  ppr (StructDeclaration ty atts optMod name optGPC optTIC decls) = ppr ty <+> string name <+> bracesLines (map ppr decls)
 
+  ppr (StructDeclaration ty atts optMod name optGPC optTIC decls) = ppr ty <+> string name <+> bracesLines (map ppr decls)
 
   ppr (InitializerDeclaration atts mods kind optGPC paramClause throws block)
       = sepBySpace atts
     <+> sepBySpace mods
-    <+> string "init"
+    <+> ppr kind
     <> ppr optGPC
     <> (parens . commasep . map ppr) paramClause
     <+> ppr throws
     <+> ppr block
 
+  ppr (DeinitializerDeclaration atts block) = sepBySpace atts <+> ppr block
+
+instance Pretty InitKind where
+  ppr Init = string "init"
+  ppr InitOption = string "init?"
+  ppr InitForce = string "init!"
 
 instance Pretty StructType where
   ppr Struct = string "struct"

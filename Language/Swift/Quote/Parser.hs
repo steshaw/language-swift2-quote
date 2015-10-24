@@ -51,8 +51,8 @@ module_ = do
 ------------------------------------------------------------
 -- Auxiliary
 ------------------------------------------------------------
-attributeList :: Parser [Attribute]
-attributeList = fromMaybe [] <$> optional attributes
+attributes' :: Parser [Attribute]
+attributes' = fromMaybe [] <$> optional attributes
 
 declarationModifiers' :: Parser [DeclarationModifier]
 declarationModifiers' = fromMaybe [] <$> optional declarationModifiers
@@ -596,8 +596,8 @@ declaration
   <|> try classDeclaration
   -- <|> try protocolDeclaration
   <|> try initializerDeclaration
+  <|> try deinitializerDeclaration
 {-
-declaration → deinitializer-declaration­
 declaration → extension-declaration­
 declaration → subscript-declaration­
 declaration → operator-declaration­
@@ -619,7 +619,7 @@ codeBlock = CodeBlock <$> braces (fromMaybe [] <$> optional statements)
 importDeclaration :: Parser Declaration
 importDeclaration
   = ImportDeclaration
-      <$> attributeList
+      <$> attributes'
       <*  kw "import"
       <*> optional importKind
       <*> importPath
@@ -650,7 +650,7 @@ importPathIdentifier
 
 constantDeclaration :: Parser Declaration
 constantDeclaration = do
-  atts <- attributeList
+  atts <- attributes'
   mods <- declarationModifiers'
   _ <- kw "let"
   is <- patternInitializerList
@@ -693,7 +693,7 @@ variableDeclarationName attrs mods = do
 
 variableDeclarationHead :: Parser ([Attribute], [DeclarationModifier])
 variableDeclarationHead = do
-  attrs <- attributeList
+  attrs <- attributes'
   mods <- declarationModifiers'
   _ <- kw "var"
   return (attrs, mods)
@@ -735,7 +735,7 @@ typealiasDeclaration = do
 
 typealiasHead :: Parser ([Attribute], Maybe DeclarationModifier, String)
 typealiasHead = do
-  atts <- attributeList
+  atts <- attributes'
   m <- optional accessLevelModifier
   _ <- kw "typealias"
   name <- typealiasName
@@ -759,7 +759,7 @@ functionDeclaration = do
 
 functionHead :: Parser ([Attribute], [DeclarationModifier])
 functionHead = do
-  a <- attributeList
+  a <- attributes'
   m <- declarationModifiers'
   _ <- kw "func"
   return (a, m)
@@ -777,7 +777,7 @@ functionSignature = do
   return (p, t, r)
 
 functionResult :: Parser FunctionResult
-functionResult = op "->" *> (FunctionResult <$> attributeList <*> type_)
+functionResult = op "->" *> (FunctionResult <$> attributes' <*> type_)
 
 functionBody :: Parser CodeBlock
 functionBody = codeBlock
@@ -844,7 +844,7 @@ defaultArgumentClause = tok "=" *> expression
 -- GRAMMAR OF AN ENUMERATION DECLARATION
 enumDeclaration :: Parser Declaration
 enumDeclaration = EnumDeclaration <$> do
-  atts <- attributeList
+  atts <- attributes'
   optMod <- optional accessLevelModifier
   unionStyleEnum atts optMod <|> rawValueStyleEnum atts optMod
 
@@ -871,7 +871,7 @@ unionStyleEnumMember
 
 unionStyleEnumCaseClause :: Parser UnionStyleEnumMember
 unionStyleEnumCaseClause = do
-  atts <- attributeList
+  atts <- attributes'
   si <- optional (kw "indirect")
   let i = isJust si
   kw "case"
@@ -908,7 +908,7 @@ rawValueStyleEnum att optMod = fail "WIP rawValueStyleEnum"
 -- raw-value-literal → numeric-literal­  static-string-literal­  boolean-literal­
 
 structDeclaration' keyword ctor = do
-  atts <- attributeList
+  atts <- attributes'
   optMod <- optional accessLevelModifier
   kw keyword
   n <- structName
@@ -940,7 +940,7 @@ classDeclaration = structDeclaration' "class" (StructDeclaration Class)
 -- GRAMMAR OF A PROTOCOL DECLARATION
 -- protocolDeclaration :: Parser Declaration
 -- protocolDeclaration = do
---   atts <- attributeList
+--   atts <- attributes'
 --   optMod <- optional accessLevelModifier
 --   kw "protocol"
 --   n <- protocolName
@@ -1009,11 +1009,11 @@ initializerDeclaration = do
   return $ InitializerDeclaration atts mods initKind optGPC pc t b
 
 throwsDeclaration :: Parser String
-throwsDeclaration = (kw' "throws" <|> kw' "rethrows" <|> pure "")
+throwsDeclaration = kw' "throws" <|> kw' "rethrows" <|> pure ""
 
 initializerHead :: Parser ([Attribute], [DeclarationModifier], InitKind)
 initializerHead = do
-  atts <- attributeList
+  atts <- attributes'
   mods <- declarationModifiers'
   i <- initKind
   return (atts, mods, i)
@@ -1027,10 +1027,15 @@ initializerHead = do
 initializerBody :: Parser CodeBlock
 initializerBody = codeBlock
 
-{-
-GRAMMAR OF A DEINITIALIZER DECLARATION
+-- GRAMMAR OF A DEINITIALIZER DECLARATION
+deinitializerDeclaration :: Parser Declaration
+deinitializerDeclaration = do
+  atts <- attributes'
+  kw "deinit"
+  block <- codeBlock
+  return $ DeinitializerDeclaration atts block
 
-deinitializer-declaration → attributes­opt­deinit­code-block­
+{-
 GRAMMAR OF AN EXTENSION DECLARATION
 
 extension-declaration → access-level-modifier­opt­extension­type-identifier­type-inheritance-clause­opt­extension-body­
@@ -1817,7 +1822,7 @@ typeInit = SimpleType <$> identifier
 
 -- GRAMMAR OF A TYPE ANNOTATION
 typeAnnotation :: Parser TypeAnnotation
-typeAnnotation = tok ":" *> (TypeAnnotation <$> attributeList <*> type_)
+typeAnnotation = tok ":" *> (TypeAnnotation <$> attributes' <*> type_)
 
 -- GRAMMAR OF A TYPE IDENTIFIER
 -- type-identifier → type-name­generic-argument-clause­opt­  type-name­generic-argument-clause­opt­.­type-identifier­

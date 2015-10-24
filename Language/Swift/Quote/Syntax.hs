@@ -197,6 +197,9 @@ data Declaration
       [Parameter]
       String -- throwsDecl
       CodeBlock
+  | DeinitializerDeclaration
+      [Attribute]
+      CodeBlock
   deriving (Show, Eq)
 
 data VariableDeclaration
