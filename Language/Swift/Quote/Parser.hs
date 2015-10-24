@@ -867,9 +867,6 @@ unionStyleEnum atts optMod = do
   tok "}"
   return $ UnionEnum atts optMod i n optP ti ms
 
-typeInheritanceClause :: Parser TypeInheritanceClause
-typeInheritanceClause = fail "WIP"
-
 unionStyleEnumMember :: Parser UnionStyleEnumMember
 unionStyleEnumMember
     = EnumMemberDeclaration <$> declaration
@@ -1882,9 +1879,11 @@ implicitlyUnwrappedOptionalTypeTail t = op "!" *> pure (ImplicitlyUnwrappedOptTy
 -- metatype-type → type­.­Type­  type­.­Protocol­
 
 -- GRAMMAR OF A TYPE INHERITANCE CLAUSE
--- type-inheritance-clause → :­class-requirement­,­type-inheritance-list­
--- type-inheritance-clause → :­class-requirement­
--- type-inheritance-clause → :­type-inheritance-list­
--- type-inheritance-list → type-identifier­  type-identifier­,­type-inheritance-list­
-
--- class-requirement → class­
+typeInheritanceClause :: Parser TypeInheritanceClause
+typeInheritanceClause = do
+  tok ":"
+  try classy <|> listy
+  where
+    classy = kw "class" *> (TypeInheritanceClause True <$> listy')
+    listy = TypeInheritanceClause False <$> listy'
+    listy' = P.many1 typeIdentifier

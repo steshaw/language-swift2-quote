@@ -221,8 +221,12 @@ instance Pretty Declaration where
     = ppr optDM
     <+> string "extension"
     <+> ppr ti
-    <+> ppr optTIC
+    <> ppr optTIC
     <+> ppr body
+
+instance Pretty TypeInheritanceClause where
+  ppr (TypeInheritanceClause True typeIds) = string ":" <+> "class" <+> (commasep . map ppr) typeIds
+  ppr (TypeInheritanceClause False typeIds) = string ":" <+> (commasep . map ppr) typeIds
 
 instance Pretty ExtensionBody where
   ppr (ExtensionBody decls) = bracesLines (map ppr decls)

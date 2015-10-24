@@ -217,7 +217,11 @@ data VariableDeclaration
 
 type IsIndirect = Bool
 type EnumName = String
-type TypeInheritanceClause = ()
+
+type ClassRequirement = Bool
+
+data TypeInheritanceClause = TypeInheritanceClause ClassRequirement [TypeIdentifier]
+  deriving (Show, Eq)
 
 data EnumDeclaration
   = UnionEnum
