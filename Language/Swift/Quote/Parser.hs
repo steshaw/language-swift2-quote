@@ -16,7 +16,6 @@ import Text.Parsec.Text (Parser)
 import Text.Parsec (try)
 import qualified Text.Parsec.Language as L
 import qualified Text.Parsec.Token as T
-import qualified Text.Parsec.Expr as E
 import Text.Parsec.Prim (parserFail)
 
 parseIt :: Parser a -> Text -> Either String a

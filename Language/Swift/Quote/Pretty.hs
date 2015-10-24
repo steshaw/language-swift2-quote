@@ -6,7 +6,6 @@ module Language.Swift.Quote.Pretty where
 import Language.Swift.Quote.Syntax
 
 import Data.Text.Lazy (Text, append)
-import Data.Maybe
 import Text.PrettyPrint.Mainland
 
 ------------------------------------------------------------
