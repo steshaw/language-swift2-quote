@@ -54,6 +54,9 @@ module_ = do
 attributeList :: Parser [Attribute]
 attributeList = fromMaybe [] <$> optional attributes
 
+declarationModifiers' :: Parser [DeclarationModifier]
+declarationModifiers' = fromMaybe [] <$> optional declarationModifiers
+
 notice :: String -> String
 notice msg = "\n\n\n" ++ msg ++ "\n\n\n"
 
@@ -591,9 +594,9 @@ declaration
   <|> try enumDeclaration
   <|> try structDeclaration
   <|> try classDeclaration
+  -- <|> try protocolDeclaration
+  <|> try initializerDeclaration
 {-
-declaration → protocol-declaration­
-declaration → initializer-declaration­
 declaration → deinitializer-declaration­
 declaration → extension-declaration­
 declaration → subscript-declaration­
@@ -648,7 +651,7 @@ importPathIdentifier
 constantDeclaration :: Parser Declaration
 constantDeclaration = do
   atts <- attributeList
-  mods <- fromMaybe [] <$> optional declarationModifiers
+  mods <- declarationModifiers'
   _ <- kw "let"
   is <- patternInitializerList
   return $ ConstantDeclaration atts mods is
@@ -691,7 +694,7 @@ variableDeclarationName attrs mods = do
 variableDeclarationHead :: Parser ([Attribute], [DeclarationModifier])
 variableDeclarationHead = do
   attrs <- attributeList
-  mods <- fromMaybe [] <$> optional declarationModifiers
+  mods <- declarationModifiers'
   _ <- kw "var"
   return (attrs, mods)
 
@@ -757,7 +760,7 @@ functionDeclaration = do
 functionHead :: Parser ([Attribute], [DeclarationModifier])
 functionHead = do
   a <- attributeList
-  m <- fromMaybe [] <$> optional declarationModifiers
+  m <- declarationModifiers'
   _ <- kw "func"
   return (a, m)
 
@@ -934,42 +937,97 @@ structDeclaration = structDeclaration' "struct" (StructDeclaration Struct)
 classDeclaration :: Parser Declaration
 classDeclaration = structDeclaration' "class" (StructDeclaration Class)
 
+-- GRAMMAR OF A PROTOCOL DECLARATION
+-- protocolDeclaration :: Parser Declaration
+-- protocolDeclaration = do
+--   atts <- attributeList
+--   optMod <- optional accessLevelModifier
+--   kw "protocol"
+--   n <- protocolName
+--   optTIC <- optional typeInheritanceClause
+--   b <- protocolBody
+--   return $ ProtocolDeclaration atts optMod n optTIC b
+
+protocolName :: Parser String
+protocolName = identifier
+
+-- protocolBody = brackets (P.many protocolMemberDeclaration)
+
+-- protocolMemberDeclaration
+--     = protocolPropertyDeclaration
+--   <|> protocolMethodDeclaration
+--   <|> protocolInitializerDeclaration
+--   <|> protocolSubscriptDeclaration
+--   <|> protocolAssociatedTypeDeclaration
+
+-- GRAMMAR OF A PROTOCOL PROPERTY DECLARATION
+-- protocolPropertyDeclaration = do
+--   h <- variableDeclarationHead
+--   n <- variableName
+--   ta <- typeAnnotation
+--   gskb <- getterSetterKeywordBlock
+--   return $ ProtocolPropertyDeclaration h n ta gskb
+
+-- GRAMMAR OF A PROTOCOL METHOD DECLARATION
+-- protocolMethodDeclaration = do
+--   h <- functionHead
+--   n <- functionName
+--   optGPC <- optional genericParameterClause
+--   sig <- functionSignature
+--   return $ ProtocolMethodDeclaration h n optGPC sig
+
+-- GRAMMAR OF A PROTOCOL INITIALIZER DECLARATION
+-- protocolInitializerDeclaration = do
+--   h <- initializerHead
+--   optGPC <- optional genericParameterClause
+--   pc <- parameterClause
+--   t <- (kw "throws" <|> kw "rethrows" <|> pure "")
+--   return $ ProtocolInitializerDeclaration h optGPC pc t
+
+-- GRAMMAR OF A PROTOCOL SUBSCRIPT DECLARATION
+-- protocolSubscriptDeclaration = do
+--   h <- subscriptHead
+--   r <- subscriptResult
+--   gskb <- getterSetterKeywordBlock
+--   return $ ProtocolSubscriptDeclaration h r gskb
+
+-- GRAMMAR OF A PROTOCOL ASSOCIATED TYPE DECLARATION
+-- protocolAssociatedTypeDeclaration = do
+--   h <- typealiasHead
+--   optTIC <- optional typeInheritanceClause
+--   optTA <- optional typealiasAssignment
+--   return $ ProtocolAssociatedTypeDeclaration h optTIC optTA
+
+-- GRAMMAR OF AN INITIALIZER DECLARATION
+initializerDeclaration :: Parser Declaration
+initializerDeclaration = do
+  (atts, mods, initKind) <- initializerHead
+  optGPC <- optional genericParameterClause
+  pc <- parameterClause
+  t <- throwsDeclaration
+  b <- initializerBody
+  return $ InitializerDeclaration atts mods initKind optGPC pc t b
+
+throwsDeclaration :: Parser String
+throwsDeclaration = (kw' "throws" <|> kw' "rethrows" <|> pure "")
+
+initializerHead :: Parser ([Attribute], [DeclarationModifier], InitKind)
+initializerHead = do
+  atts <- attributeList
+  mods <- declarationModifiers'
+  i <- initKind
+  return (atts, mods, i)
+    where
+      initKind = do
+        kw "init"
+        try (op "?") *> pure InitOption
+          <|> try (op "!") *> pure InitForce
+          <|> pure Init
+
+initializerBody :: Parser CodeBlock
+initializerBody = codeBlock
+
 {-
-GRAMMAR OF A PROTOCOL DECLARATION
-
-protocol-declaration → attributes­opt­access-level-modifier­opt­protocol­protocol-name­type-inheritance-clause­opt­protocol-body­
-protocol-name → identifier­
-protocol-body → {­protocol-member-declarations­opt­}­
-protocol-member-declaration → protocol-property-declaration­
-protocol-member-declaration → protocol-method-declaration­
-protocol-member-declaration → protocol-initializer-declaration­
-protocol-member-declaration → protocol-subscript-declaration­
-protocol-member-declaration → protocol-associated-type-declaration­
-protocol-member-declarations → protocol-member-declaration­protocol-member-declarations­opt­
-GRAMMAR OF A PROTOCOL PROPERTY DECLARATION
-
-protocol-property-declaration → variable-declaration-head­variable-name­type-annotation­getter-setter-keyword-block­
-GRAMMAR OF A PROTOCOL METHOD DECLARATION
-
-protocol-method-declaration → function-head­function-name­generic-parameter-clause­opt­function-signature­
-GRAMMAR OF A PROTOCOL INITIALIZER DECLARATION
-
-protocol-initializer-declaration → initializer-head­generic-parameter-clause­opt­parameter-clause­throws­opt­
-protocol-initializer-declaration → initializer-head­generic-parameter-clause­opt­parameter-clause­rethrows­
-GRAMMAR OF A PROTOCOL SUBSCRIPT DECLARATION
-
-protocol-subscript-declaration → subscript-head­subscript-result­getter-setter-keyword-block­
-GRAMMAR OF A PROTOCOL ASSOCIATED TYPE DECLARATION
-
-protocol-associated-type-declaration → typealias-head­type-inheritance-clause­opt­typealias-assignment­opt­
-GRAMMAR OF AN INITIALIZER DECLARATION
-
-initializer-declaration → initializer-head­generic-parameter-clause­opt­parameter-clause­throws­opt­initializer-body­
-initializer-declaration → initializer-head­generic-parameter-clause­opt­parameter-clause­rethrows­initializer-body­
-initializer-head → attributes­opt­declaration-modifiers­opt­init­
-initializer-head → attributes­opt­declaration-modifiers­opt­init­?­
-initializer-head → attributes­opt­declaration-modifiers­opt­init­!­
-initializer-body → code-block­
 GRAMMAR OF A DEINITIALIZER DECLARATION
 
 deinitializer-declaration → attributes­opt­deinit­code-block­

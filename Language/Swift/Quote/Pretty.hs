@@ -197,14 +197,24 @@ instance Pretty Declaration where
     <+> sepBySpace decls
     <+> string "func"
     <+> ppr name
--- TODO
-    -- <+> ppr optGenericParamClause
+    <> ppr optGenericParamClause
     <> sep (map (parens . commasep . map ppr) parameterClauses)
     <+> ppr optResult
     <+> ppr optBlock
 
   ppr (EnumDeclaration enum) = ppr enum
   ppr (StructDeclaration ty atts optMod name optGPC optTIC decls) = ppr ty <+> string name <+> bracesLines (map ppr decls)
+
+
+  ppr (InitializerDeclaration atts mods kind optGPC paramClause throws block)
+      = sepBySpace atts
+    <+> sepBySpace mods
+    <+> string "init"
+    <> ppr optGPC
+    <> (parens . commasep . map ppr) paramClause
+    <+> ppr throws
+    <+> ppr block
+
 
 instance Pretty StructType where
   ppr Struct = string "struct"
@@ -276,3 +286,6 @@ instance Pretty CodeBlock where
 
 instance Pretty TypeAnnotation where
   ppr (TypeAnnotation attrs type_) = sepBySpace attrs <> string ":" <+> ppr type_
+
+instance Pretty GenericParameterClause where
+  ppr (GenericParameterClause params optReqClause) = string "<todo>"

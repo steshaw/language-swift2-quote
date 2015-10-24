@@ -189,6 +189,14 @@ data Declaration
       (Maybe GenericParameterClause)
       (Maybe TypeInheritanceClause)
       [Declaration]
+  | InitializerDeclaration
+      [Attribute]
+      [DeclarationModifier]
+      InitKind
+      (Maybe GenericParameterClause)
+      [Parameter]
+      String -- throwsDecl
+      CodeBlock
   deriving (Show, Eq)
 
 data VariableDeclaration
@@ -296,4 +304,10 @@ data BuildConfiguration
   | BuildConfigurationNegate BuildConfiguration
   | BuildConfigurationOr BuildConfiguration BuildConfiguration
   | BuildConfigurationAnd BuildConfiguration BuildConfiguration
+  deriving (Show, Eq)
+
+data InitKind
+  = Init
+  | InitOption
+  | InitForce
   deriving (Show, Eq)
