@@ -578,7 +578,7 @@ genericArgumentClause :: Parser [Type]
 genericArgumentClause = angles (P.many1 type_)
 
 genericArgumentClause0 :: Parser [Type]
-genericArgumentClause0 = fromMaybe [] <$> (optional genericArgumentClause)
+genericArgumentClause0 = fromMaybe [] <$> optional genericArgumentClause
 
 ------------------------------------------------------------
 -- Declarations
@@ -604,7 +604,10 @@ declaration → subscript-declaration­
 declaration → operator-declaration­
 -}
 
+declarations1 :: Parser [Declaration]
 declarations1 = P.many1 declaration
+
+declarations0 :: Parser [Declaration]
 declarations0 = P.many declaration
 
 -- GRAMMAR OF A TOP-LEVEL DECLARATION
@@ -678,24 +681,37 @@ variableDeclaration = DeclVariableDeclaration <$> variableDeclarationBody
 variableDeclarationBody :: Parser VariableDeclaration
 variableDeclarationBody
   = do
-    (attrs, mods) <- variableDeclarationHead
-    -- (try (VarPatternInitializer attrs mods <$> patternInitializerList))
-    --   <|> variableDeclarationName attrs mods
+    (atts, mods) <- variableDeclarationHead
+    try (varDeclPatternInit atts mods)
+      <|> try (withVarNameAndType atts mods)
+      <|> varDeclSimpleObserved atts mods
+    where
+      withVarNameAndType atts mods = do
+        n <- variableName
+        ta <- typeAnnotation
+        try (varDeclReadOnly atts mods n ta)
+          <|> try (varDeclComputed atts mods n ta)
+          <|> varDeclObserved atts mods n ta
 
-    try (variableDeclarationName attrs mods) <|>
-      (VarPatternInitializer attrs mods <$> patternInitializerList)
+varDeclSimpleObserved :: [Attribute] -> [DeclarationModifier] -> Parser VariableDeclaration
+varDeclSimpleObserved attrs mods
+  = VarDeclObserved attrs mods <$> variableName <*> pure Nothing <*> (Just <$> initializer) <*> willSetDidSetBlock
 
-variableDeclarationName :: [Attribute] -> [DeclarationModifier] -> Parser VariableDeclaration
-variableDeclarationName attrs mods = do
-  n <- variableName
-  t <- typeAnnotation
-  i <- optional initializer
-  -- variable-declaration → ­­type-annotation (­initializer ­opt) ­willSet-didSet-block­
-  -- variable-declaration → ­­type-annotation­ code-block­
-  -- variable-declaration → ­­type-annotation­ getter-setter-block­
-  -- variable-declaration → ­­type-annotation­ getter-setter-keyword-block­
-  -- variable-declaration → ­­initializer­ willSet-didSet-block­
-  return $ VarSimple attrs mods n t i
+varDeclPatternInit :: [Attribute] -> [DeclarationModifier] -> Parser VariableDeclaration
+varDeclPatternInit atts mods = do
+  r <- VarDeclPattern atts mods <$> try patternInitializerList
+  P.notFollowedBy codeBlock
+  return r
+
+varDeclReadOnly :: [Attribute] -> [DeclarationModifier] -> VarName -> TypeAnnotation -> Parser VariableDeclaration
+varDeclReadOnly atts mods name ta = VarDeclReadOnly atts mods name ta <$> codeBlock
+
+varDeclComputed :: [Attribute] -> [DeclarationModifier] -> VarName -> TypeAnnotation -> Parser VariableDeclaration
+varDeclComputed atts mods name ta = VarDeclGetSet atts mods name ta <$> getterSetterBlock
+
+varDeclObserved :: [Attribute] -> [DeclarationModifier] -> VarName -> TypeAnnotation -> Parser VariableDeclaration
+varDeclObserved attrs mods name ta
+  = VarDeclObserved attrs mods name (Just ta) <$> optional initializer <*> willSetDidSetBlock
 
 variableDeclarationHead :: Parser ([Attribute], [DeclarationModifier])
 variableDeclarationHead = do
@@ -731,19 +747,20 @@ setterClause = SetterClause <$> attributes0 <*> (kw "set" *> optional setterName
 setterName :: Parser Identifier
 setterName = braces identifier
 
--- getter-setter-keyword-block → {­getter-keyword-clause­setter-keyword-clause­opt­}­
--- getter-setter-keyword-block → {­setter-keyword-clause­getter-keyword-clause­}­
+-- getter-setter-keyword-block → {­getter-keyword-clause­setter-keyword-clause­opt­}
+-- getter-setter-keyword-block → {­setter-keyword-clause­getter-keyword-clause­}
 
--- getter-keyword-clause → attributes­opt­get­
+-- getter-keyword-clause → attributes­opt­get
 
--- setter-keyword-clause → attributes­opt­set­
+-- setter-keyword-clause → attributes­opt­set
 
--- willSet-didSet-block → {­willSet-clause­didSet-clause­opt­}­
--- willSet-didSet-block → {­didSet-clause­willSet-clause­opt­}­
+willSetDidSetBlock = pure ObservedBlock
+-- willSet-didSet-block → {­willSet-clause­didSet-clause­opt­}
+-- willSet-didSet-block → {­didSet-clause­willSet-clause­opt­}
 
--- willSet-clause → attributes­opt­willSet­setter-name­opt­code-block­
+-- willSet-clause → attributes­opt­willSet­setter-name­opt­code-block
 
--- didSet-clause → attributes­opt­didSet­setter-name­opt­code-block­
+-- didSet-clause → attributes­opt­didSet­setter-name­opt­code-block
 
 -- GRAMMAR OF A TYPE ALIAS DECLARATION
 typealiasDeclaration :: Parser Declaration
@@ -830,15 +847,13 @@ parameter
         return $ ParameterLet extern local t c
   <|> do
         _ <- kw "var"
-        extern <- optional externalParameterName
-        local  <- localParameterName
+        (extern, local) <- externLocal
         t <- typeAnnotation
         c <- optional defaultArgumentClause
         return $ ParameterVar extern local t c
   <|> do
         _ <- kw "inout"
-        extern <- optional externalParameterName
-        local  <- localParameterName
+        (extern, local) <- externLocal
         t <- typeAnnotation
         return $ ParameterInOut extern local t
   <|> do -- FIXME move detection to first production
@@ -847,6 +862,11 @@ parameter
         t <- typeAnnotation
         _ <- tok "..."
         return $ ParameterDots extern local t
+  where
+    externLocal = do
+        extern <- optional externalParameterName
+        local  <- localParameterName
+        return (extern, local)
 
 parameterName :: Parser String
 parameterName = identifier <|> op' "_"
@@ -1065,6 +1085,7 @@ extensionBody :: Parser ExtensionBody
 extensionBody = ExtensionBody <$> braces declarations0
 
 -- GRAMMAR OF A SUBSCRIPT DECLARATION
+subscriptDeclaration :: Parser Declaration
 subscriptDeclaration = do
   (atts, mods, pc) <- subscriptHead
   blockyThingo <- blocky

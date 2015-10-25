@@ -182,7 +182,7 @@ src2ast = testGroup "src2ast"
 
   , moduleTest "let n = 1" $ Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "n" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))) []))])]
 
-  , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (VarPatternInitializer [] [] [PatternInitializer (IdentifierPattern "d" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1.0"))))) []))]))]
+  , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (VarDeclPattern [] [] [PatternInitializer (IdentifierPattern "d" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1.0"))))) []))]))]
 
   , moduleTest "typealias TypeAliasName = String" $ Module [DeclarationStatement (TypeAlias [] Nothing "TypeAliasName" (SimpleType "String"))]
   ]

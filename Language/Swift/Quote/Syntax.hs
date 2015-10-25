@@ -221,12 +221,18 @@ data ExtensionBody = ExtensionBody [Declaration]
   deriving (Show, Eq)
 
 data VariableDeclaration
-  = VarPatternInitializer [Attribute] [DeclarationModifier] [PatternInitializer]
-  | VarSimple [Attribute] [DeclarationModifier] String TypeAnnotation (Maybe Expression)
+  = VarDeclPattern [Attribute] [DeclarationModifier] [PatternInitializer]
+  | VarDeclReadOnly [Attribute] [DeclarationModifier] VarName TypeAnnotation CodeBlock
+  | VarDeclGetSet [Attribute] [DeclarationModifier] VarName TypeAnnotation GetSetBlock
+  | VarDeclObserved [Attribute] [DeclarationModifier] VarName (Maybe TypeAnnotation) (Maybe Expression) ObservedBlock
+  deriving (Show, Eq)
+
+data ObservedBlock = ObservedBlock -- aka WillSetDidSetBlock
   deriving (Show, Eq)
 
 type IsIndirect = Bool
-type EnumName = String
+type EnumName = Identifier
+type VarName = Identifier
 
 type ClassRequirement = Bool
 

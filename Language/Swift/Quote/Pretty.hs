@@ -280,15 +280,25 @@ instance Pretty ImportPathIdentifier where
   ppr (ImportOperator s) = ppr s
 
 instance Pretty VariableDeclaration where
-  ppr (VarPatternInitializer attrs mods patternInitialisers) = string "var" <+> commasep (map ppr patternInitialisers)
-  ppr (VarSimple attrs mods name typeAnnotation optInitExpr)
+  ppr (VarDeclPattern attrs mods patternInitialisers) = string "var" <+> commasep (map ppr patternInitialisers)
+  ppr (VarDeclObserved attrs mods name ta optInit observedBlock)
       = string "var"
     <+> string name
-    <> ppr typeAnnotation
-    <+> maybe empty (\e -> equals <+> ppr e) optInitExpr
+    <> ppr ta
+    <+> maybe empty (\e -> equals <+> ppr e) optInit -- XXX
+    <+> ppr observedBlock
+  ppr (VarDeclReadOnly attrs mods name ta block)
+      = string "var"
+    <+> string name
+    <> ppr ta
+    <+> ppr block
+
+instance Pretty ObservedBlock where
+  ppr ObservedBlock = string ""
 
 instance Pretty PatternInitializer where
-  ppr (PatternInitializer pattern optExpression) = ppr pattern <+> string "=" <+> ppr optExpression
+  ppr (PatternInitializer pattern Nothing) = ppr pattern
+  ppr (PatternInitializer pattern (Just e)) = ppr pattern <+> string "=" <+> ppr e
 
 instance Pretty Pattern where
   ppr (WildcardPattern optTypeAnn) = string "_" <+> ppr optTypeAnn
