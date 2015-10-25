@@ -224,11 +224,14 @@ instance Pretty Declaration where
     <> ppr optTIC
     <+> ppr body
 
-  ppr (SubscriptDeclaration attrs mods params subscriptBlock)
+  ppr (SubscriptDeclaration attrs mods params rAttrs result subscriptBlock)
       = sepBySpace attrs
     <+> sepBySpace mods
     <+> string "subscript"
     <> (parens . commasep . map ppr) params
+    <+> "->"
+    <+> sepBySpace rAttrs
+    <+> ppr result
     <+> ppr subscriptBlock
 
 instance Pretty SubscriptBlock where

@@ -1,3 +1,3 @@
-subscript(index: Int) {
-  value
+subscript(index: Int) -> Int {
+  0
 }

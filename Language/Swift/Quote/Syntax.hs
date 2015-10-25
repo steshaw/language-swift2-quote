@@ -209,6 +209,8 @@ data Declaration
       [Attribute]
       [DeclarationModifier]
       [Parameter] -- ParameterClause
+      [Attribute] -- Result attributes
+      Type -- result type
       SubscriptBlock
   deriving (Show, Eq)
 

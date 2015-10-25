@@ -1088,8 +1088,9 @@ extensionBody = ExtensionBody <$> braces declarations0
 subscriptDeclaration :: Parser Declaration
 subscriptDeclaration = do
   (atts, mods, pc) <- subscriptHead
+  (rAttrs, r) <- subscriptResult
   blockyThingo <- blocky
-  return $ SubscriptDeclaration atts mods pc blockyThingo
+  return $ SubscriptDeclaration atts mods pc rAttrs r blockyThingo
   where
     blocky
         = SubscriptCodeBlock <$> codeBlock
@@ -1106,10 +1107,10 @@ subscriptHead = do
 
 subscriptResult :: Parser ([Attribute], Type)
 subscriptResult = do
+  tok "->"
   atts <- attributes0
   t <- type_
   return (atts, t)
-
 
 -- GRAMMAR OF AN OPERATOR DECLARATION
 
