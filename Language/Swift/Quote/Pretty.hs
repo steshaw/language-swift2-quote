@@ -224,6 +224,31 @@ instance Pretty Declaration where
     <> ppr optTIC
     <+> ppr body
 
+  ppr (SubscriptDeclaration attrs mods params subscriptBlock)
+      = sepBySpace attrs
+    <+> sepBySpace mods
+    <+> string "subscript"
+    <> (parens . commasep . map ppr) params
+    <+> ppr subscriptBlock
+
+instance Pretty SubscriptBlock where
+  ppr (SubscriptCodeBlock codeBlock) = ppr codeBlock
+  ppr (SubscriptGetSetBlock getSetBlock) = ppr getSetBlock
+
+instance Pretty GetSetBlock where
+  ppr (GetSetBlock codeBlock) = ppr codeBlock
+  ppr (GetSet optGet optSet) = ppr optGet <+> ppr optSet
+
+instance Pretty GetterClause where
+  ppr (GetterClause attrs block) = sepBySpace attrs <+> string "get" <+> ppr block
+
+instance Pretty SetterClause where
+  ppr (SetterClause attrs optIdent codeBlock)
+    = sepBySpace attrs
+    <+> string "set"
+    <+> maybe empty (braces . string) optIdent
+    <+> ppr codeBlock
+
 instance Pretty TypeInheritanceClause where
   ppr (TypeInheritanceClause True typeIds) = string ":" <+> "class" <+> (commasep . map ppr) typeIds
   ppr (TypeInheritanceClause False typeIds) = string ":" <+> (commasep . map ppr) typeIds

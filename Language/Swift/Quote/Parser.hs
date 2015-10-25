@@ -599,8 +599,8 @@ declaration
   <|> try initializerDeclaration
   <|> try deinitializerDeclaration
   <|> try extensionDeclaration
+  <|> try subscriptDeclaration
 {-
-declaration → subscript-declaration­
 declaration → operator-declaration­
 -}
 

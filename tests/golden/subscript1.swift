@@ -1,0 +1,3 @@
+subscript(index: Int) {
+  value
+}
