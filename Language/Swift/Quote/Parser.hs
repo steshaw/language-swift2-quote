@@ -55,6 +55,7 @@ module_ = do
 notice :: String -> String
 notice msg = "\n\n\n" ++ msg ++ "\n\n\n"
 
+traceVar :: Show a => String -> a -> Parser ()
 traceVar n v = trace (notice n ++ " = " ++ show v) $ pure ()
 
 ------------------------------------------------------------
@@ -754,6 +755,7 @@ setterName = braces identifier
 
 -- setter-keyword-clause → attributes­opt­set
 
+willSetDidSetBlock :: Parser ObservedBlock
 willSetDidSetBlock = pure ObservedBlock
 -- willSet-didSet-block → {­willSet-clause­didSet-clause­opt­}
 -- willSet-didSet-block → {­didSet-clause­willSet-clause­opt­}
@@ -943,6 +945,9 @@ rawValueStyleEnum att optMod = fail "WIP rawValueStyleEnum"
 -- raw-value-assignment → =­raw-value-literal­
 -- raw-value-literal → numeric-literal­  static-string-literal­  boolean-literal­
 
+structDeclaration' :: String ->
+  ([Attribute] -> Maybe DeclarationModifier -> StructName -> Maybe GenericParameterClause ->
+   Maybe TypeInheritanceClause -> [Declaration] -> Declaration) -> Parser Declaration
 structDeclaration' keyword ctor = do
   atts <- attributes0
   optMod <- optional accessLevelModifier
@@ -1619,6 +1624,7 @@ numericLiteral = try optNegFloatingPointLiteral <|> optNegIntegerLiteral
       return $ apply (neg n) f
     neg = maybe "" (const "-")
     apply n (NumericLiteral s) = NumericLiteral $ n ++ s
+    apply _ _ = error "why know we have a NumericLiteral here"
 
 booleanLiteral :: Parser Literal
 booleanLiteral = BooleanLiteral <$>
@@ -1705,8 +1711,6 @@ hexFloatingPoint = do
   e <- stringyOptional hexExponent
   if f == "" && e == "" then fail "we want to parse a regular hex here" else pure ()
   return $ NumericLiteral (h ++ f ++ e)
-
--- floating-point-literal → hexadecimal-literal­hexadecimal-fraction­opt­hexadecimal-exponent­
 
 decimalFraction :: Parser String
 decimalFraction = do
