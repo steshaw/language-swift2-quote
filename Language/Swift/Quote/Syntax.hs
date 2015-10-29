@@ -219,6 +219,7 @@ data Declaration
       [Attribute] -- Result attributes
       Type -- result type
       SubscriptBlock
+  | OperatorDeclaration OperatorDecl
   deriving (Show, Eq)
 
 data SubscriptBlock
@@ -366,4 +367,15 @@ data SetterClause = SetterClause [Attribute] (Maybe Identifier) CodeBlock
 data GetSetBlock
   = GetSetBlock CodeBlock
   | GetSet (Maybe GetterClause) (Maybe SetterClause)
+  deriving (Show, Eq)
+
+type Op = String
+type PrecedenceLevel = Int
+data Associativity = AssocLeft | AssocRight | AssocNone
+  deriving (Show, Eq)
+
+data OperatorDecl
+  = PrefixOperatorDecl Op
+  | PostfixOperatorDecl Op
+  | InfixOperatorDecl Op (Maybe PrecedenceLevel) (Maybe Associativity)
   deriving (Show, Eq)

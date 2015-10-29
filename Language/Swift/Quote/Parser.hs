@@ -618,9 +618,7 @@ declaration
   <|> try deinitializerDeclaration
   <|> try extensionDeclaration
   <|> try subscriptDeclaration
-{-
-declaration → operator-declaration­
--}
+  <|> operatorDeclaration
 
 declarations1 :: Parser [Declaration]
 declarations1 = P.many1 declaration
@@ -1135,19 +1133,62 @@ subscriptResult = do
   return (atts, t)
 
 -- GRAMMAR OF AN OPERATOR DECLARATION
+operatorDeclaration :: Parser Declaration
+operatorDeclaration = OperatorDeclaration <$> opTypes
+  where
+    opTypes
+      = prefixOperatorDeclaration
+      <|> postfixOperatorDeclaration
+      <|> infixOperatorDeclaration
 
--- operator-declaration → prefix-operator-declaration­  postfix-operator-declaration­ infix-operator-declaration­
--- prefix-operator-declaration → prefix­operator­operator­{­}­
--- postfix-operator-declaration → postfix­operator­operator­{­}­
--- infix-operator-declaration → infix­operator­operator­{­infix-operator-attributes­opt­}­
--- infix-operator-attributes → precedence-clause­opt­associativity-clause­opt­
--- precedence-clause → precedence­precedence-level­
--- precedence-level → A decimal integer between 0 and 255, inclusive
--- associativity-clause → associativity­associativity­
--- associativity → left­  right­  none­
+prePostfixDeclaration :: Op -> (Op -> OperatorDecl) -> Parser OperatorDecl
+prePostfixDeclaration keyword ctor = do
+  kw keyword
+  kw "operator"
+  o <- operator
+  braces ws
+  return $ ctor o
+
+prefixOperatorDeclaration :: Parser OperatorDecl
+prefixOperatorDeclaration = prePostfixDeclaration "prefix" PrefixOperatorDecl
+
+postfixOperatorDeclaration :: Parser OperatorDecl
+postfixOperatorDeclaration = prePostfixDeclaration "postfix" PostfixOperatorDecl
+
+infixOperatorDeclaration :: Parser OperatorDecl
+infixOperatorDeclaration = do
+  kw "infix"
+  kw "operator"
+  o <- operator
+  (optPrec, optAssoc) <- braces infixOperatorAttributes
+  return $ InfixOperatorDecl o optPrec optAssoc
+
+infixOperatorAttributes :: Parser (Maybe PrecedenceLevel, Maybe Associativity)
+infixOperatorAttributes = do
+  optPrec <- optional precedenceClause
+  optAssoc <- optional associativityClause
+  return (optPrec, optAssoc)
+
+precedenceClause :: Parser Int
+precedenceClause = kw "precedence" *> precedenceLevel
+
+precedenceLevel :: Parser Int
+precedenceLevel = do
+  ds <- decimalDigits
+  let n = read ds
+  when (n < 0 || n > 255) $ fail "precedence level must be 0..255 inclusive"
+  return n
+
+associativityClause :: Parser Associativity
+associativityClause = kw "associativity" *> associativity
+
+associativity :: Parser Associativity
+associativity
+  = kw' "left" *> pure AssocLeft
+  <|> kw' "right" *> pure AssocRight
+  <|> kw' "none" *> pure AssocNone
 
 -- GRAMMAR OF A DECLARATION MODIFIER
-
 declarationModifier :: Parser DeclarationModifier
 declarationModifier = modifier <|> accessLevelModifier
 

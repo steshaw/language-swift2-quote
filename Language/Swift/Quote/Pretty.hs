@@ -259,6 +259,8 @@ instance Pretty Declaration where
     <+> ppr result
     <+> ppr subscriptBlock
 
+  ppr (OperatorDeclaration opDecl) = ppr opDecl
+
 instance Pretty SubscriptBlock where
   ppr (SubscriptCodeBlock codeBlock) = ppr codeBlock
   ppr (SubscriptGetSetBlock getSetBlock) = ppr getSetBlock
@@ -380,3 +382,21 @@ instance Pretty TypeIdentifier where
       p :: (TypeName, [Type]) -> Doc
       p (n, []) = ppr n
       p (n, ts) = ppr n <> (angles . commasep) (map ppr ts)
+
+instance Pretty OperatorDecl where
+  ppr (PrefixOperatorDecl op) = string "prefix" <+> "operator" <+> string op <+> string "{}"
+  ppr (PostfixOperatorDecl op) = string "postfix" <+> "operator" <+> string op <+> string "{}"
+  ppr (InfixOperatorDecl op optP optA)
+    = string "infix" <+> "operator" <+> string op
+      <+> braces (ppPrec optP <+> ppr optA)
+      where
+        ppPrec Nothing = empty
+        ppPrec (Just prec) = string "precedence" <+> ppr prec
+
+
+
+
+instance Pretty Associativity where
+  ppr AssocLeft  = string "associativity" <+> string "left"
+  ppr AssocRight = string "associativity" <+> string "right"
+  ppr AssocNone  = string "associativity" <+> string "none"
