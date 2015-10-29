@@ -59,7 +59,7 @@ traceVar :: Show a => String -> a -> Parser ()
 traceVar n v = trace (notice n ++ " = " ++ show v) $ pure ()
 
 ------------------------------------------------------------
--- Lexical Structure (old)
+-- Auxiliary lexical functions
 ------------------------------------------------------------
 
 reservedWordsDeclarations :: [String]
@@ -225,9 +225,6 @@ kw s = ws *> T.reserved lexer s
 kw' :: String -> Parser String
 kw' s = kw s *> pure s
 
-------------------------------------------------------------
--- Auxiliary
-------------------------------------------------------------
 
 op :: String -> Parser ()
 op s = op' s *> pure ()
