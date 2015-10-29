@@ -245,10 +245,6 @@ tok s = tok' s *> pure ()
 -- SUMMARY OF THE GRAMMAR
 ------------------------------------------------------------
 
-whereClause :: Parser WhereClause
-whereClause
-    = WhereClause <$> expression -- TODO
-
 ------------------------------------------------------------
 -- Statements
 ------------------------------------------------------------
@@ -370,15 +366,39 @@ guardStatement = do
 -- GRAMMAR OF A SWITCH STATEMENT
 
 switchStatement :: Parser Statement
-switchStatement = kw "switch" *> pure SwitchStatement
--- switch-statement → switch­expression­{­switch-cases­opt­}­
--- switch-cases → switch-case­switch-cases­opt­
--- switch-case → case-label­statements­  default-label­statements­
--- case-label → case­case-item-list­:­
--- case-item-list → pattern­where-clause­opt­  pattern­where-clause­opt­,­case-item-list­
--- default-label → default­:­
--- where-clause → where­where-expression­
--- where-expression → expression­
+switchStatement = do
+  kw "switch"
+  e <- expression
+  SwitchStatement e <$> braces (P.many switchCase)
+
+switchCase :: Parser Case
+switchCase
+    = CaseLabel <$> caseLabel <*> statements
+  <|> CaseDefault <$> (defaultLabel *> statements)
+
+caseLabel :: Parser [PatternWhere]
+caseLabel = do
+  kw "case"
+  cis <- caseItemList
+  tok ":"
+  return cis
+
+caseItemList :: Parser [PatternWhere]
+caseItemList = patternWhere `P.sepBy` comma
+  where
+    patternWhere = (,) <$> pattern <*> optional whereClause
+
+defaultLabel :: Parser ()
+defaultLabel = do
+  kw "default"
+  tok ":"
+  pure ()
+
+whereClause :: Parser WhereClause
+whereClause = kw "where" *> (WhereClause <$> whereExpression)
+
+whereExpression :: Parser Expression
+whereExpression = expression
 
 -- GRAMMAR OF A LABELED STATEMENT
 labeledStatement :: Parser Statement

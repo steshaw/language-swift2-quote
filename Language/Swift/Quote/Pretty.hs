@@ -22,8 +22,11 @@ prettyPrint :: Module -> Text
 prettyPrint m = append p "\n"
   where p = prettyLazyText 100 (ppr m)
 
+indentLevel :: Int
+indentLevel = 2
+
 ind :: Doc -> Doc
-ind = indent 2
+ind = indent indentLevel
 
 sepBySpace :: Pretty p => [p] -> Doc
 sepBySpace [] = empty
@@ -38,12 +41,18 @@ ppBracketExps = brackets . ppExps
 ppExpressionElements :: [ExpressionElement] -> Doc
 ppExpressionElements = parens . commasep . map ppr
 
+ppBlock :: [Statement] -> Doc
+ppBlock statements = bracesLines (map ppr statements)
+
+ppStatementStack :: [Statement] -> Doc
+ppStatementStack statements = stack (map ppr statements)
+
 ------------------------------------------------------------
 -- Pretty instances
 ------------------------------------------------------------
 
 instance Pretty Module where
-  ppr (Module statements) = stack (map ppr statements)
+  ppr (Module statements) = ppStatementStack statements
 
 instance Pretty Expression where
   ppr (Expression optTryOperator prefixExpression binaryExpressions) =
@@ -79,7 +88,7 @@ instance Pretty ExpressionElement where
 
 instance Pretty Closure where
   ppr (Closure []) = empty
-  ppr (Closure statements) = braces (ppr statements)
+  ppr (Closure statements) = ppBlock statements
 
 instance Pretty PrimaryExpression where
   ppr (PrimaryExpression1 idG) = ppr idG
@@ -159,6 +168,22 @@ instance Pretty Statement where
   ppr (DeferStatement block) = string "defer" <+> ppr block
   ppr (ThrowStatement expression) = string "throw" <+> ppr expression
   ppr (DoStatement block clauses) = string "do" <+> ppr block <+> (spread . map ppr) clauses
+  ppr (SwitchStatement e cases) = string "switch" <+> ppr e <+> bracesLines (map ppr cases)
+
+instance Pretty Case where
+  ppr (CaseLabel patternWheres statements)
+    = string "case:"
+      <+> commasep (map ppPatternWhere patternWheres)
+      <+> colon
+      <+> line
+      <+> ind (ppStatementStack statements)
+    where
+      ppPatternWhere (pattern, Nothing) = ppr pattern
+      ppPatternWhere (pattern, Just whereExp) = ppr pattern <+> string "where" <+> ppr whereExp
+  ppr (CaseDefault statements)
+    = string "default: "
+      <+> line
+      <+> ind (ppStatementStack statements)
 
 instance Pretty CatchClause where
   ppr (CatchClause optPattern optWhere block)
@@ -340,7 +365,7 @@ instance Pretty Pattern where
   ppr (ExpressionPattern expression) = ppr expression
 
 instance Pretty CodeBlock where
-  ppr (CodeBlock statements) = bracesLines (map ppr statements)
+  ppr (CodeBlock statements) = ppBlock statements
 
 instance Pretty TypeAnnotation where
   ppr (TypeAnnotation attrs type_) = sepBySpace attrs <> string ":" <+> ppr type_

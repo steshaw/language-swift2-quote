@@ -125,7 +125,7 @@ data Statement
   | WhileStatement Expression CodeBlock
   | RepeatWhileStatement CodeBlock Expression
   | GuardStatement ConditionClause CodeBlock
-  | SwitchStatement -- TODO
+  | SwitchStatement Expression [Case]
   | IfStatement ConditionClause CodeBlock (Maybe (Either CodeBlock {- if -}Statement))
   | LabelelStatement LabelName Statement
   | BreakStatement (Maybe LabelName)
@@ -138,6 +138,13 @@ data Statement
   | LineControlSpecified {- lineNum -} Integer {- fileName -} String
   | BuildConfigurationStatement BuildConfiguration [Statement] [BuildConfigurationElseifClause]
                                 (Maybe BuildConfigurationElseClause)
+  deriving (Show, Eq)
+
+type PatternWhere = (Pattern, Maybe WhereClause)
+
+data Case
+  = CaseLabel [PatternWhere] [Statement]
+  | CaseDefault [Statement]
   deriving (Show, Eq)
 
 data CatchClause = CatchClause (Maybe Pattern) (Maybe WhereClause) CodeBlock
