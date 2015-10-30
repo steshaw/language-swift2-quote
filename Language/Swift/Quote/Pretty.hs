@@ -151,6 +151,8 @@ instance Pretty Type where
   ppr (ImplicitlyUnwrappedOptType ty) = ppr ty <> string "!"
   ppr (ArrayType ty) = brackets (ppr ty)
   ppr (DictionaryType t1 t2) = brackets (ppr t1 <> colon <+> ppr t2)
+  ppr (FunctionType throws t1 t2)
+    = ppr t1 <+> ppr throws <+> string "->" <+> ppr t2
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression

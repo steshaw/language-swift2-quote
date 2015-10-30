@@ -1938,10 +1938,15 @@ postfixOperator = operator
 ------------------------------------------------------------
 -- Types
 ------------------------------------------------------------
+type_ :: Parser Type
+type_ = primType_ `P.chainr1` functionTypeOp
 
 -- GRAMMAR OF A TYPE
-type_ :: Parser Type
-type_ = try arrayType <|> dictionaryType <|> otherType
+primType_ :: Parser Type
+primType_
+    = try arrayType
+  <|> dictionaryType
+  <|> otherType
   where
     otherType = do
       t <- typeInit
@@ -1949,7 +1954,16 @@ type_ = try arrayType <|> dictionaryType <|> otherType
 
 typeInit :: Parser Type
 typeInit = SimpleType <$> identifier
--- type → array-type­  dictionary-type­  function-type­  type-identifier­  tuple-type­  optional-type­  implicitly-unwrapped-optional-type­  protocol-composition-type­  metatype-type­
+-- type →
+-- array-type­
+-- dictionary-type­
+-- function-type­
+-- type-identifier­
+-- tuple-type­
+-- optional-type­
+-- implicitly-unwrapped-optional-type
+-- protocol-composition-type
+-- metatype-type­
 
 -- GRAMMAR OF A TYPE ANNOTATION
 typeAnnotation :: Parser TypeAnnotation
@@ -1972,8 +1986,11 @@ typeName = identifier
 -- element-name → identifier­
 
 -- GRAMMAR OF A FUNCTION TYPE
--- function-type → type­throws­opt­->­type­
--- function-type → type­rethrows­->­type­
+functionTypeOp :: Parser (Type -> Type -> Type)
+functionTypeOp = do
+  throws <- kw' "throws" <|> kw' "rethrows" <|> pure ""
+  tok "->"
+  return $ FunctionType throws
 
 -- GRAMMAR OF AN ARRAY TYPE
 arrayType :: Parser Type
@@ -1981,8 +1998,7 @@ arrayType = ArrayType <$> brackets type_
 
 -- GRAMMAR OF A DICTIONARY TYPE
 dictionaryType :: Parser Type
-dictionaryType = do
-  brackets inner
+dictionaryType = brackets inner
   where
     inner = do
       t1 <- type_

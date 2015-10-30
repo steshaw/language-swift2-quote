@@ -276,12 +276,15 @@ data DeclarationModifier
 data Attribute = DummyAttribute
   deriving (Show, Eq)
 
+type Throws = String -- "throws", "rethrows", ""
+
 data Type
   = SimpleType Identifier
   | TypeOpt Type
   | ImplicitlyUnwrappedOptType Type
   | ArrayType Type
   | DictionaryType Type Type
+  | FunctionType Throws Type Type
   deriving (Show, Eq)
 
 type ImportPath = [ImportPathIdentifier]
