@@ -225,7 +225,6 @@ kw s = ws *> T.reserved lexer s
 kw' :: String -> Parser String
 kw' s = kw s *> pure s
 
-
 op :: String -> Parser ()
 op s = op' s *> pure ()
 
