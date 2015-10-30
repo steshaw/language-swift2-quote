@@ -2029,8 +2029,6 @@ protocolCompositionType = do
 
 protocolIdentifier :: Parser ProtocolIdentifier
 protocolIdentifier = typeIdentifier
--- protocol-composition-type → protocol­<­protocol-identifier-list­opt­>­
--- protocol-identifier-list → protocol-identifier­  protocol-identifier­,­protocol-identifier-list­
 
 -- GRAMMAR OF A METATYPE TYPE
 metaTypeTail :: Type -> Parser Type
