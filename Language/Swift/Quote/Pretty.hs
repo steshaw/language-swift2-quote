@@ -153,6 +153,8 @@ instance Pretty Type where
   ppr (DictionaryType t1 t2) = brackets (ppr t1 <> colon <+> ppr t2)
   ppr (FunctionType throws t1 t2)
     = ppr t1 <+> ppr throws <+> string "->" <+> ppr t2
+  ppr (TypeMetaType t) = ppr t <> dot <> "Type"
+  ppr (ProtocolMetaType t) = ppr t <> dot <> "Protocol"
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression

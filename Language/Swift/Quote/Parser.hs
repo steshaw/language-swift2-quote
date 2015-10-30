@@ -1939,7 +1939,13 @@ postfixOperator = operator
 -- Types
 ------------------------------------------------------------
 type_ :: Parser Type
-type_ = primType_ `P.chainr1` functionTypeOp
+type_ = do
+  t <- type_1
+  (metaTypeTail t <|> pure t)
+  where
+
+type_1 :: Parser Type
+type_1 = primType_ `P.chainr1` functionTypeOp
 
 -- GRAMMAR OF A TYPE
 primType_ :: Parser Type
@@ -2020,7 +2026,17 @@ implicitlyUnwrappedOptionalTypeTail t = op "!" *> pure (ImplicitlyUnwrappedOptTy
 -- protocol-identifier → type-identifier­
 
 -- GRAMMAR OF A METATYPE TYPE
--- metatype-type → type­.­Type­  type­.­Protocol­
+metaTypeTail :: Type -> Parser Type
+metaTypeTail t = typeMetaType <|> protocolMetaType
+  where
+    typeMetaType = do
+      tok "."
+      kw "Type"
+      return $ TypeMetaType t
+    protocolMetaType = do
+      tok "."
+      kw "Protocol"
+      return $ ProtocolMetaType t
 
 -- GRAMMAR OF A TYPE INHERITANCE CLAUSE
 typeInheritanceClause :: Parser TypeInheritanceClause

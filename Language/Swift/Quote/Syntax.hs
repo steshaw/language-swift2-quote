@@ -285,6 +285,8 @@ data Type
   | ArrayType Type
   | DictionaryType Type Type
   | FunctionType Throws Type Type
+  | TypeMetaType Type
+  | ProtocolMetaType Type
   deriving (Show, Eq)
 
 type ImportPath = [ImportPathIdentifier]
