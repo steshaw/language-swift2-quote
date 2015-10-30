@@ -155,6 +155,9 @@ instance Pretty Type where
     = ppr t1 <+> ppr throws <+> string "->" <+> ppr t2
   ppr (TypeMetaType t) = ppr t <> dot <> "Type"
   ppr (ProtocolMetaType t) = ppr t <> dot <> "Protocol"
+  ppr (ProtocolCompositionType ids)
+    = string "protocol"
+    <> angles (commasep (map ppr ids))
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression

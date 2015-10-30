@@ -1961,6 +1961,7 @@ primType_ :: Parser Type
 primType_
     = try arrayType
   <|> dictionaryType
+  <|> protocolCompositionType
   <|> otherType
   where
     otherType = do
@@ -2020,9 +2021,16 @@ implicitlyUnwrappedOptionalTypeTail :: Type -> Parser Type
 implicitlyUnwrappedOptionalTypeTail t = op "!" *> pure (ImplicitlyUnwrappedOptType t)
 
 -- GRAMMAR OF A PROTOCOL COMPOSITION TYPE
+protocolCompositionType :: Parser Type
+protocolCompositionType = do
+  kw "protocol"
+  ids <- angles (protocolIdentifier `P.sepBy` comma)
+  return $ ProtocolCompositionType ids
+
+protocolIdentifier :: Parser ProtocolIdentifier
+protocolIdentifier = typeIdentifier
 -- protocol-composition-type → protocol­<­protocol-identifier-list­opt­>­
 -- protocol-identifier-list → protocol-identifier­  protocol-identifier­,­protocol-identifier-list­
--- protocol-identifier → type-identifier­
 
 -- GRAMMAR OF A METATYPE TYPE
 metaTypeTail :: Type -> Parser Type

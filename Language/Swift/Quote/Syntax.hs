@@ -287,8 +287,10 @@ data Type
   | FunctionType Throws Type Type
   | TypeMetaType Type
   | ProtocolMetaType Type
+  | ProtocolCompositionType [ProtocolIdentifier]
   deriving (Show, Eq)
 
+type ProtocolIdentifier = TypeIdentifier
 type ImportPath = [ImportPathIdentifier]
 type ImportKind = String
 
