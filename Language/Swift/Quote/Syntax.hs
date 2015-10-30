@@ -280,6 +280,7 @@ data Type
   = SimpleType Identifier
   | TypeOpt Type
   | ImplicitlyUnwrappedOptType Type
+  | ArrayType Type
   deriving (Show, Eq)
 
 type ImportPath = [ImportPathIdentifier]

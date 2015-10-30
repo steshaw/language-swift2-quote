@@ -149,6 +149,7 @@ instance Pretty Type where
   ppr (SimpleType ty) = ppr ty
   ppr (TypeOpt ty) = ppr ty <> string "?"
   ppr (ImplicitlyUnwrappedOptType ty) = ppr ty <> string "!"
+  ppr (ArrayType ty) = brackets (ppr ty)
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression
@@ -169,6 +170,7 @@ instance Pretty Statement where
   ppr (ThrowStatement expression) = string "throw" <+> ppr expression
   ppr (DoStatement block clauses) = string "do" <+> ppr block <+> (spread . map ppr) clauses
   ppr (SwitchStatement e cases) = string "switch" <+> ppr e <+> bracesLines (map ppr cases)
+  ppr (BreakStatement optLabelName) = string "break" <+> ppr optLabelName
 
 instance Pretty Case where
   ppr (CaseLabel patternWheres statements)

@@ -593,7 +593,7 @@ requirementClause = pure GenericRequirementClause
 
 -- GRAMMAR OF A GENERIC ARGUMENT CLAUSE
 genericArgumentClause :: Parser [Type]
-genericArgumentClause = angles (P.many1 type_)
+genericArgumentClause = try $ angles (P.many1 type_)
 
 genericArgumentClause0 :: Parser [Type]
 genericArgumentClause0 = fromMaybe [] <$> optional genericArgumentClause
@@ -1941,9 +1941,11 @@ postfixOperator = operator
 
 -- GRAMMAR OF A TYPE
 type_ :: Parser Type
-type_ = do
-  t <- typeInit
-  (optionalTypeTail t <|> implicitlyUnwrappedOptionalTypeTail t) <|> pure t
+type_ = arrayType <|> otherType
+  where
+    otherType = do
+      t <- typeInit
+      (optionalTypeTail t <|> implicitlyUnwrappedOptionalTypeTail t) <|> pure t
 
 typeInit :: Parser Type
 typeInit = SimpleType <$> identifier
@@ -1974,7 +1976,8 @@ typeName = identifier
 -- function-type → type­rethrows­->­type­
 
 -- GRAMMAR OF AN ARRAY TYPE
--- array-type → [­type­]­
+arrayType :: Parser Type
+arrayType = ArrayType <$> brackets type_
 
 -- GRAMMAR OF A DICTIONARY TYPE
 -- dictionary-type → [­type­:­type­]­
