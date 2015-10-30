@@ -1938,6 +1938,16 @@ postfixOperator = operator
 ------------------------------------------------------------
 -- Types
 ------------------------------------------------------------
+-- type →
+-- array-type­
+-- dictionary-type­
+-- function-type­
+-- type-identifier­
+-- tuple-type­
+-- optional-type­
+-- implicitly-unwrapped-optional-type
+-- protocol-composition-type
+-- metatype-type­
 type_ :: Parser Type
 type_ = do
   t <- type_1
@@ -1960,16 +1970,6 @@ primType_
 
 typeInit :: Parser Type
 typeInit = SimpleType <$> identifier
--- type →
--- array-type­
--- dictionary-type­
--- function-type­
--- type-identifier­
--- tuple-type­
--- optional-type­
--- implicitly-unwrapped-optional-type
--- protocol-composition-type
--- metatype-type­
 
 -- GRAMMAR OF A TYPE ANNOTATION
 typeAnnotation :: Parser TypeAnnotation
