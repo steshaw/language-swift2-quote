@@ -281,6 +281,7 @@ data Type
   | TypeOpt Type
   | ImplicitlyUnwrappedOptType Type
   | ArrayType Type
+  | DictionaryType Type Type
   deriving (Show, Eq)
 
 type ImportPath = [ImportPathIdentifier]

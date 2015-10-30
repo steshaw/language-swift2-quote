@@ -118,7 +118,7 @@ instance Pretty LiteralExpression where
   ppr (DictionaryLiteral items)
     = (brackets . commasep) (map pprTuple items)
       where
-        pprTuple (e1, e2) = ppr e1 <+> string ":" <+> ppr e2
+        pprTuple (e1, e2) = ppr e1 <> string ":" <+> ppr e2
 
 instance Pretty Literal where
   ppr (NumericLiteral s) = string s
@@ -150,6 +150,7 @@ instance Pretty Type where
   ppr (TypeOpt ty) = ppr ty <> string "?"
   ppr (ImplicitlyUnwrappedOptType ty) = ppr ty <> string "!"
   ppr (ArrayType ty) = brackets (ppr ty)
+  ppr (DictionaryType t1 t2) = brackets (ppr t1 <> colon <+> ppr t2)
 
 instance Pretty Statement where
   ppr (ExpressionStatement expression) = ppr expression

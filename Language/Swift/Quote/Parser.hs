@@ -1941,7 +1941,7 @@ postfixOperator = operator
 
 -- GRAMMAR OF A TYPE
 type_ :: Parser Type
-type_ = arrayType <|> otherType
+type_ = try arrayType <|> dictionaryType <|> otherType
   where
     otherType = do
       t <- typeInit
@@ -1980,7 +1980,15 @@ arrayType :: Parser Type
 arrayType = ArrayType <$> brackets type_
 
 -- GRAMMAR OF A DICTIONARY TYPE
--- dictionary-type → [­type­:­type­]­
+dictionaryType :: Parser Type
+dictionaryType = do
+  brackets inner
+  where
+    inner = do
+      t1 <- type_
+      tok ":"
+      t2 <- type_
+      return $ DictionaryType t1 t2
 
 -- GRAMMAR OF AN OPTIONAL TYPE
 optionalTypeTail :: Type -> Parser Type
