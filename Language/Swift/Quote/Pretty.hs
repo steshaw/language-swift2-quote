@@ -400,9 +400,6 @@ instance Pretty OperatorDecl where
         ppPrec Nothing = empty
         ppPrec (Just prec) = string "precedence" <+> ppr prec
 
-
-
-
 instance Pretty Associativity where
   ppr AssocLeft  = string "associativity" <+> string "left"
   ppr AssocRight = string "associativity" <+> string "right"
