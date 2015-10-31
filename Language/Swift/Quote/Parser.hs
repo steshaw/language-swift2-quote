@@ -1540,11 +1540,6 @@ superclassExpression = kw "super" *> P.choice
   , try (pure SuperInit <* tok "." <* kw "init")
   ]
 
--- superclass-expression → superclass-method-expression­  superclass-subscript-expression­ superclass-initializer-expression­
--- superclass-method-expression → super­.­identifier­
--- superclass-subscript-expression → super­[­expression-list­]­
--- superclass-initializer-expression → super­.­init­
-
 -- GRAMMAR OF A CLOSURE EXPRESSION
 
 closureExpression :: Parser Closure
