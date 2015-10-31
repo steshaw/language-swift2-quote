@@ -388,3 +388,18 @@ data OperatorDecl
   | PostfixOperatorDecl Op
   | InfixOperatorDecl Op (Maybe PrecedenceLevel) (Maybe Associativity)
   deriving (Show, Eq)
+
+data PlatformName
+  = IOS
+  | IOSApplicationExtension
+  | OSX
+  | OSXApplicationExtension
+  | WatchOS
+
+data AvailabilityArgument
+  = PlatformAvailabilityArgument PlatformName PlatformVersion
+  | PlatformWildcard
+
+data PlatformVersion = PlatformVersion String
+
+data AvailabilityCondition = AvailabilityCondition [AvailabilityArgument]

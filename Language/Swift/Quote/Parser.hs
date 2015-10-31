@@ -435,20 +435,44 @@ fallthroughStatement = kw "fallthrough" *> pure FallthroughStatement
 returnStatement :: Parser Statement
 returnStatement = kw "return" *> (ReturnStatement <$> optional expression)
 
-{-
-GRAMMAR OF AN AVAILABILITY CONDITION
+-- GRAMMAR OF AN AVAILABILITY CONDITION
 
-availability-condition → #available­(­availability-arguments­)­
-availability-arguments → availability-argument­  availability-argument­,­availability-arguments­
-availability-argument → platform-name­platform-version­
-availability-argument → *­
-platform-name → iOS­  iOSApplicationExtension­
-platform-name → OSX­  OSXApplicationExtension­
-platform-name → watchOS­
-platform-version → decimal-digits­
-platform-version → decimal-digits­.­decimal-digits­
-platform-version → decimal-digits­.­decimal-digits­.­decimal-digits­
--}
+availabilityCondition :: Parser AvailabilityCondition
+availabilityCondition = do
+  _ <- tok "#available"
+  AvailabilityCondition <$> braces (availabilityArgument `P.sepBy1` comma)
+
+availabilityArgument :: Parser AvailabilityArgument
+availabilityArgument
+    = PlatformAvailabilityArgument <$> platformName <*> platformVersion
+  <|> tok "*" *> pure PlatformWildcard
+
+platformName :: Parser PlatformName
+platformName
+    = tok "iOS" *> pure IOS
+  <|> tok "iOSApplicationExtension" *> pure IOSApplicationExtension
+  <|> tok "OSX" *> pure OSX
+  <|> tok "OSXApplicationExtension" *> pure OSXApplicationExtension
+  <|> tok "watchOS" *> pure WatchOS
+
+platformVersion :: Parser PlatformVersion
+platformVersion
+  = try v3 <|> try v2 <|> v1
+    where
+      v1 = PlatformVersion <$> decimalDigits
+      pd2 = do
+        d1 <- decimalDigits
+        tok "."
+        d2 <- decimalDigits
+        return (d1, d2)
+      v2 = do
+        (d1, d2) <- pd2
+        return $ PlatformVersion (d1 ++ "." ++ d2)
+      v3 = do
+        (d1, d2) <- pd2
+        tok "."
+        d3 <- decimalDigits
+        return $ PlatformVersion (d1 ++ "." ++ d2 ++ "." ++ d3)
 
 -- GRAMMAR OF A THROW STATEMENT
 throwStatement :: Parser Statement
