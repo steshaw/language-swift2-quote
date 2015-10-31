@@ -786,6 +786,9 @@ setterClause = SetterClause <$> attributes0 <*> (kw "set" *> optional setterName
 setterName :: Parser Identifier
 setterName = braces identifier
 
+getterSetterKeywordBlock :: Parser GetSetBlock
+getterSetterKeywordBlock = getterSetterBlock -- TODO what is this?
+
 -- getter-setter-keyword-block → {­getter-keyword-clause­setter-keyword-clause­opt­}
 -- getter-setter-keyword-block → {­setter-keyword-clause­getter-keyword-clause­}
 
@@ -1017,65 +1020,72 @@ classDeclaration :: Parser Declaration
 classDeclaration = structDeclaration' "class" (StructDeclaration Class)
 
 -- GRAMMAR OF A PROTOCOL DECLARATION
--- protocolDeclaration :: Parser Declaration
--- protocolDeclaration = do
---   atts <- attributes0
---   optMod <- optional accessLevelModifier
---   kw "protocol"
---   n <- protocolName
---   optTIC <- optional typeInheritanceClause
---   b <- protocolBody
---   return $ ProtocolDeclaration atts optMod n optTIC b
+protocolDeclaration :: Parser Declaration
+protocolDeclaration = do
+  atts <- attributes0
+  optMod <- optional accessLevelModifier
+  kw "protocol"
+  n <- protocolName
+  optTIC <- optional typeInheritanceClause
+  b <- protocolBody
+  return $ ProtocolDeclaration atts optMod n optTIC b
 
 protocolName :: Parser String
 protocolName = identifier
 
--- protocolBody = brackets (P.many protocolMemberDeclaration)
+protocolBody :: Parser ProtocolMembers
+protocolBody = ProtocolMembers <$> brackets (P.many protocolMemberDeclaration)
 
--- protocolMemberDeclaration
---     = protocolPropertyDeclaration
---   <|> protocolMethodDeclaration
---   <|> protocolInitializerDeclaration
---   <|> protocolSubscriptDeclaration
---   <|> protocolAssociatedTypeDeclaration
+protocolMemberDeclaration :: Parser ProtocolMember
+protocolMemberDeclaration
+    = protocolPropertyDeclaration
+  <|> protocolMethodDeclaration
+  <|> protocolInitializerDeclaration
+  <|> protocolSubscriptDeclaration
+  <|> protocolAssociatedTypeDeclaration
 
 -- GRAMMAR OF A PROTOCOL PROPERTY DECLARATION
--- protocolPropertyDeclaration = do
---   h <- variableDeclarationHead
---   n <- variableName
---   ta <- typeAnnotation
---   gskb <- getterSetterKeywordBlock
---   return $ ProtocolPropertyDeclaration h n ta gskb
+protocolPropertyDeclaration :: Parser ProtocolMember
+protocolPropertyDeclaration = do
+  (attrs, mods) <- variableDeclarationHead
+  n <- variableName
+  ta <- typeAnnotation
+  gskb <- getterSetterKeywordBlock
+  return $ ProtocolPropertyDeclaration attrs mods n ta gskb
 
 -- GRAMMAR OF A PROTOCOL METHOD DECLARATION
--- protocolMethodDeclaration = do
---   h <- functionHead
---   n <- functionName
---   optGPC <- optional genericParameterClause
---   sig <- functionSignature
---   return $ ProtocolMethodDeclaration h n optGPC sig
+protocolMethodDeclaration :: Parser ProtocolMember
+protocolMethodDeclaration = do
+  (attrs, mods) <- functionHead
+  n <- functionName
+  optGPC <- optional genericParameterClause
+  (p, t, r) <- functionSignature
+  return $ ProtocolMethodDeclaration attrs mods n optGPC p t r
 
 -- GRAMMAR OF A PROTOCOL INITIALIZER DECLARATION
--- protocolInitializerDeclaration = do
---   h <- initializerHead
---   optGPC <- optional genericParameterClause
---   pc <- parameterClause
---   t <- (kw "throws" <|> kw "rethrows" <|> pure "")
---   return $ ProtocolInitializerDeclaration h optGPC pc t
+protocolInitializerDeclaration :: Parser ProtocolMember
+protocolInitializerDeclaration = do
+  (attrs, mods, initKind) <- initializerHead
+  optGPC <- optional genericParameterClause
+  pc <- parameterClause
+  t <- kw' "throws" <|> kw' "rethrows" <|> pure ""
+  return $ ProtocolInitializerDeclaration attrs mods initKind optGPC pc t
 
 -- GRAMMAR OF A PROTOCOL SUBSCRIPT DECLARATION
--- protocolSubscriptDeclaration = do
---   h <- subscriptHead
---   r <- subscriptResult
---   gskb <- getterSetterKeywordBlock
---   return $ ProtocolSubscriptDeclaration h r gskb
+protocolSubscriptDeclaration :: Parser ProtocolMember
+protocolSubscriptDeclaration = do
+  (attrs, mods, pc) <- subscriptHead
+  (rAttrs, r) <- subscriptResult
+  gskb <- getterSetterKeywordBlock
+  return $ ProtocolSubscriptDeclaration attrs mods pc rAttrs r gskb
 
 -- GRAMMAR OF A PROTOCOL ASSOCIATED TYPE DECLARATION
--- protocolAssociatedTypeDeclaration = do
---   h <- typealiasHead
---   optTIC <- optional typeInheritanceClause
---   optTA <- optional typealiasAssignment
---   return $ ProtocolAssociatedTypeDeclaration h optTIC optTA
+protocolAssociatedTypeDeclaration :: Parser ProtocolMember
+protocolAssociatedTypeDeclaration = do
+  (attrs, optMod, name) <- typealiasHead
+  optTIC <- optional typeInheritanceClause
+  optTy <- optional typealiasAssignment
+  return $ ProtocolAssociatedTypeDeclaration attrs optMod name optTIC optTy
 
 -- GRAMMAR OF AN INITIALIZER DECLARATION
 initializerDeclaration :: Parser Declaration

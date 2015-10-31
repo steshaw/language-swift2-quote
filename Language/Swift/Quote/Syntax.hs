@@ -169,7 +169,44 @@ type Name = String
 type TypeAliasName = Name
 type StructName = Name
 type ClassName = Name
+type ProtocolName = Name
+type VariableName = Name
 data StructType = Struct | Class
+  deriving (Show, Eq)
+
+data ProtocolMembers = ProtocolMembers [ProtocolMember]
+  deriving (Show, Eq)
+
+data ProtocolMember
+  = ProtocolPropertyDeclaration [Attribute] [DeclarationModifier] VariableName TypeAnnotation {- gskb -} GetSetBlock
+  | ProtocolMethodDeclaration
+      [Attribute]
+      [DeclarationModifier]
+      FunctionName
+      (Maybe GenericParameterClause)
+      [[Parameter]]
+      (Maybe String) -- "throws" or "rethrows" -- FIXME
+      (Maybe FunctionResult)
+  | ProtocolInitializerDeclaration
+      [Attribute]
+      [DeclarationModifier]
+      InitKind
+      (Maybe GenericParameterClause)
+      [Parameter]
+      String -- throwsDecl
+  | ProtocolSubscriptDeclaration
+      [Attribute]
+      [DeclarationModifier]
+      [Parameter] -- ParameterClause
+      [Attribute] -- Result attributes
+      Type -- result type
+      GetSetBlock -- gskb
+  | ProtocolAssociatedTypeDeclaration
+      [Attribute]
+      (Maybe DeclarationModifier)
+      TypeAliasName
+      (Maybe TypeInheritanceClause)
+      (Maybe Type)
   deriving (Show, Eq)
 
 data Declaration
@@ -183,7 +220,7 @@ data Declaration
     , funName :: FunctionName
     , funGenericParamClause :: Maybe GenericParameterClause
     , funParameterClauses :: [[Parameter]]
-    , funThrowDecl :: Maybe String -- "throws" or "rethrows"
+    , funThrowDecl :: Maybe String -- "throws" or "rethrows" -- FIXME
     , funResult :: Maybe FunctionResult
     , funBody :: Maybe CodeBlock
     }
@@ -220,6 +257,12 @@ data Declaration
       Type -- result type
       SubscriptBlock
   | OperatorDeclaration OperatorDecl
+  | ProtocolDeclaration
+      [Attribute]
+      (Maybe DeclarationModifier)
+      ProtocolName
+      (Maybe TypeInheritanceClause)
+      ProtocolMembers
   deriving (Show, Eq)
 
 data SubscriptBlock
