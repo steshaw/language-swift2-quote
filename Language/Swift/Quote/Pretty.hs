@@ -411,7 +411,6 @@ instance Pretty GenericParameter where
   ppr (GenericParamName typeName) = ppr typeName
   ppr (GenericParamTypeId ti1 ti2) = ppr ti2 <> colon <+> ppr ti2
 
--- data TypeIdentifier = TypeIdentifier [(TypeName, [Type])]
 instance Pretty TypeIdentifier where
   ppr (TypeIdentifier typeArguments) = (cat . punctuate dot) (map p typeArguments)
     where
