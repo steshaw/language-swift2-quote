@@ -9,10 +9,12 @@ TODO
 
 - `condition-clause` other than `expression` for `while-statement`.
 - `getter-setter-keyword-block` (currently disguised as simply `getter-setter-block`).
-- `raw-value-style-enum`s.
+- `raw-value-style-enum`
 - remaining `pattern` productions.
-- `attribute`s
+- `attribute`
 - `closure-expression`
-- Replace bodgy `identifier` parser.
-- `tuple-type`.
+- Replace interim `identifier` parser with one that meets the spec.
+- `tuple-type`
+- missing/incomplete rendering functions.
 - much testing and bug fixing
+  - expressions need to use `chainr` and `chainl`.
