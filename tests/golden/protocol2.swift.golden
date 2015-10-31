@@ -1,2 +1,2 @@
-protocol SomeProtocol : class  {
+protocol SomeProtocol: class  {
 }

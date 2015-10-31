@@ -1,0 +1,1 @@
+struct Dict<Key, Value> {}

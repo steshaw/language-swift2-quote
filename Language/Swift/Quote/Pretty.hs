@@ -239,7 +239,15 @@ instance Pretty Declaration where
 
   ppr (EnumDeclaration enum) = ppr enum
 
-  ppr (StructDeclaration ty atts optMod name optGPC optTIC decls) = ppr ty <+> string name <+> bracesLines (map ppr decls)
+  ppr (StructDeclaration structType attrs optMod name optGPC optTIC decls)
+    = sepBySpace attrs
+    <+> ppr optMod
+    <+> ppr structType
+    <+> string name
+    <> ppr optGPC
+    <> ppr optTIC
+    <> string " "
+    <> bracesLines (map ppr decls)
 
   ppr (InitializerDeclaration atts mods kind optGPC paramClause throws block)
       = sepBySpace atts
@@ -272,11 +280,11 @@ instance Pretty Declaration where
   ppr (OperatorDeclaration opDecl) = ppr opDecl
 
   ppr (ProtocolDeclaration attrs optMod name optTIC members)
-    = sepBySpace attrs
+      = sepBySpace attrs
     <+> ppr optMod
     <+> string "protocol"
     <+> string name
-    <+> ppr optTIC
+    <> ppr optTIC
     <+> ppr members
 
 instance Pretty ProtocolMembers where
@@ -397,7 +405,11 @@ instance Pretty TypeAnnotation where
   ppr (TypeAnnotation attrs type_) = sepBySpace attrs <> string ":" <+> ppr type_
 
 instance Pretty GenericParameterClause where
-  ppr (GenericParameterClause params optReqClause) = string "<todo>"
+  ppr (GenericParameterClause params optReqClause) = angles (commasep (map ppr params))
+
+instance Pretty GenericParameter where
+  ppr (GenericParamName typeName) = ppr typeName
+  ppr (GenericParamTypeId ti1 ti2) = ppr ti2 <> colon <+> ppr ti2
 
 -- data TypeIdentifier = TypeIdentifier [(TypeName, [Type])]
 instance Pretty TypeIdentifier where

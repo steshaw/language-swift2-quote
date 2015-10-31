@@ -1,2 +1,2 @@
-public protocol Applicative : Functor {
+public protocol Applicative: Functor {
 }
