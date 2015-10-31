@@ -271,6 +271,20 @@ instance Pretty Declaration where
 
   ppr (OperatorDeclaration opDecl) = ppr opDecl
 
+  ppr (ProtocolDeclaration attrs optMod name optTIC members)
+    = sepBySpace attrs
+    <+> ppr optMod
+    <+> string "protocol"
+    <+> string name
+    <+> ppr optTIC
+    <+> ppr members
+
+instance Pretty ProtocolMembers where
+  ppr (ProtocolMembers members) = bracesLines (map ppr members)
+
+instance Pretty ProtocolMember where
+  -- TODO
+
 instance Pretty SubscriptBlock where
   ppr (SubscriptCodeBlock codeBlock) = ppr codeBlock
   ppr (SubscriptGetSetBlock getSetBlock) = ppr getSetBlock

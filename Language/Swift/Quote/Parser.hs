@@ -1034,7 +1034,7 @@ protocolName :: Parser String
 protocolName = identifier
 
 protocolBody :: Parser ProtocolMembers
-protocolBody = ProtocolMembers <$> brackets (P.many protocolMemberDeclaration)
+protocolBody = ProtocolMembers <$> braces (P.many protocolMemberDeclaration)
 
 protocolMemberDeclaration :: Parser ProtocolMember
 protocolMemberDeclaration
@@ -2085,4 +2085,4 @@ typeInheritanceClause = do
   where
     classy = kw "class" *> (TypeInheritanceClause True <$> listy')
     listy = TypeInheritanceClause False <$> listy'
-    listy' = P.many1 typeIdentifier
+    listy' = typeIdentifier `P.sepBy` comma
