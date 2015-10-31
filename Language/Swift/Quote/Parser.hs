@@ -875,18 +875,12 @@ parameterList = parameter `P.sepBy1` comma
 parameter :: Parser Parameter
 parameter
     = do
-        -- _ <- trace "in parameter production 1" $ pure ()
         _ <- optional (kw "let")
         fn <- parameterName
-        -- _ <- trace "in parameter 2" $ pure ()
         sn <- optional parameterName
-        -- _ <- trace "in parameter 3" $ pure ()
         let (extern, local) = if isJust sn then (Just fn, fromJust sn) else (Nothing, fn)
-        -- _ <- trace "in parameter 3" $ pure ()
         t <- typeAnnotation
-        -- _ <- trace "in parameter 4" $ pure ()
         c <- optional defaultArgumentClause
-        -- _ <- trace "in parameter 5" $ pure ()
         return $ ParameterLet extern local t c
   <|> do
         _ <- kw "var"
@@ -1365,17 +1359,8 @@ expression :: Parser Expression
 
 expression = do
   t <- optional tryOperator
-  -- _ <- trace ("\n\n\n in expression  t = " ++ show t) $ pure ()
   p <- prefixExpression
-  -- _ <- trace ("\n  prefix = " ++ show p) $ pure ()
-  -- s1 <- try . P.lookAhead $ P.many P.anyChar
-  -- _ <- trace ("ahead s1 = " ++ show s1) $ pure ()
-  -- bs <- (fromMaybe [] <$> optional binaryExpressions)
   bs <- optional binaryExpressions
-  -- _ <- trace ("\n  bs = " ++ show bs) $ pure ()
-  s2 <- try . P.lookAhead $ P.many P.anyChar
-  -- _ <- trace ("ahead s2 = " ++ show s2) $ pure ()
-  -- _ <- trace ("\n  binaries = " ++ show bs) $ pure ()
   return $ Expression t p (fromMaybe [] bs)
 
 expressionList :: Parser [Expression]
@@ -1419,13 +1404,8 @@ binaryExpression
         return $ BinaryAssignmentExpression to pe
   <|> typeCastingOperator
   <|> do
-        -- _ <- trace "\n\n\nin 2nd case" $ pure ()
         o <- binaryOperator
-        -- _ <- trace ("\nbinaryOperator = " ++ show o) $ pure ()
-        -- s2 <- try . P.lookAhead $ many P.anyChar
-        -- _ <- trace ("\ntrying for prefixExpression in binaryExpression lookAhead s2 = " ++ show s2) $ pure ()
         e <- prefixExpression
-        -- _ <- trace ("\nprefix = " ++ show e) $ pure ()
         return $ BinaryExpression1 o e
 
 binaryExpressions :: Parser [BinaryExpression]
