@@ -369,12 +369,13 @@ data GenericParameterClause = GenericParameterClause [GenericParameter] (Maybe G
 
 data GenericParameter
   = GenericParamName TypeName
-  | GenericParamTypeId TypeIdentifier TypeIdentifier
-  -- | GenericParamProtocol TypeName Type
+  | GenericParamTypeId TypeName TypeIdentifier
+  | GenericParamProtocol TypeName {- protocol-composition-type -} Type
   deriving (Show, Eq)
 
 data TypeRequirement
- = ConformanceRequirement TypeIdentifier TypeIdentifier
+ = ConformanceRequirementRegular TypeIdentifier TypeIdentifier
+ | ConformanceRequirementProtocol TypeIdentifier {- protocol-composition-type -} Type
  | SameTypeRequirement TypeIdentifier Type
   deriving (Show, Eq)
 
