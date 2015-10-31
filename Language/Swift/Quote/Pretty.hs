@@ -433,3 +433,6 @@ instance Pretty Associativity where
   ppr AssocLeft  = string "associativity" <+> string "left"
   ppr AssocRight = string "associativity" <+> string "right"
   ppr AssocNone  = string "associativity" <+> string "none"
+
+instance Pretty InOut where
+  ppr InOut = string "inout"

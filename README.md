@@ -14,7 +14,6 @@ TODO
 - `attribute`
 - `closure-expression`
 - Replace interim `identifier` parser with one that meets the spec.
-- `tuple-type`
 - missing/incomplete rendering functions.
 - much testing and bug fixing
   - expressions need to use `chainr` and `chainl`.

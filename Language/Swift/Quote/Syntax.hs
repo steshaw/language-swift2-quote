@@ -52,8 +52,6 @@ data PrimaryExpression
   | PrimaryWildcard -- wildcard-expression
   deriving (Show, Eq)
 
-type Identifier = String
-
 data SelfExpression
   = Self
   | SelfMethod Identifier
@@ -165,12 +163,14 @@ data ForInit
 data CodeBlock = CodeBlock [Statement]
   deriving (Show, Eq)
 
-type Name = String
+type Identifier = String
+type Name = Identifier
 type TypeAliasName = Name
 type StructName = Name
 type ClassName = Name
 type ProtocolName = Name
 type VariableName = Name
+
 data StructType = Struct | Class
   deriving (Show, Eq)
 
@@ -319,7 +319,20 @@ data DeclarationModifier
 data Attribute = DummyAttribute
   deriving (Show, Eq)
 
-type Throws = String -- "throws", "rethrows", ""
+type Throws = String -- "throws", "rethrows", "" -- FIXME
+
+data InOut = InOut
+  deriving (Show, Eq)
+
+type ElementName = Name
+
+data TupleElementType
+  = TupleElementTypeAnon [Attribute] (Maybe InOut) Type
+  | TupleElementTypeNamed (Maybe InOut) ElementName TypeAnnotation
+  deriving (Show, Eq)
+
+data TupleTypeBody = TupleTypeBody [TupleElementType] Bool
+  deriving (Show, Eq)
 
 data Type
   = SimpleType Identifier
@@ -331,6 +344,7 @@ data Type
   | TypeMetaType Type
   | ProtocolMetaType Type
   | ProtocolCompositionType [ProtocolIdentifier]
+  | TupleType (Maybe TupleTypeBody)
   deriving (Show, Eq)
 
 type ProtocolIdentifier = TypeIdentifier

@@ -988,9 +988,6 @@ unionStyleEnumCase = do
   tt <- optional tupleType
   return (n, tt)
 
-tupleType :: Parser Type
-tupleType = fail "WIP tupleType"
-
 enumName :: Parser String
 enumName = identifier
 
@@ -1974,21 +1971,10 @@ postfixOperator = operator
 ------------------------------------------------------------
 -- Types
 ------------------------------------------------------------
--- type →
--- array-type­
--- dictionary-type­
--- function-type­
--- type-identifier­
--- tuple-type­
--- optional-type­
--- implicitly-unwrapped-optional-type
--- protocol-composition-type
--- metatype-type­
 type_ :: Parser Type
 type_ = do
   t <- type_1
   (metaTypeTail t <|> pure t)
-  where
 
 type_1 :: Parser Type
 type_1 = primType_ `P.chainr1` functionTypeOp
@@ -1999,6 +1985,7 @@ primType_
     = try arrayType
   <|> dictionaryType
   <|> protocolCompositionType
+  <|> tupleType
   <|> otherType
   where
     otherType = do
@@ -2022,11 +2009,32 @@ typeName :: Parser TypeName
 typeName = identifier
 
 -- GRAMMAR OF A TUPLE TYPE
--- tuple-type → (­tuple-type-body­opt­)­
--- tuple-type-body → tuple-type-element-list­...­opt­
--- tuple-type-element-list → tuple-type-element­  tuple-type-element­,­tuple-type-element-list­
--- tuple-type-element → attributes­opt­inout­opt­type­  inout­opt­element-name­type-annotation­
--- element-name → identifier­
+tupleType :: Parser Type
+tupleType = TupleType <$> braces (optional tupleTypeBody)
+
+tupleTypeBody :: Parser TupleTypeBody
+tupleTypeBody = do
+  elements <- tupleTypeElement `P.sepBy` comma
+  dots <- tok "..." *> pure True <|> pure False
+  return $ TupleTypeBody elements dots
+
+tupleTypeElement :: Parser TupleElementType
+tupleTypeElement = try anon <|> named
+  where
+    anon = do
+      attrs <- attributes0
+      optInout <- optionalInOut
+      t <- type_
+      return $ TupleElementTypeAnon attrs optInout t
+    named = do
+      optInOut <- optionalInOut
+      n <- elementName
+      ta <- typeAnnotation
+      return $ TupleElementTypeNamed optInOut n ta
+    optionalInOut = optional (kw "inout" *> pure InOut)
+
+elementName :: Parser ElementName
+elementName = identifier
 
 -- GRAMMAR OF A FUNCTION TYPE
 functionTypeOp :: Parser (Type -> Type -> Type)
