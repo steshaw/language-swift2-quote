@@ -600,19 +600,41 @@ genericParameterList :: Parser [GenericParameter]
 genericParameterList = genericParameter `P.sepBy1` comma
 
 genericParameter :: Parser GenericParameter
-genericParameter = GenericParameter <$> identifier
+genericParameter = do
+  try paramTypeId <|> paramName
+  where
+    paramName = GenericParamName <$> typeName
+    paramTypeId = do
+      ti1 <- typeIdentifier
+      tok ":"
+      ti2 <- typeIdentifier
+      pure $ GenericParamTypeId ti1 ti2
+    -- paramProtocol n = do
+    --   tok ":"
+    --   GenericParamProtocol <$> protocolCompositionType
 
 requirementClause :: Parser GenericRequirementClause
-requirementClause = pure GenericRequirementClause
+requirementClause = do
+  kw "where"
+  GenericRequirementClause <$> requirement `P.sepBy1` comma
 
--- generic-parameter → type-name­:­type-identifier­
--- generic-parameter → type-name­:­protocol-composition-type­
--- requirement-clause → where­requirement-list­
--- requirement-list → requirement­  requirement­,­requirement-list­
--- requirement → conformance-requirement­  same-type-requirement­
--- conformance-requirement → type-identifier­:­type-identifier­
+requirement :: Parser TypeRequirement
+requirement = conformanceRequirement <|> sameTypeRequirement
+
+conformanceRequirement :: Parser TypeRequirement
+conformanceRequirement = do
+  ti1 <- typeIdentifier
+  tok ":"
+  ti2 <- typeIdentifier
+  return $ ConformanceRequirement ti1 ti2
 -- conformance-requirement → type-identifier­:­protocol-composition-type­
--- same-type-requirement → type-identifier­==­type­
+
+sameTypeRequirement :: Parser TypeRequirement
+sameTypeRequirement = do
+  ti <- typeIdentifier
+  tok "="
+  ty <- type_
+  return $ SameTypeRequirement ti ty
 
 -- GRAMMAR OF A GENERIC ARGUMENT CLAUSE
 genericArgumentClause :: Parser [Type]

@@ -367,10 +367,18 @@ data FunctionName
 data GenericParameterClause = GenericParameterClause [GenericParameter] (Maybe GenericRequirementClause)
   deriving (Show, Eq)
 
-data GenericParameter = GenericParameter String
+data GenericParameter
+  = GenericParamName TypeName
+  | GenericParamTypeId TypeIdentifier TypeIdentifier
+  -- | GenericParamProtocol TypeName Type
   deriving (Show, Eq)
 
-data GenericRequirementClause = GenericRequirementClause
+data TypeRequirement
+ = ConformanceRequirement TypeIdentifier TypeIdentifier
+ | SameTypeRequirement TypeIdentifier Type
+  deriving (Show, Eq)
+
+data GenericRequirementClause = GenericRequirementClause [TypeRequirement]
   deriving (Show, Eq)
 
 data Parameter
