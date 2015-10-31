@@ -636,7 +636,7 @@ declaration
   <|> try enumDeclaration
   <|> try structDeclaration
   <|> try classDeclaration
-  -- <|> try protocolDeclaration
+  <|> try protocolDeclaration
   <|> try initializerDeclaration
   <|> try deinitializerDeclaration
   <|> try extensionDeclaration
