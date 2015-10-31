@@ -335,7 +335,7 @@ data TupleTypeBody = TupleTypeBody [TupleElementType] Bool
   deriving (Show, Eq)
 
 data Type
-  = SimpleType Identifier
+  = TypeIdentifierType TypeIdentifier
   | TypeOpt Type
   | ImplicitlyUnwrappedOptType Type
   | ArrayType Type

@@ -1974,7 +1974,7 @@ postfixOperator = operator
 type_ :: Parser Type
 type_ = do
   t <- type_1
-  (metaTypeTail t <|> pure t)
+  (metaTypeTail t <|> optionalTypeTail t <|> implicitlyUnwrappedOptionalTypeTail t) <|> pure t
 
 type_1 :: Parser Type
 type_1 = primType_ `P.chainr1` functionTypeOp
@@ -1986,22 +1986,26 @@ primType_
   <|> dictionaryType
   <|> protocolCompositionType
   <|> tupleType
-  <|> otherType
-  where
-    otherType = do
-      t <- typeInit
-      (optionalTypeTail t <|> implicitlyUnwrappedOptionalTypeTail t) <|> pure t
+  <|> typeIdentifierType
 
-typeInit :: Parser Type
-typeInit = SimpleType <$> identifier
+typeIdentifierType :: Parser Type
+typeIdentifierType = TypeIdentifierType <$> typeIdentifier
 
 -- GRAMMAR OF A TYPE ANNOTATION
 typeAnnotation :: Parser TypeAnnotation
 typeAnnotation = tok ":" *> (TypeAnnotation <$> attributes0 <*> type_)
 
+mySepBy1 :: Parser a -> Parser sep -> Parser [a]
+mySepBy1 p sep = do
+  x <- p
+  xs <- many trying
+  return (x:xs)
+    where
+      trying = try (sep >> p)
+
 -- GRAMMAR OF A TYPE IDENTIFIER
 typeIdentifier :: Parser TypeIdentifier
-typeIdentifier = TypeIdentifier <$> (nameOptGAC `P.sepBy1` tok ".")
+typeIdentifier = TypeIdentifier <$> (nameOptGAC `mySepBy1` tok ".")
   where
     nameOptGAC = (,) <$> typeName <*> genericArgumentClause0
 

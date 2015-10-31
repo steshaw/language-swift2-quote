@@ -146,7 +146,7 @@ instance Pretty SuperclassExpression where
   ppr SuperInit = string "super" <> string "." <> string "init"
 
 instance Pretty Type where
-  ppr (SimpleType ty) = ppr ty
+  ppr (TypeIdentifierType ti) = ppr ti
   ppr (TypeOpt ty) = ppr ty <> string "?"
   ppr (ImplicitlyUnwrappedOptType ty) = ppr ty <> string "!"
   ppr (ArrayType ty) = brackets (ppr ty)
