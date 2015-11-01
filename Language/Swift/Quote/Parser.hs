@@ -1314,14 +1314,13 @@ pattern :: Parser Pattern
 pattern
     = wildcardPattern *> (WildcardPattern <$> optional typeAnnotation)
   <|> valueBindingPattern
+  <|> typeCastingPattern
   <|> try optionalPattern
   <|> try (IdentifierPattern <$> identifierPattern <*> optional typeAnnotation)
   <|> TuplePattern <$> tuplePattern <*> optional typeAnnotation
   <|> ExpressionPattern <$> expression
 -- pattern → tuple-pattern­type-annotation­opt­
 -- pattern → enum-case-pattern­
--- pattern → optional-pattern­
--- pattern → type-casting-pattern­
 
 -- GRAMMAR OF A WILDCARD PATTERN
 wildcardPattern :: Parser ()
@@ -1332,6 +1331,7 @@ identifierPattern :: Parser String
 identifierPattern = identifier
 
 -- GRAMMAR OF A VALUE-BINDING PATTERN
+valueBindingPattern :: Parser Pattern
 valueBindingPattern
     = kw "var" *> (VarPattern <$> pattern)
   <|> kw "let" *> (LetPattern <$> pattern)
@@ -1351,20 +1351,24 @@ tuplePatternElement = pattern
 -- enum-case-pattern → type-identifier­opt­.­enum-case-name­tuple-pattern­opt­
 
 -- GRAMMAR OF AN OPTIONAL PATTERN
+optionalPattern :: Parser Pattern
 optionalPattern = do
   ip <- identifierPattern
   tok "?"
   return $ OptionalPattern ip
 
 -- GRAMMAR OF A TYPE CASTING PATTERN
+typeCastingPattern :: Parser Pattern
+typeCastingPattern = isPattern <|> asPattern
 
--- type-casting-pattern → is-pattern­  as-pattern­
--- is-pattern → is­type­
--- as-pattern → pattern­as­type­
+isPattern :: Parser Pattern
+isPattern = kw "is" *> (IsPattern <$> type_)
+
+asPattern :: Parser Pattern
+asPattern = kw "as" *> (IsPattern <$> type_)
 
 -- GRAMMAR OF AN EXPRESSION PATTERN
-
--- expression-pattern → expression­
+-- Implemented above.
 
 ------------------------------------------------------------
 -- Attributes

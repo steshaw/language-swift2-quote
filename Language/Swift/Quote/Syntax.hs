@@ -394,6 +394,8 @@ data Pattern
   | ExpressionPattern Expression
   | VarPattern Pattern
   | LetPattern Pattern
+  | IsPattern Type
+  | AsPattern Type
   deriving (Show, Eq)
 
 data FunctionResult = FunctionResult [Attribute] Type

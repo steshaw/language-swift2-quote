@@ -405,6 +405,8 @@ instance Pretty Pattern where
   ppr (ExpressionPattern expression) = ppr expression
   ppr (VarPattern pattern) = string "var" <+> ppr pattern
   ppr (LetPattern pattern) = string "let" <+> ppr pattern
+  ppr (IsPattern ty) = string "is" <+> ppr ty
+  ppr (AsPattern ty) = string "as" <+> ppr ty
 
 instance Pretty CodeBlock where
   ppr (CodeBlock statements) = ppBlock statements
