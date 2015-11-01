@@ -1303,8 +1303,9 @@ pattern :: Parser Pattern
 pattern
     = wildcardPattern *> (WildcardPattern <$> optional typeAnnotation)
   <|> valueBindingPattern
+  <|> try optionalPattern
+  <|> try (IdentifierPattern <$> identifierPattern <*> optional typeAnnotation)
   <|> TuplePattern <$> tuplePattern <*> optional typeAnnotation
-  <|> IdentifierPattern <$> identifierPattern <*> optional typeAnnotation
   <|> ExpressionPattern <$> expression
 -- pattern → tuple-pattern­type-annotation­opt­
 -- pattern → enum-case-pattern­
@@ -1339,8 +1340,10 @@ tuplePatternElement = pattern
 -- enum-case-pattern → type-identifier­opt­.­enum-case-name­tuple-pattern­opt­
 
 -- GRAMMAR OF AN OPTIONAL PATTERN
-
--- optional-pattern → identifier-pattern­?­
+optionalPattern = do
+  ip <- identifierPattern
+  tok "?"
+  return $ OptionalPattern ip
 
 -- GRAMMAR OF A TYPE CASTING PATTERN
 

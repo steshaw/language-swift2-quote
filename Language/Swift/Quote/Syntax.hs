@@ -363,7 +363,8 @@ type OptTypeAnnotation = Maybe TypeAnnotation
 
 data Pattern
   = WildcardPattern OptTypeAnnotation
-  | IdentifierPattern String OptTypeAnnotation
+  | IdentifierPattern Identifier OptTypeAnnotation
+  | OptionalPattern Identifier -- id?
   | TuplePattern [Pattern] OptTypeAnnotation
   | ExpressionPattern Expression
   | VarPattern Pattern
