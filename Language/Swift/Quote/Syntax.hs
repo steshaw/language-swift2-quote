@@ -366,6 +366,8 @@ data Pattern
   | IdentifierPattern String OptTypeAnnotation
   | TuplePattern [Pattern] OptTypeAnnotation
   | ExpressionPattern Expression
+  | VarPattern Pattern
+  | LetPattern Pattern
   deriving (Show, Eq)
 
 data FunctionResult = FunctionResult [Attribute] Type

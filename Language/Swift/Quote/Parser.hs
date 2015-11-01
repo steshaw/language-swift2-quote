@@ -1302,7 +1302,7 @@ accessLevelModifier = do
 pattern :: Parser Pattern
 pattern
     = wildcardPattern *> (WildcardPattern <$> optional typeAnnotation)
--- pattern → value-binding-pattern­
+  <|> valueBindingPattern
   <|> TuplePattern <$> tuplePattern <*> optional typeAnnotation
   <|> IdentifierPattern <$> identifierPattern <*> optional typeAnnotation
   <|> ExpressionPattern <$> expression
@@ -1320,8 +1320,9 @@ identifierPattern :: Parser String
 identifierPattern = identifier
 
 -- GRAMMAR OF A VALUE-BINDING PATTERN
-
--- value-binding-pattern → var­pattern­  let­pattern­
+valueBindingPattern
+    = kw "var" *> (VarPattern <$> pattern)
+  <|> kw "let" *> (LetPattern <$> pattern)
 
 -- GRAMMAR OF A TUPLE PATTERN
 tuplePattern :: Parser [Pattern]

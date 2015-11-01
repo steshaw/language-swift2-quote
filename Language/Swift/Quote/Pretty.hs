@@ -400,6 +400,8 @@ instance Pretty Pattern where
 -- pattern → optional-pattern­
 -- pattern → type-casting-pattern­
   ppr (ExpressionPattern expression) = ppr expression
+  ppr (VarPattern pattern) = string "var" <+> ppr pattern
+  ppr (LetPattern pattern) = string "let" <+> ppr pattern
 
 instance Pretty CodeBlock where
   ppr (CodeBlock statements) = ppBlock statements
