@@ -315,14 +315,25 @@ forInStatementTail = do
 whileStatement :: Parser Statement
 whileStatement = kw "while" *> (WhileStatement <$> conditionClause <*> codeBlock)
 
-conditionClause :: Parser Expression
-conditionClause = expression
--- condition-clause → expression­,­condition-list­
--- condition-clause → condition-list­
+conditionClause :: Parser ConditionClause
+conditionClause = do
+  optE <- optional expression
+  conditions <- conditionList
+  return $ ConditionClause optE conditions
 -- condition-clause → availability-condition­,­expression­
--- condition-list → condition­  condition­,­condition-list­
--- condition → availability-condition­  case-condition­  optional-binding-condition­
--- case-condition → case­pattern­initializer­where-clause­opt­
+
+conditionList = ConditionList <$> condition `P.sepBy` comma
+
+condition = availabilityCondition <|> caseCondition <|> optionalBindingCondition
+
+caseCondition = do
+  kw "case"
+  p <- pattern
+  i <- initializer
+  optWC <- optional whereClause
+  return $ CaseCondition p i optWC
+
+optionalBindingCondition = fail "optional-binding-condition not implemented"
 -- optional-binding-condition → optional-binding-head­optional-binding-continuation-list­opt­where-clause­opt­
 -- optional-binding-head → let­pattern­initializer­  var­pattern­initializer­
 -- optional-binding-continuation-list → optional-binding-continuation­ optional-binding-continuation­,­optional-binding-continuation-list­
@@ -437,7 +448,7 @@ returnStatement = kw "return" *> (ReturnStatement <$> optional expression)
 
 -- GRAMMAR OF AN AVAILABILITY CONDITION
 
-availabilityCondition :: Parser AvailabilityCondition
+availabilityCondition :: Parser Condition
 availabilityCondition = do
   _ <- tok "#available"
   AvailabilityCondition <$> braces (availabilityArgument `P.sepBy1` comma)

@@ -394,9 +394,12 @@ instance Pretty Pattern where
   ppr (WildcardPattern optTypeAnn) = string "_" <+> ppr optTypeAnn
   ppr (IdentifierPattern identifierPattern optTypeAnn) = string identifierPattern <> ppr optTypeAnn
 -- pattern → value-binding-pattern­
+  ppr (VarPattern pattern) = string "var" <+> ppr pattern
+  ppr (LetPattern pattern) = string "let" <+> ppr pattern
   ppr (TuplePattern tuplePatterns optTypeAnn)
     = parens (commasep (map ppr tuplePatterns)) <+> ppr optTypeAnn
 -- pattern → enum-case-pattern­
+  ppr (OptionalPattern ident) = ppr ident <> string "?"
 -- pattern → optional-pattern­
 -- pattern → type-casting-pattern­
   ppr (ExpressionPattern expression) = ppr expression
@@ -440,3 +443,22 @@ instance Pretty Associativity where
 
 instance Pretty InOut where
   ppr InOut = string "inout"
+
+instance Pretty ConditionClause where
+  ppr (ConditionClause optE conditions) = ppr optE <> ppr conditions
+
+instance Pretty ConditionList where
+  ppr (ConditionList conditions) = commasep (map ppr conditions)
+
+instance Pretty Condition where
+  ppr (CaseCondition p e optWC)
+    = string "case"
+    <+> ppr p
+    <+> string "="
+    <+> ppr e
+    <+> ppr optWC
+  ppr (AvailabilityCondition args) = string "#availability" <> parens (commasep (map ppr args))
+
+instance Pretty AvailabilityArgument where
+  ppr (PlatformAvailabilityArgument name version) = string "<todo platform name version>"
+  ppr PlatformWildcard = string "_"

@@ -120,7 +120,7 @@ data Statement
     }
   | DeclarationStatement Declaration
   | ReturnStatement (Maybe Expression)
-  | WhileStatement Expression CodeBlock
+  | WhileStatement ConditionClause CodeBlock
   | RepeatWhileStatement CodeBlock Expression
   | GuardStatement ConditionClause CodeBlock
   | SwitchStatement Expression [Case]
@@ -153,7 +153,32 @@ data WhereClause = WhereClause Expression
 
 type LabelName = String
 
-type ConditionClause = Expression
+data PlatformName
+  = IOS
+  | IOSApplicationExtension
+  | OSX
+  | OSXApplicationExtension
+  | WatchOS
+  deriving (Show, Eq)
+
+data AvailabilityArgument
+  = PlatformAvailabilityArgument PlatformName PlatformVersion
+  | PlatformWildcard
+  deriving (Show, Eq)
+
+data PlatformVersion = PlatformVersion String
+  deriving (Show, Eq)
+
+data Condition
+  = CaseCondition Pattern Expression (Maybe WhereClause)
+  | AvailabilityCondition [AvailabilityArgument]
+  deriving (Show, Eq)
+
+data ConditionList = ConditionList [Condition]
+  deriving (Show, Eq)
+
+data ConditionClause = ConditionClause (Maybe Expression) ConditionList
+  deriving (Show, Eq)
 
 data ForInit
   = FiDeclaration Declaration
@@ -455,21 +480,6 @@ data OperatorDecl
   | PostfixOperatorDecl Op
   | InfixOperatorDecl Op (Maybe PrecedenceLevel) (Maybe Associativity)
   deriving (Show, Eq)
-
-data PlatformName
-  = IOS
-  | IOSApplicationExtension
-  | OSX
-  | OSXApplicationExtension
-  | WatchOS
-
-data AvailabilityArgument
-  = PlatformAvailabilityArgument PlatformName PlatformVersion
-  | PlatformWildcard
-
-data PlatformVersion = PlatformVersion String
-
-data AvailabilityCondition = AvailabilityCondition [AvailabilityArgument]
 
 data Attribute = Attribute AttributeName (Maybe String)
   deriving (Show, Eq)
