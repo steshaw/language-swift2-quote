@@ -1333,22 +1333,23 @@ tuplePatterns = tuplePatternElement `P.sepBy` comma
 tuplePatternElement :: Parser Pattern
 tuplePatternElement = pattern
 
-{-
-GRAMMAR OF AN ENUMERATION CASE PATTERN
+--GRAMMAR OF AN ENUMERATION CASE PATTERN
 
-enum-case-pattern → type-identifier­opt­.­enum-case-name­tuple-pattern­opt­
-GRAMMAR OF AN OPTIONAL PATTERN
+-- enum-case-pattern → type-identifier­opt­.­enum-case-name­tuple-pattern­opt­
 
-optional-pattern → identifier-pattern­?­
-GRAMMAR OF A TYPE CASTING PATTERN
+-- GRAMMAR OF AN OPTIONAL PATTERN
 
-type-casting-pattern → is-pattern­  as-pattern­
-is-pattern → is­type­
-as-pattern → pattern­as­type­
-GRAMMAR OF AN EXPRESSION PATTERN
+-- optional-pattern → identifier-pattern­?­
 
-expression-pattern → expression­
--}
+-- GRAMMAR OF A TYPE CASTING PATTERN
+
+-- type-casting-pattern → is-pattern­  as-pattern­
+-- is-pattern → is­type­
+-- as-pattern → pattern­as­type­
+
+-- GRAMMAR OF AN EXPRESSION PATTERN
+
+-- expression-pattern → expression­
 
 ------------------------------------------------------------
 -- Attributes
