@@ -1,0 +1,2 @@
+@synchronised func tricky() {
+}

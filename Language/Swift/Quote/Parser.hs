@@ -656,7 +656,7 @@ genericArgumentClause0 = fromMaybe [] <$> optional genericArgumentClause
 -- GRAMMAR OF A DECLARATION
 declaration :: Parser Declaration
 declaration
-    = importDeclaration
+    = try importDeclaration
   <|> try constantDeclaration
   <|> try variableDeclaration
   <|> try typealiasDeclaration
