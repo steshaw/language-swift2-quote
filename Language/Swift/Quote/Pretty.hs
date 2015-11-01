@@ -356,7 +356,10 @@ instance Pretty Parameter where
   -- | ParameterDots (Maybe String) String TypeAnnotation
 
 instance Pretty Attribute where
-  ppr = undefined
+  ppr (Attribute name optClause) = string "@" <> ppr name <> ppClause optClause
+    where
+      ppClause Nothing = empty
+      ppClause (Just s) = parens (string s)
 
 instance Pretty DeclarationModifier where
   ppr (Modifier s) = ppr s

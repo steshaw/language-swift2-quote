@@ -286,6 +286,7 @@ data ObservedBlock = ObservedBlock -- aka WillSetDidSetBlock
 type IsIndirect = Bool
 type EnumName = Identifier
 type VarName = Identifier
+type AttributeName = Identifier
 
 type ClassRequirement = Bool
 
@@ -314,9 +315,6 @@ data UnionStyleEnumMember
 data DeclarationModifier
   = Modifier String
   | AccessLevelModifier String
-  deriving (Show, Eq)
-
-data Attribute = DummyAttribute
   deriving (Show, Eq)
 
 type Throws = String -- "throws", "rethrows", "" -- FIXME
@@ -469,3 +467,6 @@ data AvailabilityArgument
 data PlatformVersion = PlatformVersion String
 
 data AvailabilityCondition = AvailabilityCondition [AvailabilityArgument]
+
+data Attribute = Attribute AttributeName (Maybe String)
+  deriving (Show, Eq)

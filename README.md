@@ -11,7 +11,6 @@ TODO
 - `getter-setter-keyword-block` (currently disguised as simply `getter-setter-block`).
 - `raw-value-style-enum`
 - remaining `pattern` productions.
-- `attribute`
 - `closure-expression`
 - Replace interim `identifier` parser with one that meets the spec.
 - missing/incomplete rendering functions.

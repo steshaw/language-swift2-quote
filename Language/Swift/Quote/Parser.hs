@@ -1356,19 +1356,34 @@ expression-pattern → expression­
 
 -- GRAMMAR OF AN ATTRIBUTE
 attribute :: Parser Attribute
-attribute = parserFail "attribute not implemented" -- TODO
-{-
-attribute → @­attribute-name­attribute-argument-clause­opt­
-attribute-name → identifier­
-attribute-argument-clause → (­balanced-tokens­opt­)­
-attributes → attribute­attributes­opt­
-balanced-tokens → balanced-token­balanced-tokens­opt­
-balanced-token → (­balanced-tokens­opt­)­
-balanced-token → [­balanced-tokens­opt­]­
-balanced-token → {­balanced-tokens­opt­}­
-balanced-token → Any identifier, keyword, literal, or operator
-balanced-token → Any punctuation except (­, )­, [­, ]­, {­, or }­
--}
+attribute = do
+  tok "@"
+  n <- attributeName
+  optAAC <- optional attributeArgumentClause
+  return $ Attribute n optAAC
+
+attributeName :: Parser AttributeName
+attributeName = identifier
+
+attributeArgumentClause :: Parser String
+attributeArgumentClause = parens balancedTokens
+
+balancedTokens :: Parser String
+balancedTokens = Prelude.concat <$> P.many balancedToken
+
+balancedToken :: Parser String
+balancedToken = parensToken <|> bracketsToken <|> bracesToken <|> anyBut
+  where
+    parensToken = do
+      s <- parens balancedTokens
+      return $ "(" ++ s ++ ")"
+    bracketsToken = do
+      s <- brackets balancedTokens
+      return $ "[" ++ s ++ "]"
+    bracesToken = do
+      s <- braces balancedTokens
+      return $ "{" ++ s ++ "}"
+    anyBut = P.many1 (P.noneOf "()[]{}")
 
 ------------------------------------------------------------
 -- Expressions
