@@ -16,7 +16,6 @@ import Text.Parsec.Text (Parser)
 import Text.Parsec (try)
 import qualified Text.Parsec.Language as L
 import qualified Text.Parsec.Token as T
-import Text.Parsec.Prim (parserFail)
 
 parseIt :: Parser a -> Text -> Either String a
 parseIt p input = left show (P.parse (ws *> p <* ws) "<stdin>" input)
@@ -1255,11 +1254,8 @@ associativity
 declarationModifier :: Parser DeclarationModifier
 declarationModifier = modifier <|> accessLevelModifier
 
-declarationModifiers :: Parser [DeclarationModifier]
-declarationModifiers = P.many1 declarationModifier
-
 declarationModifiers0 :: Parser [DeclarationModifier]
-declarationModifiers0 = fromMaybe [] <$> optional declarationModifiers
+declarationModifiers0 = P.many declarationModifier
 
 modifier :: Parser DeclarationModifier
 modifier = Modifier <$> P.choice
