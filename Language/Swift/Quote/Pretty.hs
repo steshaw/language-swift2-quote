@@ -291,7 +291,16 @@ instance Pretty ProtocolMembers where
   ppr (ProtocolMembers members) = bracesLines (map ppr members)
 
 instance Pretty ProtocolMember where
-  -- TODO
+  ppr (ProtocolAssociatedTypeDeclaration attrs optMod name optTIC optType)
+      = sepBySpace attrs
+    <+> ppr optMod
+    <+> string "typealias"
+    <+> ppr name
+    <+> ppr optTIC
+    <+> ppTypeAssign optType
+      where
+        ppTypeAssign Nothing = empty
+        ppTypeAssign (Just type_) = string "=" <+> ppr type_
 
 instance Pretty SubscriptBlock where
   ppr (SubscriptCodeBlock codeBlock) = ppr codeBlock
