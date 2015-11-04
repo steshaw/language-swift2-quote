@@ -1,0 +1,4 @@
+protocol SomeProtocol{
+  func bar()
+  func baz()
+}

@@ -302,6 +302,15 @@ instance Pretty ProtocolMember where
         ppTypeAssign Nothing = empty
         ppTypeAssign (Just type_) = string "=" <+> ppr type_
 
+  ppr (ProtocolMethodDeclaration attrs mods name optGPC paramClauses optThrows optResult)
+      = sepBySpace attrs
+    <+> sepBySpace mods
+    <+> string "func"
+    <+> ppr name
+    <> ppr optGPC
+    <> sep (map (parens . commasep . map ppr) paramClauses)
+    <+> ppr optResult
+
 instance Pretty SubscriptBlock where
   ppr (SubscriptCodeBlock codeBlock) = ppr codeBlock
   ppr (SubscriptGetSetBlock getSetBlock) = ppr getSetBlock
