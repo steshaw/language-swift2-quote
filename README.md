@@ -12,11 +12,14 @@ Resources
 TODO
 ----
 
+- remaining `pattern` productions.
+- Replace interim `identifier` parser with one that meets the spec.
 - `getter-setter-keyword-block` (currently disguised as simply `getter-setter-block`).
 - `raw-value-style-enum`
-- remaining `pattern` productions.
-- `closure-expression`
-- Replace interim `identifier` parser with one that meets the spec.
+- `implicit-member-expression`
+- expressions need to use `chainr` and `chainl`.
 - missing/incomplete rendering functions.
-- much testing and bug fixing
-  - expressions need to use `chainr` and `chainl`.
+- test cases
+  - closures and closure signatures
+  - availability conditions
+  - protocol members

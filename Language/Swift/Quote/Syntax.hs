@@ -38,7 +38,23 @@ data ExpressionElement = ExpressionElement (Maybe String) Expression
 data FunctionCall = FunctionCall PostfixExpression [ExpressionElement] (Maybe Closure)
   deriving (Show, Eq)
 
-data Closure = Closure [Statement]
+type ParamClause = [Parameter]
+
+data CaptureSpecifier = Weak | Unowned | UnownedSafe | UnownedUnsafe
+  deriving (Show, Eq)
+
+data Capture = Capture (Maybe CaptureSpecifier) Expression
+  deriving (Show, Eq)
+
+data CaptureList = CaptureList [Capture]
+  deriving (Show, Eq)
+
+data ClosureSig
+  = ClosureSigParam  (Maybe CaptureList) ParamClause  {- optResult -}(Maybe FunctionResult)
+  | ClosureSigIdents (Maybe CaptureList) [Identifier] {- optResult -}(Maybe FunctionResult)
+  deriving (Show, Eq)
+
+data Closure = Closure (Maybe ClosureSig) [Statement]
   deriving (Show, Eq)
 
 data PrimaryExpression

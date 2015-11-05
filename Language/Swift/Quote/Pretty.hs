@@ -87,8 +87,8 @@ instance Pretty ExpressionElement where
   ppr (ExpressionElement (Just ident) expression) = ppr ident <> colon <+> ppr expression
 
 instance Pretty Closure where
-  ppr (Closure []) = empty
-  ppr (Closure statements) = ppBlock statements
+  ppr (Closure optSig []) = empty
+  ppr (Closure optSig statements) = ppBlock statements
 
 instance Pretty PrimaryExpression where
   ppr (PrimaryExpression1 idG) = ppr idG
