@@ -140,6 +140,7 @@ src2ast = testGroup "src2ast"
   , expressionTest "self.init" $ self SelfInit
   , expressionTest "a.123" $ Expression Nothing (PrefixExpression Nothing (ExplicitMemberExpressionDigits (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []}))) "123")) []
   , expressionTest "a.b" $ Expression Nothing (PrefixExpression Nothing (ExplicitMemberExpressionIdentifier (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "a", idgGenericArgs = []}))) (IdG {idgIdentifier = "b", idgGenericArgs = []}))) []
+  , expressionTest ".b" $ Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryImplicitMember "b"))) []
   , expressionTest "foo" $ primary1 "foo"
   , expressionTest "a" $ primary1 "a"
   , expressionTest "a1" $ primary1 "a1"

@@ -97,7 +97,7 @@ instance Pretty PrimaryExpression where
   ppr (PrimarySuper superclassExpression) = ppr superclassExpression
   ppr (PrimaryClosure closure) = ppr closure
   ppr (PrimaryParenthesized expressionElements) = (parens . commasep .  map ppr) expressionElements
-  ppr PrimaryImplicitMember = string "<implicit-member-expression>" -- TODO implicit-member-expression
+  ppr (PrimaryImplicitMember ident) = string "." <> ppr ident
   ppr PrimaryWildcard = string "_"
 
 instance Pretty IdG where

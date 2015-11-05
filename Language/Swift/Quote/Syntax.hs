@@ -62,9 +62,9 @@ data PrimaryExpression
   | PrimaryLiteral LiteralExpression
   | PrimarySelf SelfExpression
   | PrimarySuper SuperclassExpression
-  | PrimaryClosure Closure -- XXX closure-expression
+  | PrimaryClosure Closure
   | PrimaryParenthesized [ExpressionElement] -- parenthesized-expression
-  | PrimaryImplicitMember -- TODO implicit-member-expression
+  | PrimaryImplicitMember Identifier
   | PrimaryWildcard -- wildcard-expression
   deriving (Show, Eq)
 

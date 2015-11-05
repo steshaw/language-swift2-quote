@@ -1525,11 +1525,8 @@ primaryExpression
   <|> PrimarySuper <$> superclassExpression
   <|> PrimaryClosure <$> closureExpression
   <|> PrimaryParenthesized <$> parenthesizedExpression
-  <|> pure PrimaryImplicitMember <* implicitMemberExpression
+  <|> implicitMemberExpression
   <|> pure PrimaryWildcard <* wildCardExpression
-
-implicitMemberExpression :: Parser ()
-implicitMemberExpression = do {kw "<implicit-member-expression>"; pure ()}
 
 -- GRAMMAR OF A LITERAL EXPRESSION
 literalExpression :: Parser LiteralExpression
@@ -1642,8 +1639,11 @@ captureSpecifier = weak <|> try unownedSafe <|> try unownedUnsafe <|> unowned
       return UnownedUnsafe
 
 -- GRAMMAR OF A IMPLICIT MEMBER EXPRESSION
-
--- implicit-member-expression → .­identifier­
+implicitMemberExpression :: Parser PrimaryExpression
+implicitMemberExpression = do
+  tok "."
+  ident <- identifier
+  return $ PrimaryImplicitMember ident
 
 -- GRAMMAR OF A PARENTHESIZED EXPRESSION
 
