@@ -482,3 +482,6 @@ instance Pretty Condition where
 instance Pretty AvailabilityArgument where
   ppr (PlatformAvailabilityArgument name version) = string "<todo platform name version>"
   ppr PlatformWildcard = string "_"
+
+instance Pretty Initializer where
+  ppr (Initializer e) = ppr e

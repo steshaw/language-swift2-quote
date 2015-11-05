@@ -332,11 +332,19 @@ caseCondition = do
   optWC <- optional whereClause
   return $ CaseCondition p i optWC
 
-optionalBindingCondition = fail "optional-binding-condition not implemented"
--- optional-binding-condition → optional-binding-head­optional-binding-continuation-list­opt­where-clause­opt­
--- optional-binding-head → let­pattern­initializer­  var­pattern­initializer­
--- optional-binding-continuation-list → optional-binding-continuation­ optional-binding-continuation­,­optional-binding-continuation-list­
--- optional-binding-continuation → pattern­initializer­  optional-binding-head­
+optionalBindingCondition = do
+  h <- optionalBindingHead
+  cs <- OptionalBindingContinuations <$> optionalBindingContinuation `P.sepBy` comma
+  optWC <- optional whereClause
+  pure $ OptionalBindingCondition h cs optWC
+
+optionalBindingHead
+    = kw "let" *> (LetOptionalBinding <$> pattern <*> initializer)
+  <|> kw "var" *> (VarOptionalBinding <$> pattern <*> initializer)
+
+optionalBindingContinuation
+    = OptionalBindingContinuationPattern <$> pattern <*> initializer
+  <|> OptionalBindingContinuationHead <$> optionalBindingHead
 
 -- GRAMMAR OF A REPEAT-WHILE STATEMENT
 repeatWhileStatement :: Parser Statement
@@ -748,8 +756,8 @@ patternInitializerList = patternInitializer `P.sepBy1` comma
 patternInitializer :: Parser PatternInitializer
 patternInitializer = PatternInitializer <$> pattern <*> optional initializer
 
-initializer :: Parser Expression
-initializer = tok "=" *> expression
+initializer :: Parser Initializer
+initializer = tok "=" *> (Initializer <$> expression)
 
 -- GRAMMAR OF A VARIABLE DECLARATION
 variableDeclaration :: Parser Declaration

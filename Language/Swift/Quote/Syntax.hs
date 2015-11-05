@@ -170,8 +170,12 @@ data PlatformVersion = PlatformVersion String
   deriving (Show, Eq)
 
 data Condition
-  = CaseCondition Pattern Expression (Maybe WhereClause)
+  = CaseCondition Pattern Initializer (Maybe WhereClause)
   | AvailabilityCondition [AvailabilityArgument]
+  | OptionalBindingCondition
+      OptionalBindingContinuationHead
+      OptionalBindingContinuations
+      (Maybe WhereClause)
   deriving (Show, Eq)
 
 data ConditionList = ConditionList [Condition]
@@ -302,7 +306,7 @@ data VariableDeclaration
   = VarDeclPattern [Attribute] [DeclarationModifier] [PatternInitializer]
   | VarDeclReadOnly [Attribute] [DeclarationModifier] VarName TypeAnnotation CodeBlock
   | VarDeclGetSet [Attribute] [DeclarationModifier] VarName TypeAnnotation GetSetBlock
-  | VarDeclObserved [Attribute] [DeclarationModifier] VarName (Maybe TypeAnnotation) (Maybe Expression) ObservedBlock
+  | VarDeclObserved [Attribute] [DeclarationModifier] VarName (Maybe TypeAnnotation) (Maybe Initializer) ObservedBlock
   deriving (Show, Eq)
 
 data ObservedBlock = ObservedBlock -- aka WillSetDidSetBlock
@@ -379,9 +383,7 @@ data ImportPathIdentifier
   | ImportOperator String
   deriving (Show, Eq)
 
-type OptInitExpr = Maybe Expression
-
-data PatternInitializer = PatternInitializer Pattern OptInitExpr
+data PatternInitializer = PatternInitializer Pattern (Maybe Initializer)
   deriving (Show, Eq)
 
 type OptTypeAnnotation = Maybe TypeAnnotation
@@ -484,4 +486,20 @@ data OperatorDecl
   deriving (Show, Eq)
 
 data Attribute = Attribute AttributeName (Maybe String)
+  deriving (Show, Eq)
+
+data Initializer = Initializer Expression
+  deriving (Show, Eq)
+
+data OptionalBindingContinuationHead
+  = LetOptionalBinding Pattern Initializer
+  | VarOptionalBinding Pattern Initializer
+  deriving (Show, Eq)
+
+data OptionalBindingContinuations = OptionalBindingContinuations [OptionalBindingContinuation]
+  deriving (Show, Eq)
+
+data OptionalBindingContinuation
+  = OptionalBindingContinuationPattern Pattern Initializer
+  | OptionalBindingContinuationHead OptionalBindingContinuationHead
   deriving (Show, Eq)

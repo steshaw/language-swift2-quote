@@ -180,9 +180,9 @@ src2ast = testGroup "src2ast"
 
   , moduleTest "print(\"Hello world\\n\")" $ Module [ExpressionStatement (Expression Nothing (PrefixExpression Nothing (FunctionCallE (FunctionCall (PostfixPrimary (PrimaryExpression1 (IdG {idgIdentifier = "print", idgGenericArgs = []}))) [ExpressionElement Nothing (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (StringLiteral (StaticStringLiteral"Hello world\n")))))) [])] Nothing))) [])]
 
-  , moduleTest "let n = 1" $ Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "n" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))) []))])]
+  , moduleTest "let n = 1" $ Module [DeclarationStatement (ConstantDeclaration [] [] [PatternInitializer (IdentifierPattern "n" Nothing) (Just (Initializer (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1"))))) [])))])]
 
-  , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (VarDeclPattern [] [] [PatternInitializer (IdentifierPattern "d" Nothing) (Just (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1.0"))))) []))]))]
+  , moduleTest "var d = 1.0" $ Module [DeclarationStatement (DeclVariableDeclaration (VarDeclPattern [] [] [PatternInitializer (IdentifierPattern "d" Nothing) (Just (Initializer (Expression Nothing (PrefixExpression Nothing (PostfixPrimary (PrimaryLiteral (RegularLiteral (NumericLiteral "1.0"))))) [])))]))]
 
   , moduleTest "typealias TypeAliasName = String" $ Module [DeclarationStatement (TypeAlias [] Nothing "TypeAliasName" (TypeIdentifierType (TypeIdentifier [("String",[])])))]
   ]
