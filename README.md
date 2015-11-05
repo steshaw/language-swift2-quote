@@ -7,7 +7,6 @@ This library will eventually provide quasiquotation support for Swift in Templat
 TODO
 ----
 
-- `optional-binding-condition`
 - `getter-setter-keyword-block` (currently disguised as simply `getter-setter-block`).
 - `raw-value-style-enum`
 - remaining `pattern` productions.
