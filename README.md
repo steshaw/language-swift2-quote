@@ -3,6 +3,11 @@ Quasiquotation for Swift in Haskell
 
 This library will eventually provide quasiquotation support for Swift in Template Haskell.
 
+Resources
+---------
+
+- [Swift 2.1 Grammar Summary](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/zzSummaryOfTheGrammar.html)
+
 
 TODO
 ----
