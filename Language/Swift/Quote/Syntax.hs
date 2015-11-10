@@ -215,6 +215,7 @@ type StructName = Name
 type ClassName = Name
 type ProtocolName = Name
 type VariableName = Name
+type EnumCaseName = Name
 
 data StructType = Struct | Class
   deriving (Show, Eq)
@@ -347,7 +348,13 @@ data EnumDeclaration
       (Maybe GenericParameterClause)
       (Maybe TypeInheritanceClause)
       [UnionStyleEnumMember]
-  | RawEnum
+  | RawEnumDeclaration
+      [Attribute]
+      (Maybe DeclarationModifier)
+      EnumName
+      (Maybe GenericParameterClause)
+      TypeInheritanceClause
+      RawValueEnumMembers
   deriving (Show, Eq)
 
 type CaseName = String
@@ -518,4 +525,18 @@ data OptionalBindingContinuations = OptionalBindingContinuations [OptionalBindin
 data OptionalBindingContinuation
   = OptionalBindingContinuationPattern Pattern Initializer
   | OptionalBindingContinuationHead OptionalBindingContinuationHead
+  deriving (Show, Eq)
+
+data RawValueEnumCase = RawValueEnumCase EnumCaseName (Maybe Literal)
+  deriving (Show, Eq)
+
+data RawValueEnumCases = RawValueEnumCases [RawValueEnumCase]
+  deriving (Show, Eq)
+
+data RawValueEnumMember
+  = RawValueEnumCaseClause [Attribute] RawValueEnumCases
+  | RawValueEnumDeclaration Declaration
+  deriving (Show, Eq)
+
+data RawValueEnumMembers = RawValueEnumMembers [RawValueEnumMember]
   deriving (Show, Eq)

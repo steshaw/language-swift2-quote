@@ -1019,15 +1019,40 @@ enumCaseName :: Parser String
 enumCaseName = identifier
 
 rawValueStyleEnum :: [Attribute] -> Maybe DeclarationModifier -> Parser EnumDeclaration
-rawValueStyleEnum att optMod = fail "WIP rawValueStyleEnum"
--- raw-value-style-enum → enum­enum-name­generic-parameter-clause­opt­type-inheritance-clause­{­raw-value-style-enum-members­}­
--- raw-value-style-enum-members → raw-value-style-enum-member­raw-value-style-enum-members­opt­
--- raw-value-style-enum-member → declaration­  raw-value-style-enum-case-clause­
--- raw-value-style-enum-case-clause → attributes­opt­case­raw-value-style-enum-case-list­
--- raw-value-style-enum-case-list → raw-value-style-enum-case­ raw-value-style-enum-case­,­raw-value-style-enum-case-list­
--- raw-value-style-enum-case → enum-case-name­raw-value-assignment­opt­
--- raw-value-assignment → =­raw-value-literal­
--- raw-value-literal → numeric-literal­  static-string-literal­  boolean-literal­
+rawValueStyleEnum att optMod = do
+  kw "enum"
+  n <- enumName
+  optGPC <- optional genericParameterClause
+  tic <- typeInheritanceClause
+  members <- RawValueEnumMembers <$> braces (P.many1 rawValueStyleEnumMember)
+  return $ RawEnumDeclaration att optMod n optGPC tic members
+
+rawValueStyleEnumMember :: Parser RawValueEnumMember
+rawValueStyleEnumMember
+    = try rawValueStyleEnumCaseClause
+  <|> RawValueEnumDeclaration <$> declaration
+
+rawValueStyleEnumCaseClause :: Parser RawValueEnumMember
+rawValueStyleEnumCaseClause = do
+  attrs <- attributes0
+  kw "case"
+  cases <- rawValueStyleEnumCaseList
+  return $ RawValueEnumCaseClause attrs cases
+
+rawValueStyleEnumCaseList :: Parser RawValueEnumCases
+rawValueStyleEnumCaseList = RawValueEnumCases <$> rawValueStyleEnumCase `P.sepBy` comma
+
+rawValueStyleEnumCase :: Parser RawValueEnumCase
+rawValueStyleEnumCase = RawValueEnumCase <$> enumCaseName <*> optional rawValueAssignment
+
+rawValueAssignment :: Parser Literal
+rawValueAssignment = tok "=" *> rawValueLiteral
+
+rawValueLiteral :: Parser Literal
+rawValueLiteral
+  = numericLiteral
+  <|> StringLiteral <$> staticStringLiteral
+  <|> booleanLiteral
 
 structDeclaration' :: String ->
   ([Attribute] -> Maybe DeclarationModifier -> StructName -> Maybe GenericParameterClause ->

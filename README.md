@@ -15,7 +15,6 @@ TODO
 - remaining `pattern` productions.
 - Replace interim `identifier` parser with one that meets the spec.
 - `getter-setter-keyword-block` (currently disguised as simply `getter-setter-block`).
-- `raw-value-style-enum`
 - expressions need to use `chainr` and `chainl`.
 - missing/incomplete rendering functions.
 - test cases
@@ -23,3 +22,4 @@ TODO
   - availability conditions
   - protocol members
   - nested expressions
+  - enums
