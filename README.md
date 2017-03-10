@@ -4,7 +4,7 @@ Quasiquotation for Swift in Haskell
 This library will eventually provide quasiquotation support for Swift in
 Template Haskell.
 
-**Warning**
+### Warning
 Unfortunately the Swift 2.1 grammar is quite left recursive -- not just on the
 small scale but on a large scale. This was not something I had noticed before
 digging right into this project. It looks as though the changes for Swift 3
